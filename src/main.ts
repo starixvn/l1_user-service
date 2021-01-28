@@ -1,11 +1,13 @@
 import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import * as Sentry from "@sentry/node";
+import helmet from "fastify-helmet";
 
 import { AppModule } from "./app.module";
 import { SentryLogger } from "./logger/logger.service";
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
@@ -17,6 +19,7 @@ async function bootstrap() {
     Sentry.captureMessage(`Logger started at ${new Date()}`);
 
     app.useLogger(app.get(SentryLogger));
+    app.register(helmet);
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
     app.enableCors({
