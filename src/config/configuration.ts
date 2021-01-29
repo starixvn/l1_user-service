@@ -15,11 +15,16 @@ export default () => ({
         environment: process.env,
         release: '',
     },
+    logIdentifier: 'user-service',
     api: {
-        apiUrl: 'http://api.lumigame.com',
+        baseURL: 'http://api.lumigame.com',
         useAuthenticate: true,
         requestTimeout: 10000,
         placeBetTimeout: 4500,
     },
-    logIdentifier: 'user-service',
+    auth: {
+        uri: 'http://auth.lumigame.com',
+        clientId: 'game-server',
+        clientSecret: 'gameserver@20luminet&',
+    },
 });

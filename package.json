@@ -30,6 +30,7 @@
         "axios": "^0.21.1",
         "fastify-helmet": "^5.1.0",
         "mongoose": "5.11.13",
+        "openid-client": "^4.3.0",
         "randomstring": "^1.1.5",
         "reflect-metadata": "0.1.13",
         "rimraf": "3.0.2",
