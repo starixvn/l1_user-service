@@ -4,6 +4,7 @@ import axios, { AxiosInstance } from "axios";
 import { OpenIdClient } from "src/open-id/open-id.client";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
+import { GetBalanceRequest } from "./models";
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
 interface ApiConfig {
@@ -28,8 +29,16 @@ export class OWApiClient {
     }
 
     async verifyToken(request: VerifyTokenRequest) {
+        return await this.sendPostRequest<VerifyTokenResponse>('/AuthVerification/verify', request);
+    }
+
+    async getBalance(request: GetBalanceRequest) {
+        return await this.sendPostRequest('/Member/Balance', request);
+    }
+
+    private async sendPostRequest<T>(url: string, data?: any) {
         const requestHeaders = { Authorization: await this.openIdClient.getBearerToken() };
 
-        return (await this.instance.post<VerifyTokenResponse>('/AuthVerification/verify', request, { headers: requestHeaders })).data;
+        return (await this.instance.post<T>(url, data, { headers: requestHeaders })).data;
     }
 }

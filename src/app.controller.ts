@@ -13,12 +13,17 @@ export class AppController {
     }
 
     @Get('authenticate')
-    authenticate(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
-        return this.authService.signIn(ip, userAgent, token);
+    sso(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
+        return this.authService.signIn(ip, token, userAgent);
     }
 
-    @Get('refresh/:id')
+    @Get('reCheckIn/:id')
     reCheckIn(@Param('id') id: string, @Headers('user-agent') userAgent: string) {
-        return this.authService.reCheckIn(id, userAgent);
+        // return this.authService.reCheckIn(id, userAgent);
     }
+
+    // @Post('authorize')
+    // authenticate(@Body()) {
+
+    // }
 }

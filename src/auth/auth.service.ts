@@ -45,16 +45,15 @@ export class AuthService {
         }
     }
 
-    async reCheckIn(sessionId: string, userAgent: string) {
-        const userSession = await this.userSessionsService.getUserSession(sessionId);
-
-        const isValid = userSession && userSession.browserUserAgent === userAgent;
-
-        if (isValid && this.isSessionExpired(userSession)) {
+    async reCheckIn(sessionId: string, userName: string, userAgent: string) {
+        const isValidSession = await this.validateSession(sessionId, userName, userAgent);
+        if (isValidSession) {
             this.userSessionsService.updateReCheckInTime(sessionId);
 
-            return {};
+            return { isSuccessful: true };
         }
+
+        return { isSuccessful: false };
     }
 
     private isSessionExpired(userSession: UserSession) {
@@ -116,5 +115,30 @@ export class AuthService {
                 ),
             ))
         );
+    }
+
+    async validateSession(sessionId: string, userName: string, userAgent: string) {
+        const userSession = await this.userSessionsService.getUserSession(sessionId);
+        const isValid = userSession && userSession.username === userName && userSession.browserUserAgent === userAgent;
+
+        return isValid && !this.isSessionExpired(userSession);
+    }
+
+    async authorize(sessionId: string, userName: string, userAgent: string) {
+        const isValidSession = await this.validateSession(sessionId, userName, userAgent);
+
+        if (!isValidSession) {
+            return { isSessionExpired: true };
+        }
+
+        const user = await this.usersService.findUser(userName);
+        if (!user) {
+            return { isAuthenticated: false };
+        }
+
+        const userInfo = await this.usersService.getUserInfo(user.id);
+        if (!userInfo) {
+            return { authorized: false };
+        }
     }
 }
