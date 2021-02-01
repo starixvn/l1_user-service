@@ -41,4 +41,22 @@ export class SentryLogger implements LoggerService {
     verbose?(message: string) {
         Sentry.captureMessage(`${this.logIdentifier} ${message}`, Sentry.Severity.Log);
     }
+
+    composeBeforeCallMessage(session, params) {
+        const characterName = session && session.characterName ? `\n\tCharacter: ${session.characterName} ` : '';
+        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${characterName}\n\tParams:${JSON.stringify(
+            params,
+        )}`;
+    }
+    logAfterSendToApi(action, params, result, beforeMessage, logLevel) {
+        const messages = [
+            `Account ${params.SiteId}_${params.ObCustId} performs ${action} at ${new Date()}`,
+            '',
+            beforeMessage,
+            `\nAction Result: ${JSON.stringify(result)}`,
+        ];
+
+        const joinedMessages = messages.join('\n');
+        Sentry.captureMessage(joinedMessages, logLevel);
+    }
 }

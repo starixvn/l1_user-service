@@ -1,10 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Severity } from "@sentry/node";
 import axios, { AxiosInstance } from "axios";
+import { SentryLogger } from "src/logger/logger.service";
 import { OpenIdClient } from "src/open-id/open-id.client";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
-import { GetBalanceRequest } from "./models";
+import { BaseResponse, GetBalanceRequest, GetBalanceResponse } from "./models";
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
 interface ApiConfig {
@@ -18,8 +20,35 @@ interface ApiConfig {
 export class OWApiClient {
     private instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
+    private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
+    private readonly errors = {
+        placeBetFailed: {
+            errorCode: 'SB1900',
+            errorMessage: 'Đặt cược không thành công.',
+        },
+        endGameFailed: {
+            errorCode: 'SB1901',
+            errorMessage: 'Phiên chơi bị lỗi. Vui lòng liên hệ bộ phận CSKH để được hỗ trợ.',
+        },
+        getBalanceFailed: {
+            errorCode: 'SB1902',
+            errorMessage: 'Không thể cập nhật số tiền trong tài khoản.',
+        },
+        enterPortalFailed: {
+            errorCode: `SB1903`,
+            errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+        },
+        accountClosed: {
+            errorCode: '2002',
+            errorMessage: 'Tài khoản của bạn đã bị khoá.',
+        },
+    };
 
-    constructor(private readonly configService: ConfigService, private readonly openIdClient: OpenIdClient) {
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly openIdClient: OpenIdClient,
+        private readonly logger: SentryLogger,
+    ) {
         const apiConfig = this.configService.get<ApiConfig>('api');
 
         this.instance = axios.create({
@@ -32,13 +61,48 @@ export class OWApiClient {
         return await this.sendPostRequest<VerifyTokenResponse>('/AuthVerification/verify', request);
     }
 
-    async getBalance(request: GetBalanceRequest) {
-        return await this.sendPostRequest('/Member/Balance', request);
+    async getBalance(request: GetBalanceRequest, beforeMessage: string) {
+        try {
+            const response = await this.sendPostRequest<GetBalanceResponse>('/Member/Balance', request);
+
+            if (this.isError(response)) {
+                this.logAfterSendToApi('Get Balance', request, response, beforeMessage, this.getLogLevel(response));
+            }
+
+            return response.result;
+        } catch (error) {
+            this.logAfterSendToApi('Error Get Balance', request, error, beforeMessage, Severity.Error);
+            this.logger.error(error);
+        }
     }
 
     private async sendPostRequest<T>(url: string, data?: any) {
         const requestHeaders = { Authorization: await this.openIdClient.getBearerToken() };
 
         return (await this.instance.post<T>(url, data, { headers: requestHeaders })).data;
+    }
+
+    private isError(response: BaseResponse) {
+        return (response?.result?.errorCode ?? 0) !== 0;
+    }
+
+    private logAfterSendToApi(action: string, params, result: BaseResponse, beforeMessage: string, logLevel: Severity) {
+        const messages = [
+            `Account ${params.SiteId}_${params.ObCustId} performs ${action} at ${new Date()}`,
+            '',
+            beforeMessage,
+            `\nAction Result: ${JSON.stringify(result)}`,
+        ];
+
+        const joinedMessages = messages.join('\n');
+        this.logger.log(joinedMessages, logLevel);
+    }
+
+    private getLogLevel(response: BaseResponse) {
+        if (this.isError(response)) {
+            return this.warningErrorCodes.includes(response.result.errorCode) ? Severity.Warning : Severity.Error;
+        }
+
+        return Severity.Info;
     }
 }

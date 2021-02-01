@@ -13,8 +13,8 @@ export class AppController {
     }
 
     @Get('authenticate')
-    sso(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
-        return this.authService.signIn(ip, token, userAgent);
+    authenticate(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
+        return this.authService.authenticate(ip, token, userAgent);
     }
 
     @Get('reCheckIn/:id')

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { generate } from "randomstring";
 import { SentryLogger } from "src/logger/logger.service";
-import { VerifyTokenRequest, VerifyTokenResponse } from "src/ow-api/models";
+import { GetBalanceRequest, VerifyTokenRequest, VerifyTokenResponse } from "src/ow-api/models";
 import { OWApiClient } from "src/ow-api/ow-api.client";
 import { CreateUserSessionParam } from "src/user-sessions/params/create-user-session.param";
 import { UserSession } from "src/user-sessions/schemas/user-session.schema";
@@ -22,7 +22,14 @@ export class AuthService {
         private readonly userSessionsService: UserSessionsService,
     ) {}
 
-    async signIn(ip: string, token: string, userAgent: string) {
+    composeBeforeCallMessage(session: UserSession, nickName: string, params) {
+        const characterName = nickName ? `\n\tCharacter: ${nickName} ` : '';
+        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${characterName}\n\tParams:${JSON.stringify(
+            params,
+        )}`;
+    }
+
+    async authenticate(ip: string, token: string, userAgent: string) {
         const param = new VerifyTokenRequest(normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(param);
 
@@ -46,9 +53,10 @@ export class AuthService {
     }
 
     async reCheckIn(sessionId: string, userName: string, userAgent: string) {
-        const isValidSession = await this.validateSession(sessionId, userName, userAgent);
+        const userSession = await this.userSessionsService.getUserSession(sessionId);
+        const isValidSession = await this.validateSession(userSession, userName, userAgent);
         if (isValidSession) {
-            this.userSessionsService.updateReCheckInTime(sessionId);
+            await this.userSessionsService.updateReCheckInTime(sessionId);
 
             return { isSuccessful: true };
         }
@@ -117,15 +125,15 @@ export class AuthService {
         );
     }
 
-    async validateSession(sessionId: string, userName: string, userAgent: string) {
-        const userSession = await this.userSessionsService.getUserSession(sessionId);
+    async validateSession(userSession: UserSession, userName: string, userAgent: string) {
         const isValid = userSession && userSession.username === userName && userSession.browserUserAgent === userAgent;
 
         return isValid && !this.isSessionExpired(userSession);
     }
 
     async authorize(sessionId: string, userName: string, userAgent: string) {
-        const isValidSession = await this.validateSession(sessionId, userName, userAgent);
+        const userSession = await this.userSessionsService.getUserSession(sessionId);
+        const isValidSession = await this.validateSession(userSession, userName, userAgent);
 
         if (!isValidSession) {
             return { isSessionExpired: true };
@@ -140,5 +148,14 @@ export class AuthService {
         if (!userInfo) {
             return { authorized: false };
         }
+
+        if (!!userInfo.currency) {
+            // Notify login
+            const request = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
+            const response = await this.apiClient.getBalance(request, this.composeBeforeCallMessage(userSession, userInfo.name, request));
+            userInfo.red = response.balance;
+        }
+
+        return { authorized: true, user: userInfo };
     }
 }

@@ -23,7 +23,7 @@ export class UserSessionsService {
         return userSessionCreated.save();
     }
 
-    updateReCheckInTime(sessionId) {
+    async updateReCheckInTime(sessionId) {
         this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 }
