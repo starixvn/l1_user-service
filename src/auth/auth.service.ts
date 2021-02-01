@@ -1,17 +1,20 @@
 import { Injectable } from "@nestjs/common";
 import { generate } from "randomstring";
 import { SentryLogger } from "src/logger/logger.service";
+import { VerifyTokenRequest, VerifyTokenResponse } from "src/ow-api/models";
 import { OWApiClient } from "src/ow-api/ow-api.client";
 import { CreateUserSessionParam } from "src/user-sessions/params/create-user-session.param";
+import { UserSession } from "src/user-sessions/schemas/user-session.schema";
 import { UserSessionsService } from "src/user-sessions/user-sessions.service";
 import { CreateUserParam } from "src/users/params/createUser.param";
 import { UserDocument } from "src/users/schemas/user.schema";
 import { UsersService } from "src/users/users.service";
-
-import { VerifyTokenParam } from "./params/verify-token-param";
+import { normalizeIP } from "src/utils";
 
 @Injectable()
 export class AuthService {
+    private readonly sessionTimeoutInMinutes = 19.8;
+
     constructor(
         private readonly logger: SentryLogger,
         private readonly apiClient: OWApiClient,
@@ -19,9 +22,9 @@ export class AuthService {
         private readonly userSessionsService: UserSessionsService,
     ) {}
 
-    async signIn(param: VerifyTokenParam) {
+    async signIn(ip: string, token: string, userAgent: string) {
+        const param = new VerifyTokenRequest(normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(param);
-        console.log(data);
 
         if (data && data.isSuccessful) {
             let user = await this.createUserIfNotExist(data);
@@ -40,6 +43,32 @@ export class AuthService {
 
             return { isAuthenticated: false };
         }
+    }
+
+    async reCheckIn(sessionId: string, userAgent: string) {
+        const userSession = await this.userSessionsService.getUserSession(sessionId);
+
+        const isValid = userSession && userSession.browserUserAgent === userAgent;
+
+        if (isValid && this.isSessionExpired(userSession)) {
+            this.userSessionsService.updateReCheckInTime(sessionId);
+
+            return {};
+        }
+    }
+
+    private isSessionExpired(userSession: UserSession) {
+        if (!userSession) {
+            return true;
+        }
+
+        const differenceInMinutes = Math.abs(Date.now() - userSession.recheckInTime.getTime()) / (1000 * 60);
+
+        return differenceInMinutes > this.sessionTimeoutInMinutes;
+    }
+
+    private formatCurrency(currency: string) {
+        return currency && currency.toUpperCase() === 'UUS' ? 'UUS' : currency;
     }
 
     private async createUserIfNotExist(verifyTokenResult) {
@@ -61,12 +90,12 @@ export class AuthService {
         );
     }
 
-    private async addSessionIfNotExist(user: UserDocument, verifyTokenParam: VerifyTokenParam, verifyTokenResult) {
+    private async addSessionIfNotExist(user: UserDocument, verifyTokenParam: VerifyTokenRequest, verifyTokenResult: VerifyTokenResponse) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
         const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
 
         return (
-            (await this.userSessionsService.findUserSession(token)) ??
+            (await this.userSessionsService.getUserSessionByToken(token)) ??
             (await this.userSessionsService.createUserSession(
                 new CreateUserSessionParam(
                     token,
@@ -87,13 +116,5 @@ export class AuthService {
                 ),
             ))
         );
-    }
-
-    reCheckIn(sessionId: string) {
-        this.userSessionsService.updateReCheckInTime(sessionId);
-    }
-
-    private formatCurrency(currency: string) {
-        return currency && currency.toUpperCase() === 'UUS' ? 'UUS' : currency;
     }
 }

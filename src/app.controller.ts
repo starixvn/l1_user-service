@@ -1,8 +1,7 @@
-import { Controller, Get, Headers, Ip, Query } from "@nestjs/common";
+import { Controller, Get, Headers, Ip, Param, Query } from "@nestjs/common";
 
 import { AppService } from "./app.service";
 import { AuthService } from "./auth/auth.service";
-import { VerifyTokenParam } from "./auth/params/verify-token-param";
 
 @Controller()
 export class AppController {
@@ -15,6 +14,11 @@ export class AppController {
 
     @Get('authenticate')
     authenticate(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
-        return this.authService.signIn(new VerifyTokenParam(ip, token, userAgent));
+        return this.authService.signIn(ip, userAgent, token);
+    }
+
+    @Get('refresh/:id')
+    reCheckIn(@Param('id') id: string, @Headers('user-agent') userAgent: string) {
+        return this.authService.reCheckIn(id, userAgent);
     }
 }

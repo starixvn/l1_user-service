@@ -9,7 +9,11 @@ import { UserSession, UserSessionDocument } from "./schemas/user-session.schema"
 export class UserSessionsService {
     constructor(@InjectModel(UserSession.name) private readonly userSessionModel: Model<UserSessionDocument>) {}
 
-    async findUserSession(token: string): Promise<UserSession> {
+    async getUserSession(sessionId: string): Promise<UserSession> {
+        return this.userSessionModel.findOne({ sessionId: sessionId });
+    }
+
+    async getUserSessionByToken(token: string): Promise<UserSession> {
         return this.userSessionModel.findOne({ ssoToken: token });
     }
 

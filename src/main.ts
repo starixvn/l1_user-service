@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as Sentry from "@sentry/node";
 import helmet from "fastify-helmet";
 
@@ -8,6 +9,16 @@ import { SentryLogger } from "./logger/logger.service";
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+    const options = new DocumentBuilder()
+        .setTitle('Cats example')
+        .setDescription('The cats API description')
+        .setVersion('1.0')
+        .addTag('cats')
+        .addBearerAuth()
+        .build();
+    const document = SwaggerModule.createDocument(app, options);
+    SwaggerModule.setup('api', app, document);
 
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
@@ -19,7 +30,7 @@ async function bootstrap() {
     Sentry.captureMessage(`Logger started at ${new Date()}`);
 
     app.useLogger(app.get(SentryLogger));
-    app.register(helmet);
+    app.register(helmet, { contentSecurityPolicy: false });
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
     app.enableCors({

@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import axios, { AxiosInstance } from "axios";
-import { VerifyTokenResponse } from "src/auth/params/verify-token-response";
 import { OpenIdClient } from "src/open-id/open-id.client";
+import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
