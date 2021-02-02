@@ -13,8 +13,12 @@ export class UsersService {
         @InjectModel(UserInfo.name) private readonly userInfoModel: Model<UserInfoDocument>,
     ) {}
 
-    async findUser(memberKey: string): Promise<UserDocument> {
-        return this.userModel.findOne({ 'local.username': memberKey });
+    async getByUsername(username: string): Promise<UserDocument> {
+        return this.userModel.findOne({ 'local.username': username });
+    }
+
+    async getById(id: string): Promise<User> {
+        return this.userModel.findById(id);
     }
 
     async createUser(createUserParam: CreateUserParam): Promise<UserDocument> {

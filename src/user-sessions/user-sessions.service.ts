@@ -29,7 +29,7 @@ export class UserSessionsService {
         this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 
-    async validateSession(userSession: UserSession, username: string, userAgent: string) {
+    async verifySession(userSession: UserSession, username: string, userAgent: string) {
         const isValid = userSession && userSession.username === username && userSession.browserUserAgent === userAgent;
 
         return isValid && !this.isSessionExpired(userSession);

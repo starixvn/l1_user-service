@@ -11,7 +11,7 @@ import { UserDocument } from "src/users/schemas/user.schema";
 import { UsersService } from "src/users/users.service";
 import validator from "validator";
 
-import { ValidateSignNameResult } from "./models/validate-signname-result";
+import { AuthorizeResult, ExpiredSessionResult, Result, UnAuthorizeResult } from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -55,7 +55,7 @@ export class AuthService {
 
     async reCheckIn(sessionId: string, username: string, userAgent: string) {
         const userSession = await this.userSessionsService.getUserSession(sessionId);
-        const isValidSession = await this.userSessionsService.validateSession(userSession, username, userAgent);
+        const isValidSession = await this.userSessionsService.verifySession(userSession, username, userAgent);
         if (isValidSession) {
             await this.userSessionsService.updateReCheckInTime(sessionId);
 
@@ -67,21 +67,21 @@ export class AuthService {
 
     async authorize(sessionId: string, username: string, userAgent: string) {
         const userSession = await this.userSessionsService.getUserSession(sessionId);
-        const isValidSession = await this.userSessionsService.validateSession(userSession, username, userAgent);
+        const isValidSession = await this.userSessionsService.verifySession(userSession, username, userAgent);
 
         if (!isValidSession) {
-            return { isSessionExpired: true };
+            return new ExpiredSessionResult();
         }
 
-        const user = await this.usersService.findUser(username);
+        const user = await this.usersService.getByUsername(username);
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify({ sessionId, username, userAgent })}`);
-            return { isAuthenticated: false };
+            return new Result(false, 'Account not found');
         }
 
         const userInfo = await this.usersService.getUserInfo(user.id);
         if (!userInfo) {
-            return { authorized: false };
+            return new UnAuthorizeResult();
         }
 
         if (!!userInfo.currency) {
@@ -91,19 +91,30 @@ export class AuthService {
             userInfo.red = response.balance;
         }
 
-        return { authorized: true, user: userInfo };
+        return new AuthorizeResult(true, userInfo);
     }
 
     async createCharacterName(sessionId: string, username: string, userAgent: string, signName: string) {
         const userSession = await this.userSessionsService.getUserSession(sessionId);
-        const isValidSession = await this.userSessionsService.validateSession(userSession, username, userAgent);
+        const isValidSession = await this.userSessionsService.verifySession(userSession, username, userAgent);
 
         if (!isValidSession) {
-            return { isSessionExpired: true };
+            return new ExpiredSessionResult();
         }
 
         const validateSignNameResult = this.validateSignName(signName);
-        if (validateSignNameResult.isValid) {
+        if (!validateSignNameResult.isOK) {
+            return new Result(false, validateSignNameResult.message);
+        }
+
+        const user = await this.usersService.getById(userSession.userId);
+        if (user.local.username.toUpperCase() === signName.toUpperCase()) {
+            return new Result(false, this.CreateCharacterNameErrors.sameWithUserName);
+        }
+
+        const userInfo = await this.usersService.getUserInfo(userSession.userId);
+        if (userInfo) {
+            return new AuthorizeResult(true, userInfo);
         }
     }
 
@@ -128,10 +139,10 @@ export class AuthService {
         const failedCriterion = criteria.find((criterion) => criterion.failure);
 
         if (failedCriterion) {
-            return new ValidateSignNameResult(false, failedCriterion.notice);
+            return new Result(false, failedCriterion.notice);
         }
 
-        return new ValidateSignNameResult();
+        return new Result();
     }
 
     private formatCurrency(currency: string) {
@@ -142,7 +153,7 @@ export class AuthService {
         const { memberKey, memberId, memberName, clientId, currency } = verifyTokenResult;
 
         return (
-            (await this.usersService.findUser(verifyTokenResult.memberKey)) ??
+            (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
             (await this.usersService.createUser(
                 new CreateUserParam(
                     memberKey,
