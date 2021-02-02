@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Ip, Param, Query } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Ip, Post, Query } from "@nestjs/common";
 
 import { AppService } from "./app.service";
 import { AuthService } from "./auth/auth.service";
@@ -17,13 +17,13 @@ export class AppController {
         return this.authService.authenticate(ip, token, userAgent);
     }
 
-    @Get('reCheckIn/:id')
-    reCheckIn(@Param('id') id: string, @Headers('user-agent') userAgent: string) {
-        // return this.authService.reCheckIn(id, userAgent);
+    @Post('reCheckIn')
+    reCheckIn(@Headers('user-agent') userAgent: string, @Body() body) {
+        return this.authService.reCheckIn(body.session, body.username, userAgent);
     }
 
-    // @Post('authorize')
-    // authenticate(@Body()) {
-
-    // }
+    @Post('authorize')
+    authorize(@Headers('user-agent') userAgent: string, @Body() body) {
+        return this.authService.authorize(body.session, body.username, userAgent);
+    }
 }

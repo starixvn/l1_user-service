@@ -6,7 +6,6 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import configuration from "./config/configuration";
-import { LoggerModule } from "./logger/logger.module";
 import { UserSessionsModule } from "./user-sessions/user-sessions.module";
 import { UsersModule } from "./users/users.module";
 
@@ -25,7 +24,6 @@ import { UsersModule } from "./users/users.module";
         }),
         UsersModule,
         UserSessionsModule,
-        LoggerModule,
         AuthModule,
     ],
     controllers: [AppController],

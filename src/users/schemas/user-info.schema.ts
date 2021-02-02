@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { MongooseAutoIncrementID } from "mongoose-auto-increment-reworked";
 
 type UserInfoDocument = UserInfo & Document;
 
@@ -49,9 +48,5 @@ class UserInfo {
     banned: boolean;
 }
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);
-UserInfoSchema.plugin(MongooseAutoIncrementID.plugin, {
-    modelName: 'UserInfo',
-    field: 'UID',
-});
 
 export { UserInfoDocument, UserInfo, UserInfoSchema };

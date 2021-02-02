@@ -1,11 +1,10 @@
 import { Module } from "@nestjs/common";
-import { LoggerModule } from "src/logger/logger.module";
-import { OpenIdModule } from "src/open-id/open-id.module";
+import { CommonModule } from "src/common";
 
 import { OWApiClient } from "./ow-api.client";
 
 @Module({
-    imports: [OpenIdModule, LoggerModule],
+    imports: [CommonModule],
     providers: [OWApiClient],
     exports: [OWApiClient],
 })

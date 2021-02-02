@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/node";
 import helmet from "fastify-helmet";
 
 import { AppModule } from "./app.module";
-import { SentryLogger } from "./logger/logger.service";
+import { SentryLogger } from "./common/providers/logger.service";
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());

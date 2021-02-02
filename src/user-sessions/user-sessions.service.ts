@@ -7,6 +7,8 @@ import { UserSession, UserSessionDocument } from "./schemas/user-session.schema"
 
 @Injectable()
 export class UserSessionsService {
+    private readonly sessionTimeoutInMinutes = 19.8;
+
     constructor(@InjectModel(UserSession.name) private readonly userSessionModel: Model<UserSessionDocument>) {}
 
     async getUserSession(sessionId: string): Promise<UserSession> {
@@ -25,5 +27,21 @@ export class UserSessionsService {
 
     async updateReCheckInTime(sessionId) {
         this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
+    }
+
+    async validateSession(userSession: UserSession, username: string, userAgent: string) {
+        const isValid = userSession && userSession.username === username && userSession.browserUserAgent === userAgent;
+
+        return isValid && !this.isSessionExpired(userSession);
+    }
+
+    private isSessionExpired(userSession: UserSession) {
+        if (!userSession) {
+            return true;
+        }
+
+        const differenceInMinutes = Math.abs(Date.now() - userSession.recheckInTime.getTime()) / (1000 * 60);
+
+        return differenceInMinutes > this.sessionTimeoutInMinutes;
     }
 }
