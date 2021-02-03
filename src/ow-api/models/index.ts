@@ -1,7 +1,5 @@
-import { BaseResponse } from "./base-respone";
-import { GetBalanceRequest } from "./get-balance-request";
-import { GetBalanceResponse, GetBalanceResult } from "./get-balance-response";
-import { VerifyTokenRequest } from "./verify-token-request";
-import { VerifyTokenResponse } from "./verify-token-response";
-
-export { VerifyTokenRequest, VerifyTokenResponse, GetBalanceRequest, GetBalanceResponse, BaseResponse, GetBalanceResult };
+export * from './base-respone';
+export * from './get-balance-request';
+export * from './get-balance-response';
+export * from './verify-token-request';
+export * from './verify-token-response';

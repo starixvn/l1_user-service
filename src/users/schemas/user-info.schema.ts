@@ -9,6 +9,9 @@ class UserInfo {
     id: string;
 
     @Prop({ required: true, unique: true })
+    UID: number;
+
+    @Prop({ required: true, unique: true })
     name: string;
 
     @Prop({ default: new Date() })

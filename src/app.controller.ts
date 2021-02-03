@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, Ip, Post, Query } from "@nestjs/common";
 
 import { AppService } from "./app.service";
-import { AuthService } from "./auth/auth.service";
+import { AuthenticateRequest, AuthService, SignNameRequest } from "./auth";
 
 @Controller()
 export class AppController {
@@ -18,12 +18,22 @@ export class AppController {
     }
 
     @Post('reCheckIn')
-    reCheckIn(@Headers('user-agent') userAgent: string, @Body() body) {
-        return this.authService.reCheckIn(body.session, body.username, userAgent);
+    reCheckIn(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
+        return this.authService.reCheckIn(body, userAgent);
     }
 
     @Post('authorize')
-    authorize(@Headers('user-agent') userAgent: string, @Body() body) {
-        return this.authService.authorize(body.session, body.username, userAgent);
+    authorize(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
+        return this.authService.authorize(body, userAgent);
+    }
+
+    @Post('signName')
+    signName(@Headers('user-agent') userAgent: string, @Body() body: SignNameRequest) {
+        return this.authService.createCharacterName(body, userAgent);
+    }
+
+    @Post('balance')
+    getBalance(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
+        return this.authService.getBalance(body, userAgent);
     }
 }

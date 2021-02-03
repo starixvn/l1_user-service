@@ -6,6 +6,7 @@ import { OpenIdClient, SentryLogger } from "src/common";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
 import { BaseResponse, GetBalanceRequest, GetBalanceResponse } from "./models";
+import { BaseResult } from "./models/base-respone";
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
 interface ApiConfig {
@@ -72,7 +73,13 @@ export class OWApiClient {
         } catch (error) {
             this.logAfterSendToApi('Error Get Balance', request, error, beforeMessage, Severity.Error);
             this.logger.error(error);
+
+            return { ...this.errors.getBalanceFailed, balance: 0 };
         }
+    }
+
+    isDisabledAccountResult(result: BaseResult) {
+        return result.errorCode == 2002;
     }
 
     private async sendPostRequest<T>(url: string, data?: any) {

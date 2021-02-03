@@ -4,8 +4,6 @@ export class BaseResponse {
 }
 
 export class BaseResult {
-    seq: string;
     errorCode: number;
     errorMessage: string;
-    errorDescription: string;
 }

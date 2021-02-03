@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 
-import { CreateUserSessionParam } from "./params/create-user-session.param";
-import { UserSession, UserSessionDocument } from "./schemas/user-session.schema";
+import { CreateUserSessionParam } from "../params/create-user-session.param";
+import { UserSession, UserSessionDocument } from "../schemas/user-session.schema";
 
 @Injectable()
 export class UserSessionsService {

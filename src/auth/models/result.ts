@@ -29,3 +29,17 @@ export class UnAuthorizeResult extends AuthorizeResult {
         super(false, null);
     }
 }
+
+export class AuthenticateResult {
+    isAuthenticated: boolean;
+    username: string;
+    language: string;
+    ss: string;
+
+    constructor(isAuthenticated: boolean, username = null, language = null, ss = null) {
+        this.isAuthenticated = isAuthenticated;
+        this.username = username;
+        this.language = language;
+        this.ss = ss;
+    }
+}
