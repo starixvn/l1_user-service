@@ -2,7 +2,15 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
 import { SentryLogger, UtilsService } from "src/common/providers";
-import { BaseResult, GetBalanceRequest, OWApiClient, VerifyTokenRequest, VerifyTokenResponse } from "src/ow-api";
+import { NODE_ENV } from "src/environments";
+import {
+    BaseResult,
+    GetBalanceRequest,
+    NotifyLoginRequest,
+    OWApiClient,
+    VerifyTokenRequest,
+    VerifyTokenResponse,
+} from "src/ow-api";
 import {
     CreateUserInfoParam,
     CreateUserParam,
@@ -16,7 +24,7 @@ import {
 import validator from "validator";
 
 import { AuthenticateRequest, SignNameRequest } from "./models/request";
-import { AuthenticateResult, AuthorizeResult, ExpiredSessionResult, Result, UnAuthorizeResult } from "./models/result";
+import { AuthenticateResult, AuthorizeResult, ExpiredSessionResult, ReCheckInResult, Result } from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -64,13 +72,24 @@ export class AuthService {
     async reCheckIn(request: AuthenticateRequest, userAgent: string) {
         const userSession = await this.userSessionsService.getUserSession(request.session);
         const isValidSession = await this.userSessionsService.verifySession(userSession, request.username, userAgent);
-        if (isValidSession) {
-            await this.userSessionsService.updateReCheckInTime(request.session);
 
-            return { isSuccessful: true };
+        if (!isValidSession) {
+            return new ReCheckInResult(false);
         }
 
-        return { isSuccessful: false };
+        const getBalanceResult = await this.GetBalanceBySession(userSession, request.characterName);
+        if (this.apiClient.isErrorResult(getBalanceResult as BaseResult)) {
+            return new ReCheckInResult(
+                false,
+                0,
+                this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult),
+                getBalanceResult.errorMessage,
+            );
+        }
+
+        await this.userSessionsService.updateReCheckInTime(request.session);
+
+        return new ReCheckInResult(true, getBalanceResult.balance);
     }
 
     async authorize(request: AuthenticateRequest, userAgent: string) {
@@ -95,8 +114,10 @@ export class AuthService {
 
         const userInfo = await this.userInfosService.getUserInfo(user.id);
         if (!userInfo) {
-            return new UnAuthorizeResult();
+            return new AuthorizeResult(false, null);
         }
+
+        await this.notifyLogin(userSession, userInfo.name);
 
         const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
         if (this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult)) {
@@ -142,6 +163,7 @@ export class AuthService {
         );
 
         if (insertedUserInfo) {
+            await this.notifyLogin(userSession, characterName, true);
             const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
             if (this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult)) {
                 return { isDisabledAccount: true };
@@ -152,27 +174,6 @@ export class AuthService {
         }
 
         return new Result(false, this.CreateCharacterNameErrors.existCharacterName);
-    }
-
-    async getBalance(request: AuthenticateRequest, userAgent: string) {
-        const userSession = await this.userSessionsService.getUserSession(request.session);
-        const isValidSession = await this.userSessionsService.verifySession(userSession, request.username, userAgent);
-
-        if (!isValidSession) {
-            return new ExpiredSessionResult();
-        }
-
-        const userInfo = await this.userInfosService.getUserInfo(userSession.userId);
-        if (!userInfo) {
-            return new UnAuthorizeResult();
-        }
-
-        const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
-        if (this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult)) {
-            return { isDisabledAccount: true };
-        }
-
-        return getBalanceResult.balance;
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickName: string) {
@@ -186,7 +187,7 @@ export class AuthService {
     }
 
     private generateCharacterName(signName: string, currency: string) {
-        if (process.env.ENV === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
+        if (NODE_ENV === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
             return `${this.configService.get('prefixCharacterName') ?? ''}${signName}`;
         }
 
@@ -271,10 +272,22 @@ export class AuthService {
         );
     }
 
-    private composeBeforeCallMessage(session: UserSession, nickName: string, params) {
-        const characterName = nickName ? `\n\tCharacter: ${nickName} ` : '';
-        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${characterName}\n\tParams:${JSON.stringify(
-            params,
-        )}`;
+    private async notifyLogin(session: UserSession, characterName: string, isFirstLogin: boolean = false) {
+        const request = new NotifyLoginRequest(
+            session.owSeq,
+            session.siteId,
+            session.memberId,
+            session.language,
+            characterName,
+            isFirstLogin,
+        );
+
+        return await this.apiClient.getBalance(request, this.composeBeforeCallMessage(session, characterName, request));
+    }
+
+    private composeBeforeCallMessage(session: UserSession, characterName: string, params: any) {
+        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${
+            characterName ? `\n\tCharacter: ${characterName} ` : ''
+        }\n\tParams:${JSON.stringify(params)}`;
     }
 }

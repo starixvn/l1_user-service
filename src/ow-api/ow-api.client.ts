@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from "axios";
 import { OpenIdClient, SentryLogger } from "src/common";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
-import { BaseResponse, GetBalanceRequest, GetBalanceResponse } from "./models";
+import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest } from "./models";
 import { BaseResult } from "./models/base-respone";
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
@@ -58,14 +58,36 @@ export class OWApiClient {
     }
 
     async verifyToken(request: VerifyTokenRequest) {
-        return await this.sendPostRequest<VerifyTokenResponse>('/AuthVerification/verify', request);
+        try {
+            return await this.sendPostRequest<VerifyTokenResponse>('/AuthVerification/verify', request);
+        } catch (error) {
+            this.logger.error(error);
+            return null;
+        }
+    }
+
+    async notifyLogin(request: NotifyLoginRequest, beforeMessage: string) {
+        try {
+            const response = await this.sendPostRequest<BaseResponse>('/Member/EnterPortal', request);
+
+            if (this.isErrorResult(response.result)) {
+                this.logAfterSendToApi('Notify Login', request, response, beforeMessage, this.getLogLevel(response));
+            }
+
+            return response.result;
+        } catch (error) {
+            this.logAfterSendToApi('Error Notify Login', request, error, beforeMessage, Severity.Error);
+            this.logger.error(error);
+
+            return this.errors.enterPortalFailed;
+        }
     }
 
     async getBalance(request: GetBalanceRequest, beforeMessage: string) {
         try {
             const response = await this.sendPostRequest<GetBalanceResponse>('/Member/Balance', request);
 
-            if (this.isError(response)) {
+            if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Get Balance', request, response, beforeMessage, this.getLogLevel(response));
             }
 
@@ -82,14 +104,14 @@ export class OWApiClient {
         return result.errorCode == 2002;
     }
 
+    isErrorResult(result: BaseResult) {
+        return (result?.errorCode ?? 0) !== 0;
+    }
+
     private async sendPostRequest<T>(url: string, data?: any) {
         const requestHeaders = { Authorization: await this.openIdClient.getBearerToken() };
 
         return (await this.instance.post<T>(url, data, { headers: requestHeaders })).data;
-    }
-
-    private isError(response: BaseResponse) {
-        return (response?.result?.errorCode ?? 0) !== 0;
     }
 
     private logAfterSendToApi(action: string, params, result: BaseResponse, beforeMessage: string, logLevel: Severity) {
@@ -105,7 +127,7 @@ export class OWApiClient {
     }
 
     private getLogLevel(response: BaseResponse) {
-        if (this.isError(response)) {
+        if (this.isErrorResult(response.result)) {
             return this.warningErrorCodes.includes(response.result.errorCode) ? Severity.Warning : Severity.Error;
         }
 

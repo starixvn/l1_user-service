@@ -1,5 +1,4 @@
 export default () => ({
-    port: parseInt(process.env.PORT, 10) || 3000,
     database: {
         uri: process.env.DATABASE_URI,
         options: {
@@ -8,12 +7,6 @@ export default () => ({
             useUnifiedTopology: true,
             auto_reconnect: true,
         },
-    },
-    sentry: {
-        dsn: process.env.SENTRY_DSN,
-        maxValueLength: 5000,
-        environment: process.env,
-        release: '',
     },
     logIdentifier: 'user-service',
     api: {

@@ -31,9 +31,4 @@ export class AppController {
     signName(@Headers('user-agent') userAgent: string, @Body() body: SignNameRequest) {
         return this.authService.createCharacterName(body, userAgent);
     }
-
-    @Post('balance')
-    getBalance(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
-        return this.authService.getBalance(body, userAgent);
-    }
 }

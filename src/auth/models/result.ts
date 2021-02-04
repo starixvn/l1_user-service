@@ -24,12 +24,6 @@ export class AuthorizeResult {
     }
 }
 
-export class UnAuthorizeResult extends AuthorizeResult {
-    constructor() {
-        super(false, null);
-    }
-}
-
 export class AuthenticateResult {
     isAuthenticated: boolean;
     username: string;
@@ -41,5 +35,19 @@ export class AuthenticateResult {
         this.username = username;
         this.language = language;
         this.ss = ss;
+    }
+}
+
+export class ReCheckInResult {
+    isSuccessful: boolean;
+    balance: number;
+    isDisableAccount: boolean;
+    message: string;
+
+    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, message = '') {
+        this.isSuccessful = isSuccessful;
+        this.balance = balance;
+        this.isDisableAccount = isDisableAccount;
+        this.message = message;
     }
 }
