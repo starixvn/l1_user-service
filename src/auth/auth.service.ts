@@ -35,6 +35,8 @@ export class AuthService {
         sameWithUserName: 'Tên nhân vật không được trùng với tên đăng nhập...',
         existCharacterName: 'Tên nhân vật đã tồn tại...',
     };
+    private readonly DisabledAccountMessage =
+        'Tài khoản đã bị đóng. Phiên đăng nhập sẽ hết hạn sau 10 giây. Vui lòng liên hệ với cấp trên để biết thêm chi tiết.';
 
     constructor(
         private readonly logger: SentryLogger,
@@ -77,13 +79,22 @@ export class AuthService {
             return new ReCheckInResult(false);
         }
 
-        const getBalanceResult = await this.GetBalanceBySession(userSession, request.characterName);
+        await this.userSessionsService.updateReCheckInTime(request.session);
+
+        const userInfo = await this.userInfosService.getUserInfo(userSession.userId);
+        if (!userInfo) {
+            return new ReCheckInResult(true);
+        }
+
+        const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
         if (this.apiClient.isErrorResult(getBalanceResult as BaseResult)) {
+            const isDisabledAccount = this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult);
+
             return new ReCheckInResult(
                 false,
                 0,
-                this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult),
-                getBalanceResult.errorMessage,
+                isDisabledAccount,
+                isDisabledAccount ? this.DisabledAccountMessage : getBalanceResult.errorMessage,
             );
         }
 
@@ -120,9 +131,6 @@ export class AuthService {
         await this.notifyLogin(userSession, userInfo.name);
 
         const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
-        if (this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult)) {
-            return { isDisabledAccount: true };
-        }
         userInfo.red = getBalanceResult.balance;
 
         return new AuthorizeResult(true, userInfo);
@@ -165,9 +173,6 @@ export class AuthService {
         if (insertedUserInfo) {
             await this.notifyLogin(userSession, characterName, true);
             const getBalanceResult = await this.GetBalanceBySession(userSession, userInfo.name);
-            if (this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult)) {
-                return { isDisabledAccount: true };
-            }
             insertedUserInfo.red = getBalanceResult.balance;
 
             return new AuthorizeResult(true, insertedUserInfo);

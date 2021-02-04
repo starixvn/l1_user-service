@@ -1,7 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import * as Sentry from "@sentry/node";
-import * as bodyParser from "body-parser";
 import * as compression from "compression";
 import helmet from "fastify-helmet";
 
@@ -23,9 +22,20 @@ async function bootstrap() {
     app.useLogger(app.get(SentryLogger));
 
     app.use(compression());
-    app.register(helmet, { contentSecurityPolicy: false });
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }));
+    app.register(helmet, {
+        contentSecurityPolicy: false,
+    });
+
+    const corsWhiteList = process.env.CORS_WHITELIST.split(',');
+    app.enableCors({
+        origin: (origin, callback) => {
+            if (corsWhiteList.indexOf(origin) !== -1 || !origin) {
+                callback(null, true);
+            } else {
+                callback(new Error(`Not allowed by CORS ${origin}`));
+            }
+        },
+    });
 
     await app.listen(PORT);
 
