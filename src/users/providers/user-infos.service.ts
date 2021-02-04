@@ -34,4 +34,8 @@ export class UserInfosService {
             .updateOne({ name: param.name }, { $setOnInsert: param }, { upsert: true, setDefaultsOnInsert: true })
             .exec();
     }
+
+    async updateBalance(userId: string, balance: number) {
+        return this.userInfoModel.updateOne({ id: userId }, { $set: { red: balance } }).exec();
+    }
 }

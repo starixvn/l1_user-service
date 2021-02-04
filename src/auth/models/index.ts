@@ -1,2 +1,2 @@
 export * from './result';
-export * from './request';
+export * from './create-nickname-request';

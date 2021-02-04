@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Headers, Ip, Post, Query } from "@nestjs/common";
 
 import { AppService } from "./app.service";
-import { AuthenticateRequest, AuthService, SignNameRequest } from "./auth";
+import { AuthService } from "./auth";
+import { CreateNicknameRequest } from "./auth/models/create-nickname-request";
+import { VerifySessionRequest } from "./users/models";
 
 @Controller()
 export class AppController {
@@ -14,21 +16,21 @@ export class AppController {
 
     @Get('authenticate')
     authenticate(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
-        return this.authService.authenticate(ip, token, userAgent);
+        return this.authService.signIn(ip, token, userAgent);
     }
 
     @Post('reCheckIn')
-    reCheckIn(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
-        return this.authService.reCheckIn(body, userAgent);
+    reCheckIn(@Body() body: VerifySessionRequest) {
+        return this.authService.reCheckIn(body);
     }
 
     @Post('authorize')
-    authorize(@Headers('user-agent') userAgent: string, @Body() body: AuthenticateRequest) {
-        return this.authService.authorize(body, userAgent);
+    authorize(@Body() body: VerifySessionRequest) {
+        return this.authService.authorize(body);
     }
 
     @Post('signName')
-    signName(@Headers('user-agent') userAgent: string, @Body() body: SignNameRequest) {
-        return this.authService.createCharacterName(body, userAgent);
+    signName(@Body() body: CreateNicknameRequest) {
+        return this.authService.createCharacterName(body);
     }
 }

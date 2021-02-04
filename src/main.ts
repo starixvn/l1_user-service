@@ -21,7 +21,7 @@ async function bootstrap() {
     Sentry.captureMessage(`Logger started at ${new Date()}`);
     app.useLogger(app.get(SentryLogger));
 
-    app.use(compression());
+    app.use(compression);
     app.register(helmet, {
         contentSecurityPolicy: false,
     });

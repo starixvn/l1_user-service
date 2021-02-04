@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 
+import { VerifySessionRequest, VerifySessionResult } from "../models";
 import { CreateUserSessionParam } from "../params/create-user-session.param";
 import { UserSession, UserSessionDocument } from "../schemas/user-session.schema";
 
@@ -29,10 +30,12 @@ export class UserSessionsService {
         this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 
-    async verifySession(userSession: UserSession, username: string, userAgent: string) {
-        const isValid = userSession && userSession.username === username && userSession.browserUserAgent === userAgent;
+    async verifySession(request: VerifySessionRequest) {
+        const userSession = await this.getUserSession(request.session);
+        const isValid =
+            userSession && userSession.username === request.username && userSession.browserUserAgent === request.browserUserAgent;
 
-        return isValid && !this.isSessionExpired(userSession);
+        return new VerifySessionResult(isValid && !this.isSessionExpired(userSession), userSession);
     }
 
     private isSessionExpired(userSession: UserSession) {
