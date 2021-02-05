@@ -4,7 +4,7 @@ export class Result {
     isSuccessful: boolean;
     message: string;
 
-    constructor(isSuccessful, message) {
+    constructor(isSuccessful: boolean, message: string) {
         this.isSuccessful = isSuccessful;
         this.message = message;
     }
@@ -23,7 +23,7 @@ export class FailedResult extends Result {
 }
 
 export class ExpiredSessionResult {
-    isSessionExpired: boolean = false;
+    isSessionExpired: boolean = true;
 }
 
 export class AuthorizeResult {
@@ -50,16 +50,13 @@ export class AuthenticateResult {
     }
 }
 
-export class ReCheckInResult {
-    isSuccessful: boolean;
+export class ReCheckInResult extends Result {
     balance: number;
     isDisableAccount: boolean;
-    message: string;
 
     constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, message = '') {
-        this.isSuccessful = isSuccessful;
+        super(isSuccessful, message);
         this.balance = balance;
         this.isDisableAccount = isDisableAccount;
-        this.message = message;
     }
 }
