@@ -3,7 +3,14 @@ import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
 import { SentryLogger, UtilsService } from "src/common/providers";
 import { NODE_ENV } from "src/environments";
-import { BaseResult, GetBalanceRequest, NotifyLoginRequest, OWApiClient, VerifyTokenRequest, VerifyTokenResponse } from "src/ow-api";
+import {
+    BaseResult,
+    GetBalanceRequest,
+    NotifyLoginRequest,
+    OWApiClient,
+    VerifyTokenRequest,
+    VerifyTokenResponse,
+} from "src/ow-api";
 import {
     CreateUserInfoParam,
     CreateUserParam,
@@ -18,7 +25,14 @@ import {
 import validator from "validator";
 
 import { CreateNicknameRequest } from ".";
-import { AuthenticateResult, AuthorizeResult, ExpiredSessionResult, ReCheckInResult, Result } from "./models/result";
+import {
+    AuthenticateResult,
+    AuthorizeResult,
+    ExpiredSessionResult,
+    FailedResult,
+    ReCheckInResult,
+    SuccessResult,
+} from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -43,21 +57,21 @@ export class AuthService {
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string) {
-        const param = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
-        const data = await this.apiClient.verifyToken(param);
+        const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
+        const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful) {
             let user = await this.createUserIfNotExist(data);
-            const userSession = await this.addSessionIfNotExist(user, param, data);
+            const userSession = await this.addSessionIfNotExist(user, request, data);
 
             return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId);
         } else {
             this.logger.log(
                 [
                     `Authentication Failed`,
-                    `Request: ${JSON.stringify(param)}`,
+                    `Request: ${JSON.stringify(request)}`,
                     `Result: ${JSON.stringify(data)}`,
-                    `IP Info: ${param.ip}`,
+                    `IP Info: ${request.ip}`,
                 ].join('\n'),
             );
 
@@ -106,7 +120,7 @@ export class AuthService {
         const user = await this.usersService.getByUsername(request.username);
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
-            return new Result(false, 'Account not found');
+            return new FailedResult('Account not found');
         }
 
         const userInfo = await this.userInfosService.getUserInfo(user.id);
@@ -130,13 +144,13 @@ export class AuthService {
         }
 
         const validateSignNameResult = this.validateNickname(request.nickname);
-        if (!validateSignNameResult.isOK) {
-            return new Result(false, validateSignNameResult.message);
+        if (!validateSignNameResult.isSuccessful) {
+            return new FailedResult(validateSignNameResult.message);
         }
 
         const user = await this.usersService.getById(session.userId);
         if (user.local.username.toUpperCase() === request.nickname.toUpperCase()) {
-            return new Result(false, this.CreateNicknameErrors.sameWithUserName);
+            return new FailedResult(this.CreateNicknameErrors.sameWithUserName);
         }
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
@@ -146,7 +160,7 @@ export class AuthService {
 
         const characterName = this.generateCharacterName(request.nickname, session.currency);
         if (await this.userInfosService.isExistingCharacterName(characterName)) {
-            return new Result(false, this.CreateNicknameErrors.existCharacterName);
+            return new FailedResult(this.CreateNicknameErrors.existCharacterName);
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
@@ -162,7 +176,7 @@ export class AuthService {
             return new AuthorizeResult(true, insertedUserInfo);
         }
 
-        return new Result(false, this.CreateNicknameErrors.existCharacterName);
+        return new FailedResult(this.CreateNicknameErrors.existCharacterName);
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
@@ -208,10 +222,10 @@ export class AuthService {
         const failedCriterion = criteria.find((criterion) => criterion.failure);
 
         if (failedCriterion) {
-            return new Result(false, failedCriterion.notice);
+            return new FailedResult(failedCriterion.notice);
         }
 
-        return new Result();
+        return new SuccessResult();
     }
 
     private formatCurrency(currency: string) {

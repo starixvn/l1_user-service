@@ -1,7 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as Sentry from "@sentry/node";
-import * as compression from "compression";
 import helmet from "fastify-helmet";
 
 import { AppModule } from "./app.module";
@@ -20,11 +20,7 @@ async function bootstrap() {
 
     Sentry.captureMessage(`Logger started at ${new Date()}`);
     app.useLogger(app.get(SentryLogger));
-
-    app.use(compression);
-    app.register(helmet, {
-        contentSecurityPolicy: false,
-    });
+    app.register(helmet, { contentSecurityPolicy: false });
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
     app.enableCors({
@@ -36,6 +32,15 @@ async function bootstrap() {
             }
         },
     });
+
+    const config = new DocumentBuilder()
+        .setTitle('User Service')
+        .setDescription('The User Service description')
+        .setVersion('1.0')
+        .addTag('user-service')
+        .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
 
     await app.listen(PORT);
 

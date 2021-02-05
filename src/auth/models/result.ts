@@ -1,12 +1,24 @@
-import { UserInfo } from "src/users/schemas/user-info.schema";
+import { UserInfo } from "src/users";
 
 export class Result {
-    isOK: boolean;
+    isSuccessful: boolean;
     message: string;
 
-    constructor(isOk = true, message = '') {
-        this.isOK = isOk;
+    constructor(isSuccessful, message) {
+        this.isSuccessful = isSuccessful;
         this.message = message;
+    }
+}
+
+export class SuccessResult extends Result {
+    constructor() {
+        super(true, null);
+    }
+}
+
+export class FailedResult extends Result {
+    constructor(message: string) {
+        super(false, message);
     }
 }
 
