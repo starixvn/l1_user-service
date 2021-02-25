@@ -5,8 +5,10 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { CommonModule } from "./common/common.module";
 import configuration from "./config/configuration";
 import { HealthModule } from "./health";
+import { OWApiModule } from "./ow-api/ow-api.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -22,7 +24,9 @@ import { UsersModule } from "./users/users.module";
             }),
             inject: [ConfigService],
         }),
+        CommonModule,
         UsersModule,
+        OWApiModule,
         AuthModule,
         HealthModule,
     ],

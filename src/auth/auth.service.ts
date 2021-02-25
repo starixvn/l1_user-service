@@ -7,21 +7,14 @@ import {
     BaseResult,
     GetBalanceRequest,
     NotifyLoginRequest,
-    OWApiClient,
     VerifyTokenRequest,
     VerifyTokenResponse,
-} from "src/ow-api";
-import {
-    CreateUserInfoParam,
-    CreateUserParam,
-    CreateUserSessionParam,
-    UserDocument,
-    UserInfosService,
-    UserSession,
-    UserSessionsService,
-    UsersService,
-    VerifySessionRequest,
-} from "src/users";
+} from "src/ow-api/models";
+import { OWApiClient } from "src/ow-api/ow-api.client";
+import { VerifySessionRequest } from "src/users/models";
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "src/users/params";
+import { UserInfosService, UserSessionsService, UsersService } from "src/users/providers";
+import { UserDocument, UserSession } from "src/users/schemas";
 import validator from "validator";
 
 import { CreateNicknameRequest } from ".";

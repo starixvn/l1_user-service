@@ -1,4 +1,4 @@
-import { VerifySessionRequest } from "src/users";
+import { VerifySessionRequest } from "src/users/models";
 
 export class CreateNicknameRequest extends VerifySessionRequest {
     nickname: string;

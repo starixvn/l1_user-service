@@ -1,4 +1,4 @@
-import { UserInfo } from "src/users";
+import { UserInfo } from "src/users/schemas";
 
 export class Result {
     isSuccessful: boolean;

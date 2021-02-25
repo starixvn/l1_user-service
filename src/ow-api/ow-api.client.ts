@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Severity } from "@sentry/node";
 import axios, { AxiosInstance } from "axios";
-import { OpenIdClient, SentryLogger } from "src/common";
+import { OpenIdClient, SentryLogger } from "src/common/providers";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
 import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest } from "./models";
