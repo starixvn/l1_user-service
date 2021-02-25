@@ -21,7 +21,7 @@ import { CreateNicknameRequest } from ".";
 import {
     AuthenticateResult,
     AuthorizeResult,
-    ExpiredSessionResult,
+    CreateCharacterNameResult,
     FailedResult,
     ReCheckInResult,
     SuccessResult,
@@ -107,18 +107,18 @@ export class AuthService {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
-            return new ExpiredSessionResult();
+            return new AuthorizeResult(false);
         }
 
         const user = await this.usersService.getByUsername(request.username);
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
-            return new FailedResult('Account not found');
+            return new AuthorizeResult(false);
         }
 
         const userInfo = await this.userInfosService.getUserInfo(user.id);
         if (!userInfo) {
-            return new AuthorizeResult(false, null);
+            return new AuthorizeResult(false);
         }
 
         await this.notifyLogin(session, userInfo.name);
@@ -133,27 +133,27 @@ export class AuthService {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
-            return new ExpiredSessionResult();
+            return new CreateCharacterNameResult(false);
         }
 
         const validateSignNameResult = this.validateNickname(request.nickname);
         if (!validateSignNameResult.isSuccessful) {
-            return new FailedResult(validateSignNameResult.message);
+            return new CreateCharacterNameResult(false, validateSignNameResult.message);
         }
 
         const user = await this.usersService.getById(session.userId);
         if (user.local.username.toUpperCase() === request.nickname.toUpperCase()) {
-            return new FailedResult(this.CreateNicknameErrors.sameWithUserName);
+            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.sameWithUserName);
         }
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         if (userInfo) {
-            return new AuthorizeResult(true, userInfo);
+            return new CreateCharacterNameResult(true, '', userInfo);
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currency);
         if (await this.userInfosService.isExistingCharacterName(characterName)) {
-            return new FailedResult(this.CreateNicknameErrors.existCharacterName);
+            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
@@ -166,10 +166,10 @@ export class AuthService {
             const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
             insertedUserInfo.red = getBalanceResult.balance;
 
-            return new AuthorizeResult(true, insertedUserInfo);
+            return new CreateCharacterNameResult(true, '', insertedUserInfo);
         }
 
-        return new FailedResult(this.CreateNicknameErrors.existCharacterName);
+        return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {

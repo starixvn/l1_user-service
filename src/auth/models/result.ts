@@ -30,7 +30,7 @@ export class AuthorizeResult {
     authorized: boolean;
     user: UserInfo;
 
-    constructor(authorized: boolean, user: UserInfo) {
+    constructor(authorized: boolean, user: UserInfo = null) {
         this.authorized = authorized;
         this.user = user;
     }
@@ -58,5 +58,15 @@ export class ReCheckInResult extends Result {
         super(isSuccessful, message);
         this.balance = balance;
         this.isDisableAccount = isDisableAccount;
+    }
+}
+
+export class CreateCharacterNameResult extends Result {
+    user: UserInfo;
+
+    constructor(isSuccessful: boolean, message: string = '', user: UserInfo = null) {
+        super(isSuccessful, message);
+
+        this.user = user;
     }
 }
