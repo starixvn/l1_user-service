@@ -1,6 +1,6 @@
 export default () => ({
     database: {
-        uri: process.env.DATABASE_URI,
+        uri: `mongodb://${process.env.DATABASE_URI}`,
         options: {
             dbName: 'minigame',
             useNewUrlParser: true,
@@ -8,16 +8,20 @@ export default () => ({
             auto_reconnect: true,
         },
     },
-    logIdentifier: 'user-service',
     api: {
-        baseURL: 'http://api.lumigame.com',
+        baseURL: process.env.API_URI,
         useAuthenticate: true,
         requestTimeout: 10000,
         placeBetTimeout: 4500,
     },
     auth: {
-        uri: 'http://auth.lumigame.com',
+        uri: process.env.AUTH_URI,
         clientId: 'game-server',
         clientSecret: 'gameserver@20luminet&',
+    },
+    sentry: {
+        dns: process.env.SENTRY_DNS,
+        release: process.env.SENTRY_RELEASE,
+        logIdentifier: 'user-service',
     },
 });

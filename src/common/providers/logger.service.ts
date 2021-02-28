@@ -2,12 +2,26 @@ import { Injectable, LoggerService } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as Sentry from "@sentry/node";
 
+interface SentryConfig {
+    dns: string;
+    release: string;
+    logIdentifier: string;
+}
+
 @Injectable()
 export class SentryLogger implements LoggerService {
-    private logIdentifier: string;
+    private config: SentryConfig;
 
     constructor(private readonly configService: ConfigService) {
-        this.logIdentifier = this.configService.get('logIdentifier');
+        this.config = this.configService.get<SentryConfig>('sentry');
+        Sentry.init({
+            dsn: this.config.dns,
+            environment: process.env.NODE_ENV,
+            maxValueLength: 5000,
+            release: this.config.release ? `user-service@${this.config.release}` : '',
+        });
+
+        Sentry.captureMessage(`Logger started at ${new Date()}`);
     }
 
     log(message: string, context = Sentry.Severity.Info) {
@@ -20,7 +34,7 @@ export class SentryLogger implements LoggerService {
             exception instanceof String ||
             (exception && exception.message == null && exception.stack == null)
         ) {
-            this.log(`${this.logIdentifier} ${exception}`, Sentry.Severity.Error);
+            this.log(`${this.config.logIdentifier} ${exception}`, Sentry.Severity.Error);
         } else {
             if (!exception) {
                 exception = `Exception is null at ${new Date()}`;
@@ -31,15 +45,15 @@ export class SentryLogger implements LoggerService {
     }
 
     warn(message: string) {
-        Sentry.captureMessage(`${this.logIdentifier} ${message}`, Sentry.Severity.Warning);
+        Sentry.captureMessage(`${this.config.logIdentifier} ${message}`, Sentry.Severity.Warning);
     }
 
     debug?(message: string) {
-        Sentry.captureMessage(`${this.logIdentifier} ${message}`, Sentry.Severity.Debug);
+        Sentry.captureMessage(`${this.config.logIdentifier} ${message}`, Sentry.Severity.Debug);
     }
 
     verbose?(message: string) {
-        Sentry.captureMessage(`${this.logIdentifier} ${message}`, Sentry.Severity.Log);
+        Sentry.captureMessage(`${this.config.logIdentifier} ${message}`, Sentry.Severity.Log);
     }
 
     composeBeforeCallMessage(session, params) {
@@ -48,7 +62,8 @@ export class SentryLogger implements LoggerService {
             params,
         )}`;
     }
-    logAfterSendToApi(action, params, result, beforeMessage, logLevel) {
+
+    logAfterSendToApi(action, params, result, beforeMessage: string, logLevel) {
         const messages = [
             `Account ${params.SiteId}_${params.ObCustId} performs ${action} at ${new Date()}`,
             '',

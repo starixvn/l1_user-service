@@ -14,13 +14,13 @@ import { UsersModule } from "./users/users.module";
 @Module({
     imports: [
         ConfigModule.forRoot({
-            envFilePath: ['.env.development', '.env.local'],
             isGlobal: true,
             load: [configuration],
         }),
         MongooseModule.forRootAsync({
-            useFactory: async (config: ConfigService) => ({
-                ...config.get('database'),
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                ...configService.get('database'),
             }),
             inject: [ConfigService],
         }),

@@ -1,24 +1,14 @@
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import * as Sentry from "@sentry/node";
 import helmet from "fastify-helmet";
 
 import { AppModule } from "./app.module";
 import { SentryLogger } from "./common/providers/logger.service";
-import { NODE_ENV, PORT, SENTRY_DSN, SENTRY_RELEASE } from "./environments";
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
-    Sentry.init({
-        dsn: SENTRY_DSN,
-        environment: NODE_ENV,
-        maxValueLength: 5000,
-        release: SENTRY_RELEASE ? `user-service@${SENTRY_RELEASE}` : '',
-    });
-
-    Sentry.captureMessage(`Logger started at ${new Date()}`);
     app.useLogger(app.get(SentryLogger));
     app.register(helmet, { contentSecurityPolicy: false });
 
@@ -42,7 +32,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
 
-    await app.listen(PORT);
+    await app.listen(process.env.PORT || 300);
 
     console.log(`Application is running on: ${await app.getUrl()}`);
 }
