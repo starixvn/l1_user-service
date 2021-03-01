@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
 import { SentryLogger, UtilsService } from "src/common/providers";
-import { NODE_ENV } from "src/environments";
 import {
     BaseResult,
     GetBalanceRequest,
@@ -187,7 +186,7 @@ export class AuthService {
     }
 
     private generateCharacterName(signName: string, currency: string) {
-        if (NODE_ENV === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
+        if (process.env.NODE_ENV === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
             return `${this.configService.get('prefixCharacterName') ?? ''}${signName}`;
         }
 
