@@ -186,7 +186,7 @@ export class AuthService {
     }
 
     private generateCharacterName(signName: string, currency: string) {
-        if (process.env.NODE_ENV === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
+        if (process.env.ENV.toUpperCase() === 'UAT' && currency.toUpperCase() === this.UUSCurrency) {
             return `${this.configService.get('prefixCharacterName') ?? ''}${signName}`;
         }
 
