@@ -19,6 +19,6 @@ ENV NODE_ENV $NODE_ENV
 COPY package.json .
 COPY yarn.lock .
 RUN yarn install --prod
-COPY --from=builder /app/dist .
+COPY --from=builder /app/dist ./dist
 
-CMD [ "node", "main.js" ]
+CMD [ "node", "./dist/main.js" ]
