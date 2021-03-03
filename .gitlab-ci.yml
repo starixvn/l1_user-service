@@ -1,0 +1,5 @@
+include:
+  - project: "ci/repos-ci/pentagon_l1_user_service"
+    ref: master
+    file: "gitlab-ci.yml"
+
