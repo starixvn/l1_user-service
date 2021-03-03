@@ -1,6 +1,6 @@
 export default () => ({
     database: {
-        uri: `mongodb://${process.env.DATABASE_URI}`,
+        uri: process.env.DATABASE_URI,
         options: {
             dbName: 'minigame',
             useNewUrlParser: true,
