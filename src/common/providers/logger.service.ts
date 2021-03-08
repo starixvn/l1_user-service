@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/node";
 
 interface SentryConfig {
     dns: string;
+    env: string;
     release: string;
     logIdentifier: string;
 }
@@ -16,7 +17,7 @@ export class SentryLogger implements LoggerService {
         this.config = this.configService.get<SentryConfig>('sentry');
         Sentry.init({
             dsn: this.config.dns,
-            environment: process.env.NODE_ENV,
+            environment: this.config.env,
             maxValueLength: 5000,
             release: this.config.release ? `user-service@${this.config.release}` : '',
         });

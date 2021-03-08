@@ -22,6 +22,7 @@ export default () => ({
     sentry: {
         dns: process.env.SENTRY_DNS,
         release: process.env.SENTRY_RELEASE,
+        env: process.env.ENV,
         logIdentifier: 'user-service',
     },
 });
