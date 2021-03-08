@@ -62,9 +62,9 @@ export class ReCheckInResult extends Result {
 }
 
 export class CreateCharacterNameResult extends Result {
-    user: UserInfo;
+    user: any;
 
-    constructor(isSuccessful: boolean, message: string = '', user: UserInfo = null) {
+    constructor(isSuccessful: boolean, message: string = '', user: any = null) {
         super(isSuccessful, message);
 
         this.user = user;

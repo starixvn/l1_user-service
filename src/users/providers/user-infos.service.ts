@@ -30,7 +30,7 @@ export class UserInfosService {
         return 1;
     }
 
-    async upSertUserInfo(param: CreateUserInfoParam): Promise<UserInfo> {
+    async upSertUserInfo(param: CreateUserInfoParam): Promise<any> {
         return this.userInfoModel
             .updateOne({ name: param.name }, { $setOnInsert: param }, { upsert: true, setDefaultsOnInsert: true })
             .exec();

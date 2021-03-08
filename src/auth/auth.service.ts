@@ -156,19 +156,17 @@ export class AuthService {
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
-        const insertedUserInfo = await this.userInfosService.upSertUserInfo(
-            new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID),
-        );
+        const param = new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID);
+        const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
-        if (insertedUserInfo) {
-            await this.notifyLogin(session, characterName, true);
-            const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
-            insertedUserInfo.red = getBalanceResult.balance;
-
-            return new CreateCharacterNameResult(true, '', insertedUserInfo);
+        if (!upsetResult || upsetResult?.upserted?.length == 0) {
+            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
         }
 
-        return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
+        await this.notifyLogin(session, characterName, true);
+        const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
+
+        return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance });
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
