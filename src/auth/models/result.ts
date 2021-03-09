@@ -1,5 +1,3 @@
-import { UserInfo } from "src/users/schemas";
-
 export class Result {
     isSuccessful: boolean;
     message: string;
@@ -28,9 +26,9 @@ export class ExpiredSessionResult {
 
 export class AuthorizeResult {
     authorized: boolean;
-    user: UserInfo;
+    user: any;
 
-    constructor(authorized: boolean, user: UserInfo = null) {
+    constructor(authorized: boolean, user: any = null) {
         this.authorized = authorized;
         this.user = user;
     }

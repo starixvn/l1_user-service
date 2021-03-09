@@ -49,6 +49,9 @@ export class UserSession {
 
     @Prop()
     memberName: string;
+
+    @Prop()
+    siteName: string;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);

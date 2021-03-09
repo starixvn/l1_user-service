@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
 import { SentryLogger, UtilsService } from "src/common/providers";
+import { GlobalConfigService } from "src/global-config/global-config.service";
 import {
     BaseResult,
     GetBalanceRequest,
@@ -46,6 +47,7 @@ export class AuthService {
         private readonly userInfosService: UserInfosService,
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
+        private readonly globalConfigService: GlobalConfigService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string) {
@@ -125,7 +127,9 @@ export class AuthService {
         const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        return new AuthorizeResult(true, userInfo);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
+
+        return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -166,8 +170,9 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
 
-        return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance });
+        return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance, offerGames });
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
@@ -265,9 +270,14 @@ export class AuthService {
                     this.formatCurrency(currency),
                     clientId,
                     memberName,
+                    this.getSiteName(seq),
                 ),
             ))
         );
+    }
+
+    private getSiteName(seq: string) {
+        return seq.split(',')[2];
     }
 
     private async notifyLogin(session: UserSession, characterName: string, isFirstLogin: boolean = false) {
