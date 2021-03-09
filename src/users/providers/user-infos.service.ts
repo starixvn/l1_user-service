@@ -39,4 +39,8 @@ export class UserInfosService {
     async updateBalance(userId: string, balance: number) {
         return this.userInfoModel.updateOne({ id: userId }, { $set: { red: balance } }).exec();
     }
+
+    async updateMemberStakeLevel(userId: string, minBet: number, maxBet: number) {
+        return this.userInfoModel.updateOne({ id: userId }, { minBet: minBet, maxBet: maxBet, betLimitModifiedDate: new Date() }).exec();
+    }
 }

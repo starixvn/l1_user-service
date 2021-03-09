@@ -49,6 +49,15 @@ class UserInfo {
 
     @Prop({ default: false })
     banned: boolean;
+
+    @Prop({ default: 0 })
+    minBet: number;
+
+    @Prop({ default: 0 })
+    maxBet: number;
+
+    @Prop()
+    betLimitModifiedDate: Date;
 }
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);
 

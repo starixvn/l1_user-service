@@ -7,14 +7,19 @@ export type UserDocument = User & Document;
 class Local {
     @Prop()
     username: string;
+
     @Prop()
     password: string;
+
     @Prop()
     regDate: Date;
+
     @Prop()
     clientId: string;
+
     @Prop()
     memberId: number;
+
     @Prop()
     memberName: string;
 

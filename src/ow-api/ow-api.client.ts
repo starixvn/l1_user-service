@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from "axios";
 import { OpenIdClient, SentryLogger } from "src/common/providers";
 import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
-import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest } from "./models";
+import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest, NotifyLoginResponse } from "./models";
 import { BaseResult } from "./models/base-respone";
 import { VerifyTokenRequest } from "./models/verify-token-request";
 
@@ -37,6 +37,8 @@ export class OWApiClient {
         enterPortalFailed: {
             errorCode: `SB1903`,
             errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+            minBet: 0,
+            maxBet: 0,
         },
         accountClosed: {
             errorCode: '2002',
@@ -68,7 +70,7 @@ export class OWApiClient {
 
     async notifyLogin(request: NotifyLoginRequest, beforeMessage: string) {
         try {
-            const response = await this.sendPostRequest<BaseResponse>('/Member/EnterPortal', request);
+            const response = await this.sendPostRequest<NotifyLoginResponse>('/Member/EnterPortal', request);
 
             if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Notify Login', request, response, beforeMessage, this.getLogLevel(response));

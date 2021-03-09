@@ -164,6 +164,7 @@ export class AuthService {
         }
 
         await this.notifyLogin(session, characterName, true);
+
         const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
 
         return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance });
@@ -279,7 +280,11 @@ export class AuthService {
             isFirstLogin,
         );
 
-        return await this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
+        const notifyLoginResult = await this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
+
+        if (notifyLoginResult.minBet && notifyLoginResult.maxBet) {
+            this.userInfosService.updateMemberStakeLevel(session.userId, notifyLoginResult.minBet, notifyLoginResult.maxBet);
+        }
     }
 
     private composeBeforeCallMessage(session: UserSession, characterName: string, params: any) {
