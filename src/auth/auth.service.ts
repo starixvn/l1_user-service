@@ -50,13 +50,13 @@ export class AuthService {
         private readonly globalConfigService: GlobalConfigService,
     ) {}
 
-    async signIn(ip: string, token: string, userAgent: string) {
+    async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful) {
             let user = await this.createUserIfNotExist(data);
-            const userSession = await this.addSessionIfNotExist(user, request, data);
+            const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
             return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId);
         } else {
@@ -247,13 +247,23 @@ export class AuthService {
         );
     }
 
-    private async addSessionIfNotExist(user: UserDocument, verifyTokenParam: VerifyTokenRequest, verifyTokenResult: VerifyTokenResponse) {
+    private async addSessionIfNotExist(
+        user: UserDocument,
+        verifyTokenParam: VerifyTokenRequest,
+        verifyTokenResult: VerifyTokenResponse,
+        system: number,
+    ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
         const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
 
-        return (
-            (await this.userSessionsService.getUserSessionByToken(token)) ??
-            (await this.userSessionsService.createUserSession(
+        let session = await this.userSessionsService.getUserSessionByToken(token);
+        if (session) {
+            await this.userSessionsService.updateSystem(session.sessionId, system);
+            session.system = system;
+
+            return session;
+        } else {
+            return await this.userSessionsService.createUserSession(
                 new CreateUserSessionParam(
                     token,
                     `${generate()}_${memberKey}`,
@@ -271,9 +281,10 @@ export class AuthService {
                     clientId,
                     memberName,
                     this.getSiteName(seq),
+                    system,
                 ),
-            ))
-        );
+            );
+        }
     }
 
     private getSiteName(seq: string) {

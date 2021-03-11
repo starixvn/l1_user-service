@@ -8,8 +8,8 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Get('sso')
-    sso(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string) {
-        return this.authService.signIn(ip, token, userAgent);
+    sso(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string, @Query('system') system: number = 1) {
+        return this.authService.signIn(ip, token, userAgent, system);
     }
 
     @Post('reCheckIn')

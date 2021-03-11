@@ -26,8 +26,12 @@ export class UserSessionsService {
         return userSessionCreated.save();
     }
 
-    async updateReCheckInTime(sessionId) {
-        this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
+    async updateReCheckInTime(sessionId: string) {
+        return this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
+    }
+
+    async updateSystem(sessionId: string, system: number) {
+        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { system: system } }).exec();
     }
 
     async verifySession(request: VerifySessionRequest) {
