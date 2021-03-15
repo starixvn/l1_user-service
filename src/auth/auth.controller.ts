@@ -26,4 +26,9 @@ export class AuthController {
     signName(@Body() body: CreateNicknameRequest) {
         return this.authService.createCharacterName(body);
     }
+
+    @Post('session/verify')
+    verifySession(@Body() body: VerifySessionRequest) {
+        return this.authService.verifySession(body);
+    }
 }

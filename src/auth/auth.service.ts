@@ -104,6 +104,12 @@ export class AuthService {
         return new ReCheckInResult(true, getBalanceResult.balance);
     }
 
+    async verifySession(request: VerifySessionRequest) {
+        const { isAuthenticated } = await this.userSessionsService.verifySession(request);
+
+        return isAuthenticated ? new SuccessResult() : new FailedResult('Invalid session');
+    }
+
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
