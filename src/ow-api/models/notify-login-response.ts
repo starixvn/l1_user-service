@@ -1,10 +1,10 @@
 import { BaseResponse, BaseResult } from "./base-respone";
 
-export class NotifyLoginResponse extends BaseResponse {
+export interface NotifyLoginResponse extends BaseResponse {
     result: NotifyLoginResult;
 }
 
-export class NotifyLoginResult extends BaseResult {
+export interface NotifyLoginResult extends BaseResult {
     minBet: number;
     maxBet: number;
 }

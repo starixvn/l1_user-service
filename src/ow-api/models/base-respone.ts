@@ -1,9 +1,9 @@
-export class BaseResponse {
+export interface BaseResponse {
     timeStamp: string;
     result: BaseResult;
 }
 
-export class BaseResult {
-    errorCode: number;
+export interface BaseResult {
+    errorCode: number | string;
     errorMessage: string;
 }

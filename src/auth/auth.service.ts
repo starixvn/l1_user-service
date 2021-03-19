@@ -91,12 +91,7 @@ export class AuthService {
         if (this.apiClient.isErrorResult(getBalanceResult as BaseResult)) {
             const isDisabledAccount = this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult);
 
-            return new ReCheckInResult(
-                false,
-                0,
-                isDisabledAccount,
-                isDisabledAccount ? this.DisabledAccountMessage : getBalanceResult.errorMessage,
-            );
+            return new ReCheckInResult(true, 0, isDisabledAccount, getBalanceResult);
         }
 
         await this.userSessionsService.updateReCheckInTime(request.session);

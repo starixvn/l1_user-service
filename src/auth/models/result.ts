@@ -1,3 +1,5 @@
+import { BaseResult } from "src/ow-api/models";
+
 export class Result {
     isSuccessful: boolean;
     message: string;
@@ -51,11 +53,13 @@ export class AuthenticateResult {
 export class ReCheckInResult extends Result {
     balance: number;
     isDisableAccount: boolean;
+    apiError: BaseResult;
 
-    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, message = '') {
+    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, apiError = null, message = '') {
         super(isSuccessful, message);
         this.balance = balance;
         this.isDisableAccount = isDisableAccount;
+        this.apiError = apiError;
     }
 }
 

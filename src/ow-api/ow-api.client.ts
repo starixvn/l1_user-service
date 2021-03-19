@@ -16,35 +16,28 @@ interface ApiConfig {
     placeBetTimeout: number;
 }
 
+class Errors {
+    public static enterPortalFailed: BaseResult = {
+        errorCode: `SB1903`,
+        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+    };
+
+    public static getBalanceFailed: BaseResult = {
+        errorCode: `SB1903`,
+        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+    };
+
+    public static accountClosed: BaseResult = {
+        errorCode: '2002',
+        errorMessage: 'Tài khoản đã bị đóng. Phiên đăng nhập sẽ hết hạn sau 10 giây. Vui lòng liên hệ với cấp trên để biết thêm chi tiết.',
+    };
+}
+
 @Injectable()
 export class OWApiClient {
     private instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
     private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
-    private readonly errors = {
-        placeBetFailed: {
-            errorCode: 'SB1900',
-            errorMessage: 'Đặt cược không thành công.',
-        },
-        endGameFailed: {
-            errorCode: 'SB1901',
-            errorMessage: 'Phiên chơi bị lỗi. Vui lòng liên hệ bộ phận CSKH để được hỗ trợ.',
-        },
-        getBalanceFailed: {
-            errorCode: 'SB1902',
-            errorMessage: 'Không thể cập nhật số tiền trong tài khoản.',
-        },
-        enterPortalFailed: {
-            errorCode: `SB1903`,
-            errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
-            minBet: 0,
-            maxBet: 0,
-        },
-        accountClosed: {
-            errorCode: '2002',
-            errorMessage: 'Tài khoản của bạn đã bị khoá.',
-        },
-    };
 
     constructor(
         private readonly configService: ConfigService,
@@ -81,7 +74,7 @@ export class OWApiClient {
             this.logAfterSendToApi('Error Notify Login', request, error, beforeMessage, Severity.Error);
             this.logger.error(error);
 
-            return this.errors.enterPortalFailed;
+            return { ...Errors.enterPortalFailed, minBet: 0, maxBet: 0 };
         }
     }
 
@@ -91,6 +84,10 @@ export class OWApiClient {
 
             if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Get Balance', request, response, beforeMessage, this.getLogLevel(response));
+
+                if (this.isDisabledAccountResult(response.result)) {
+                    return { ...Errors.accountClosed, balance: 0 };
+                }
             }
 
             return response.result;
@@ -98,12 +95,12 @@ export class OWApiClient {
             this.logAfterSendToApi('Error Get Balance', request, error, beforeMessage, Severity.Error);
             this.logger.error(error);
 
-            return { ...this.errors.getBalanceFailed, balance: 0 };
+            return { ...Errors.getBalanceFailed, balance: 0 };
         }
     }
 
     isDisabledAccountResult(result: BaseResult) {
-        return result.errorCode == 2002;
+        return result.errorCode == Errors.accountClosed.errorCode;
     }
 
     isErrorResult(result: BaseResult) {
@@ -130,7 +127,7 @@ export class OWApiClient {
 
     private getLogLevel(response: BaseResponse) {
         if (this.isErrorResult(response.result)) {
-            return this.warningErrorCodes.includes(response.result.errorCode) ? Severity.Warning : Severity.Error;
+            return this.warningErrorCodes.includes(+response.result.errorCode) ? Severity.Warning : Severity.Error;
         }
 
         return Severity.Info;
