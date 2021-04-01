@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Ip, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Post, Query } from "@nestjs/common";
 import { VerifySessionRequest } from "src/users/models";
 
 import { AuthService, CreateNicknameRequest } from ".";
@@ -8,7 +8,12 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Get('sso')
-    sso(@Headers('user-agent') userAgent: string, @Ip() ip: string, @Query('token') token: string, @Query('system') system: number = 1) {
+    sso(
+        @Headers('user-agent') userAgent: string,
+        @Headers('X-Forwarded-For') ip: string,
+        @Query('token') token: string,
+        @Query('system') system: number = 1,
+    ) {
         return this.authService.signIn(ip, token, userAgent, system);
     }
 
