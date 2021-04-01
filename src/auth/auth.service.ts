@@ -51,8 +51,6 @@ export class AuthService {
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        this.logger.log(ip);
-        this.logger.log(this.utilsService.normalizeIP(ip));
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
