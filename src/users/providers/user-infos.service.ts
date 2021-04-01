@@ -14,7 +14,14 @@ export class UserInfosService {
     }
 
     async isExistingCharacterName(characterName: string): Promise<boolean> {
-        return this.userInfoModel.exists({ name: characterName });
+        const exist = await this.userInfoModel
+            .findOne({ name: characterName })
+            .select({ _id: 1 })
+            .collation({ locale: 'en', strength: 2 })
+            .lean()
+            .exec();
+
+        return exist != null;
     }
 
     async getLatestUserInfoUID() {
