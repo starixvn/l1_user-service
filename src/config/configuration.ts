@@ -25,4 +25,5 @@ export default () => ({
         env: process.env.ENV,
         logIdentifier: 'user-service',
     },
+    prefixCharacterName: process.env.PREFIX_CHARACTER_NAME,
 });
