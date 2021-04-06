@@ -1,6 +1,6 @@
 export default () => ({
     database: {
-        uri: `mongodb://${process.env.DATABASE_URI}`,
+        uri: process.env.DATABASE_URI,
         options: {
             dbName: 'minigame',
             useNewUrlParser: true,
@@ -22,6 +22,8 @@ export default () => ({
     sentry: {
         dns: process.env.SENTRY_DNS,
         release: process.env.SENTRY_RELEASE,
+        env: process.env.ENV,
         logIdentifier: 'user-service',
     },
+    prefixCharacterName: process.env.PREFIX_CHARACTER_NAME,
 });

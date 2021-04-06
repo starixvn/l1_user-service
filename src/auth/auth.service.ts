@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
 import { SentryLogger, UtilsService } from "src/common/providers";
+import { GlobalConfigService } from "src/global-config/global-config.service";
 import {
     BaseResult,
     GetBalanceRequest,
@@ -46,15 +47,16 @@ export class AuthService {
         private readonly userInfosService: UserInfosService,
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
+        private readonly globalConfigService: GlobalConfigService,
     ) {}
 
-    async signIn(ip: string, token: string, userAgent: string) {
+    async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful) {
             let user = await this.createUserIfNotExist(data);
-            const userSession = await this.addSessionIfNotExist(user, request, data);
+            const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
             return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId);
         } else {
@@ -89,17 +91,18 @@ export class AuthService {
         if (this.apiClient.isErrorResult(getBalanceResult as BaseResult)) {
             const isDisabledAccount = this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult);
 
-            return new ReCheckInResult(
-                false,
-                0,
-                isDisabledAccount,
-                isDisabledAccount ? this.DisabledAccountMessage : getBalanceResult.errorMessage,
-            );
+            return new ReCheckInResult(true, 0, isDisabledAccount, getBalanceResult);
         }
 
         await this.userSessionsService.updateReCheckInTime(request.session);
 
         return new ReCheckInResult(true, getBalanceResult.balance);
+    }
+
+    async verifySession(request: VerifySessionRequest) {
+        const { isAuthenticated } = await this.userSessionsService.verifySession(request);
+
+        return isAuthenticated ? new SuccessResult() : new FailedResult('Invalid session');
     }
 
     async authorize(request: VerifySessionRequest) {
@@ -125,7 +128,9 @@ export class AuthService {
         const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        return new AuthorizeResult(true, userInfo);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
+
+        return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -156,19 +161,19 @@ export class AuthService {
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
-        const insertedUserInfo = await this.userInfosService.upSertUserInfo(
-            new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID),
-        );
+        const param = new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID);
+        const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
-        if (insertedUserInfo) {
-            await this.notifyLogin(session, characterName, true);
-            const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
-            insertedUserInfo.red = getBalanceResult.balance;
-
-            return new CreateCharacterNameResult(true, '', insertedUserInfo);
+        if (!upsetResult || upsetResult?.upserted?.length == 0) {
+            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
         }
 
-        return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
+        await this.notifyLogin(session, characterName, true);
+
+        const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
+
+        return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance, offerGames });
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
@@ -243,13 +248,23 @@ export class AuthService {
         );
     }
 
-    private async addSessionIfNotExist(user: UserDocument, verifyTokenParam: VerifyTokenRequest, verifyTokenResult: VerifyTokenResponse) {
+    private async addSessionIfNotExist(
+        user: UserDocument,
+        verifyTokenParam: VerifyTokenRequest,
+        verifyTokenResult: VerifyTokenResponse,
+        system: number,
+    ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
         const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
 
-        return (
-            (await this.userSessionsService.getUserSessionByToken(token)) ??
-            (await this.userSessionsService.createUserSession(
+        let session = await this.userSessionsService.getUserSessionByToken(token);
+        if (session) {
+            await this.userSessionsService.updateSystem(session.sessionId, system);
+            session.system = system;
+
+            return session;
+        } else {
+            return await this.userSessionsService.createUserSession(
                 new CreateUserSessionParam(
                     token,
                     `${generate()}_${memberKey}`,
@@ -266,9 +281,15 @@ export class AuthService {
                     this.formatCurrency(currency),
                     clientId,
                     memberName,
+                    this.getSiteName(seq),
+                    system,
                 ),
-            ))
-        );
+            );
+        }
+    }
+
+    private getSiteName(seq: string) {
+        return seq.split(',')[2];
     }
 
     private async notifyLogin(session: UserSession, characterName: string, isFirstLogin: boolean = false) {
@@ -281,7 +302,11 @@ export class AuthService {
             isFirstLogin,
         );
 
-        return await this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
+        const notifyLoginResult = await this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
+
+        if (notifyLoginResult.minBet && notifyLoginResult.maxBet) {
+            this.userInfosService.updateMemberStakeLevel(session.userId, notifyLoginResult.minBet, notifyLoginResult.maxBet);
+        }
     }
 
     private composeBeforeCallMessage(session: UserSession, characterName: string, params: any) {

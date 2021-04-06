@@ -1,4 +1,4 @@
-import { UserInfo } from "src/users/schemas";
+import { BaseResult } from "src/ow-api/models";
 
 export class Result {
     isSuccessful: boolean;
@@ -28,9 +28,9 @@ export class ExpiredSessionResult {
 
 export class AuthorizeResult {
     authorized: boolean;
-    user: UserInfo;
+    user: any;
 
-    constructor(authorized: boolean, user: UserInfo = null) {
+    constructor(authorized: boolean, user: any = null) {
         this.authorized = authorized;
         this.user = user;
     }
@@ -53,18 +53,20 @@ export class AuthenticateResult {
 export class ReCheckInResult extends Result {
     balance: number;
     isDisableAccount: boolean;
+    apiError: BaseResult;
 
-    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, message = '') {
+    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, apiError = null, message = '') {
         super(isSuccessful, message);
         this.balance = balance;
         this.isDisableAccount = isDisableAccount;
+        this.apiError = apiError;
     }
 }
 
 export class CreateCharacterNameResult extends Result {
-    user: UserInfo;
+    user: any;
 
-    constructor(isSuccessful: boolean, message: string = '', user: UserInfo = null) {
+    constructor(isSuccessful: boolean, message: string = '', user: any = null) {
         super(isSuccessful, message);
 
         this.user = user;

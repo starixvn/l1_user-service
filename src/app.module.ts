@@ -7,6 +7,7 @@ import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
 import { CommonModule } from "./common/common.module";
 import configuration from "./config/configuration";
+import { GlobalConfigModule } from "./global-config/global-config.module";
 import { HealthModule } from "./health";
 import { OWApiModule } from "./ow-api/ow-api.module";
 import { UsersModule } from "./users/users.module";
@@ -29,6 +30,7 @@ import { UsersModule } from "./users/users.module";
         OWApiModule,
         AuthModule,
         HealthModule,
+        GlobalConfigModule,
     ],
     controllers: [AppController],
     providers: [AppService],

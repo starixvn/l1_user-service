@@ -10,11 +10,18 @@ export class UserInfosService {
     constructor(@InjectModel(UserInfo.name) private readonly userInfoModel: Model<UserInfoDocument>) {}
 
     async getUserInfo(UID: string): Promise<UserInfo> {
-        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency');
+        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency').lean();
     }
 
     async isExistingCharacterName(characterName: string): Promise<boolean> {
-        return this.userInfoModel.exists({ name: characterName });
+        const exist = await this.userInfoModel
+            .findOne({ name: characterName })
+            .select({ _id: 1 })
+            .collation({ locale: 'en', strength: 2 })
+            .lean()
+            .exec();
+
+        return exist != null;
     }
 
     async getLatestUserInfoUID() {
@@ -30,7 +37,7 @@ export class UserInfosService {
         return 1;
     }
 
-    async upSertUserInfo(param: CreateUserInfoParam): Promise<UserInfo> {
+    async upSertUserInfo(param: CreateUserInfoParam): Promise<any> {
         return this.userInfoModel
             .updateOne({ name: param.name }, { $setOnInsert: param }, { upsert: true, setDefaultsOnInsert: true })
             .exec();
@@ -38,5 +45,9 @@ export class UserInfosService {
 
     async updateBalance(userId: string, balance: number) {
         return this.userInfoModel.updateOne({ id: userId }, { $set: { red: balance } }).exec();
+    }
+
+    async updateMemberStakeLevel(userId: string, minBet: number, maxBet: number) {
+        return this.userInfoModel.updateOne({ id: userId }, { minBet: minBet, maxBet: maxBet, betLimitModifiedDate: new Date() }).exec();
     }
 }
