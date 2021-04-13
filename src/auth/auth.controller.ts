@@ -36,4 +36,9 @@ export class AuthController {
     verifySession(@Body() body: VerifySessionRequest) {
         return this.authService.verifySession(body);
     }
+
+    @Post('balance')
+    getBalance(@Body() body: VerifySessionRequest) {
+        return this.authService.getBalance(body);
+    }
 }

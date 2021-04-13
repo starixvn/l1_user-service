@@ -176,6 +176,20 @@ export class AuthService {
         return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance, offerGames });
     }
 
+    async getBalance(request: VerifySessionRequest) {
+        const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        if (!isAuthenticated) {
+            return new AuthorizeResult(false);
+        }
+
+        const userInfo = await this.userInfosService.getUserInfo(session.userId);
+        if (!userInfo) {
+            return new AuthorizeResult(false);
+        }
+
+        return await this.GetBalanceBySession(session, userInfo.name, true);
+    }
+
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
         const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
         const response = await this.apiClient.getBalance(
