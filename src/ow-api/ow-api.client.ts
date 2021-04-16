@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Severity } from "@sentry/node";
 import axios, { AxiosInstance } from "axios";
-import { OpenIdClient, SentryLogger } from "src/common/providers";
-import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
+import { OpenIdClient, SentryLogger } from "../common/providers";
+import { VerifyTokenResponse } from "../ow-api/models/verify-token-response";
 import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest, NotifyLoginResponse } from "./models";
 import { BaseResult } from "./models/base-respone";
 import { VerifyTokenRequest } from "./models/verify-token-request";
@@ -35,7 +35,7 @@ class Errors {
 
 @Injectable()
 export class OWApiClient {
-    private instance: AxiosInstance;
+    private readonly instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
     private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
 
@@ -100,7 +100,7 @@ export class OWApiClient {
     }
 
     isDisabledAccountResult(result: BaseResult) {
-        return result.errorCode == Errors.accountClosed.errorCode;
+        return result.errorCode === Errors.accountClosed.errorCode;
     }
 
     isErrorResult(result: BaseResult) {

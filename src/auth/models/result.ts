@@ -1,4 +1,4 @@
-import { BaseResult } from "src/ow-api/models";
+import { BaseResult } from "../../ow-api/models";
 
 export class Result {
     isSuccessful: boolean;
@@ -23,7 +23,7 @@ export class FailedResult extends Result {
 }
 
 export class ExpiredSessionResult {
-    isSessionExpired: boolean = true;
+    isSessionExpired = true;
 }
 
 export class AuthorizeResult {
@@ -66,7 +66,7 @@ export class ReCheckInResult extends Result {
 export class CreateCharacterNameResult extends Result {
     user: any;
 
-    constructor(isSuccessful: boolean, message: string = '', user: any = null) {
+    constructor(isSuccessful: boolean, message = '', user: any = null) {
         super(isSuccessful, message);
 
         this.user = user;

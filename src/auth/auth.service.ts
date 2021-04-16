@@ -1,23 +1,23 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { generate } from "randomstring";
-import { SentryLogger, UtilsService } from "src/common/providers";
-import { GlobalConfigService } from "src/global-config/global-config.service";
+import validator from "validator";
+
+import { CreateNicknameRequest } from ".";
+import { SentryLogger, UtilsService } from "../common/providers";
+import { GlobalConfigService } from "../global-config/global-config.service";
 import {
     BaseResult,
     GetBalanceRequest,
     NotifyLoginRequest,
     VerifyTokenRequest,
     VerifyTokenResponse,
-} from "src/ow-api/models";
-import { OWApiClient } from "src/ow-api/ow-api.client";
-import { VerifySessionRequest } from "src/users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "src/users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "src/users/providers";
-import { UserDocument, UserSession } from "src/users/schemas";
-import validator from "validator";
-
-import { CreateNicknameRequest } from ".";
+} from "../ow-api/models";
+import { OWApiClient } from "../ow-api/ow-api.client";
+import { VerifySessionRequest } from "../users/models";
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
+import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
+import { UserDocument, UserSession } from "../users/schemas";
 import {
     AuthenticateResult,
     AuthorizeResult,
@@ -55,7 +55,7 @@ export class AuthService {
         const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful) {
-            let user = await this.createUserIfNotExist(data);
+            const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
             return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId);
@@ -164,7 +164,7 @@ export class AuthService {
         const param = new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID);
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
-        if (!upsetResult || upsetResult?.upserted?.length == 0) {
+        if (!upsetResult || upsetResult?.upserted?.length === 0) {
             return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
         }
 
@@ -187,7 +187,7 @@ export class AuthService {
             return new AuthorizeResult(false);
         }
 
-        return await this.GetBalanceBySession(session, userInfo.name, true);
+        return this.GetBalanceBySession(session, userInfo.name, true);
     }
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
@@ -248,7 +248,7 @@ export class AuthService {
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
-            (await this.usersService.createUser(
+            this.usersService.createUser(
                 new CreateUserParam(
                     memberKey,
                     `${memberKey}@#QWE`,
@@ -258,7 +258,7 @@ export class AuthService {
                     memberName,
                     this.formatCurrency(currency),
                 ),
-            ))
+            )
         );
     }
 
@@ -271,14 +271,14 @@ export class AuthService {
         const { token, browserUserAgent, ip } = verifyTokenParam;
         const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
 
-        let session = await this.userSessionsService.getUserSessionByToken(token);
+        const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
             await this.userSessionsService.updateSystem(session.sessionId, system);
             session.system = system;
 
             return session;
         } else {
-            return await this.userSessionsService.createUserSession(
+            return this.userSessionsService.createUserSession(
                 new CreateUserSessionParam(
                     token,
                     `${generate()}_${memberKey}`,
@@ -306,7 +306,7 @@ export class AuthService {
         return seq.split(',')[2];
     }
 
-    private async notifyLogin(session: UserSession, characterName: string, isFirstLogin: boolean = false) {
+    private async notifyLogin(session: UserSession, characterName: string, isFirstLogin = false) {
         const request = new NotifyLoginRequest(
             session.owSeq,
             session.siteId,

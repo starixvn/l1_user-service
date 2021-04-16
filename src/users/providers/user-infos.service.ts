@@ -25,7 +25,7 @@ export class UserInfosService {
     }
 
     async getLatestUserInfoUID() {
-        let userInfoList = await this.userInfoModel
+        const userInfoList = await this.userInfoModel
             .find({}, ['UID'], { skip: 0, limit: 1, sort: { UID: -1 } })
             .lean()
             .exec();

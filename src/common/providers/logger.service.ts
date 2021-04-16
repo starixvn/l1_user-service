@@ -11,7 +11,7 @@ interface SentryConfig {
 
 @Injectable()
 export class SentryLogger implements LoggerService {
-    private config: SentryConfig;
+    private readonly config: SentryConfig;
 
     constructor(private readonly configService: ConfigService) {
         this.config = this.configService.get<SentryConfig>('sentry');

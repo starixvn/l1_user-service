@@ -4,7 +4,7 @@ import { SettingsService } from "./settings.service";
 
 @Controller('settings')
 export class SettingsController {
-    constructor(private settingsService: SettingsService) {}
+    constructor(private readonly settingsService: SettingsService) {}
 
     @Get()
     getSettings() {
