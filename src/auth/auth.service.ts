@@ -196,6 +196,7 @@ export class AuthService {
             getBalanceRequest,
             this.composeBeforeCallMessage(userSession, nickname, getBalanceRequest),
         );
+        this.logger.log(`${nickname}-${JSON.stringify(getBalanceRequest)}-${JSON.stringify(response)}`);
 
         if (captureBalance) {
             this.userInfosService.updateBalance(userSession.userId, response.balance);
