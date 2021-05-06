@@ -41,12 +41,14 @@ export class AuthenticateResult {
     username: string;
     language: string;
     ss: string;
+    system: number;
 
-    constructor(isAuthenticated: boolean, username = null, language = null, ss = null) {
+    constructor(isAuthenticated: boolean, username = null, language = null, ss = null, system = 0) {
         this.isAuthenticated = isAuthenticated;
         this.username = username;
         this.language = language;
         this.ss = ss;
+        this.system = system;
     }
 }
 

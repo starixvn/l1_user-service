@@ -81,7 +81,6 @@ export class OWApiClient {
     async getBalance(request: GetBalanceRequest, beforeMessage: string) {
         try {
             const response = await this.sendPostRequest<GetBalanceResponse>('/Member/Balance', request);
-            this.logger.log(`${JSON.stringify(request)}-${JSON.stringify(response)}`);
 
             if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Get Balance', request, response, beforeMessage, this.getLogLevel(response));

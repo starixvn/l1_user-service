@@ -58,7 +58,7 @@ export class AuthService {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
-            return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId);
+            return new AuthenticateResult(true, userSession.username, userSession.language, userSession.sessionId, userSession.system);
         } else {
             this.logger.log(
                 [
@@ -196,7 +196,6 @@ export class AuthService {
             getBalanceRequest,
             this.composeBeforeCallMessage(userSession, nickname, getBalanceRequest),
         );
-        this.logger.log(`${nickname}-${JSON.stringify(getBalanceRequest)}-${JSON.stringify(response)}`);
 
         if (captureBalance) {
             this.userInfosService.updateBalance(userSession.userId, response.balance);
