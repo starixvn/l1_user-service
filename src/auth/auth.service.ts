@@ -6,38 +6,24 @@ import validator from "validator";
 import { CreateNicknameRequest } from ".";
 import { SentryLogger, UtilsService } from "../common/providers";
 import { GlobalConfigService } from "../global-config/global-config.service";
-import {
-    BaseResult,
-    GetBalanceRequest,
-    NotifyLoginRequest,
-    VerifyTokenRequest,
-    VerifyTokenResponse,
-} from "../ow-api/models";
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
 import { OWApiClient } from "../ow-api/ow-api.client";
 import { VerifySessionRequest } from "../users/models";
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
 import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
 import { UserDocument, UserSession } from "../users/schemas";
 import {
-    AuthenticateResult,
-    AuthorizeResult,
-    CreateCharacterNameResult,
-    FailedResult,
-    ReCheckInResult,
-    SuccessResult,
-} from "./models/result";
+    duplicateNickname,
+    invalidNicknameChars,
+    invalidNicknameLength,
+    invalidSession,
+    sameWithUsername,
+} from "./constants/errors";
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, Result } from "./models/result";
 
 @Injectable()
 export class AuthService {
     private readonly UUSCurrency = 'UUS';
-    private readonly CreateNicknameErrors = {
-        invalidLength: 'Độ dài từ 3 đến 14 ký tự !!',
-        invalidChars: 'Tên không chứa ký tự đặc biệt !!',
-        sameWithUserName: 'Tên nhân vật không được trùng với tên đăng nhập...',
-        existCharacterName: 'Tên nhân vật đã tồn tại...',
-    };
-    private readonly DisabledAccountMessage =
-        'Tài khoản đã bị đóng. Phiên đăng nhập sẽ hết hạn sau 10 giây. Vui lòng liên hệ với cấp trên để biết thêm chi tiết.';
 
     constructor(
         private readonly logger: SentryLogger,
@@ -77,45 +63,38 @@ export class AuthService {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
-            return new ReCheckInResult(false);
+            return invalidSession;
         }
 
         await this.userSessionsService.updateReCheckInTime(request.session);
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         if (!userInfo) {
-            return new ReCheckInResult(true);
-        }
-
-        const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, false);
-        if (this.apiClient.isErrorResult(getBalanceResult as BaseResult)) {
-            const isDisabledAccount = this.apiClient.isDisabledAccountResult(getBalanceResult as BaseResult);
-
-            return new ReCheckInResult(true, 0, isDisabledAccount, getBalanceResult);
+            return new Result();
         }
 
         await this.userSessionsService.updateReCheckInTime(request.session);
 
-        return new ReCheckInResult(true, getBalanceResult.balance);
+        return this.GetBalanceBySession(session, userInfo.name, false);
     }
 
     async verifySession(request: VerifySessionRequest) {
         const { isAuthenticated } = await this.userSessionsService.verifySession(request);
 
-        return isAuthenticated ? new SuccessResult() : new FailedResult('Invalid session');
+        return isAuthenticated ? new Result() : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
-            return new AuthorizeResult(false);
+            return invalidSession;
         }
 
         const user = await this.usersService.getByUsername(request.username);
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
-            return new AuthorizeResult(false);
+            return invalidSession;
         }
 
         const userInfo = await this.userInfosService.getUserInfo(user.id);
@@ -137,27 +116,27 @@ export class AuthService {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
-            return new CreateCharacterNameResult(false);
+            return invalidSession;
         }
 
         const validateSignNameResult = this.validateNickname(request.nickname);
         if (!validateSignNameResult.isSuccessful) {
-            return new CreateCharacterNameResult(false, validateSignNameResult.message);
+            return validateSignNameResult;
         }
 
         const user = await this.usersService.getById(session.userId);
         if (user.local.username.toUpperCase() === request.nickname.toUpperCase()) {
-            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.sameWithUserName);
+            return sameWithUsername;
         }
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         if (userInfo) {
-            return new CreateCharacterNameResult(true, '', userInfo);
+            return new AuthorizeResult(true, userInfo);
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currency);
         if (await this.userInfosService.isExistingCharacterName(characterName)) {
-            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
+            return duplicateNickname;
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
@@ -165,7 +144,7 @@ export class AuthService {
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
         if (!upsetResult || upsetResult?.upserted?.length === 0) {
-            return new CreateCharacterNameResult(false, this.CreateNicknameErrors.existCharacterName);
+            return duplicateNickname;
         }
 
         await this.notifyLogin(session, characterName, true);
@@ -173,18 +152,18 @@ export class AuthService {
         const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
         const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
 
-        return new CreateCharacterNameResult(true, '', { ...param, red: getBalanceResult.balance, offerGames });
+        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }
 
     async getBalance(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         if (!isAuthenticated) {
-            return new AuthorizeResult(false);
+            return invalidSession;
         }
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         if (!userInfo) {
-            return new AuthorizeResult(false);
+            return invalidSession;
         }
 
         return this.GetBalanceBySession(session, userInfo.name, true);
@@ -201,7 +180,7 @@ export class AuthService {
             this.userInfosService.updateBalance(userSession.userId, response.balance);
         }
 
-        return response;
+        return new GetBalanceResult(response.errorCode.toString(), response.errorMessage, response.balance);
     }
 
     private generateCharacterName(signName: string, currency: string) {
@@ -214,29 +193,20 @@ export class AuthService {
 
     private validateNickname(name: string) {
         const az09 = new RegExp('^[a-zA-Z0-9]+$');
-
         const criteria = [
             {
-                failure: !name,
-                notice: this.CreateNicknameErrors.invalidLength,
-            },
-            {
-                failure: !validator.isLength(name, { min: 3, max: 14 }),
-                notice: this.CreateNicknameErrors.invalidLength,
+                failure: !name || !validator.isLength(name, { min: 3, max: 14 }),
+                error: invalidNicknameLength,
             },
             {
                 failure: !az09.test(name),
-                notice: this.CreateNicknameErrors.invalidChars,
+                error: invalidNicknameChars,
             },
         ];
 
         const failedCriterion = criteria.find((criterion) => criterion.failure);
 
-        if (failedCriterion) {
-            return new FailedResult(failedCriterion.notice);
-        }
-
-        return new SuccessResult();
+        return failedCriterion ? failedCriterion.error : new Result();
     }
 
     private formatCurrency(currency: string) {

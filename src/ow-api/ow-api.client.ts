@@ -19,17 +19,17 @@ interface ApiConfig {
 class Errors {
     public static enterPortalFailed: BaseResult = {
         errorCode: `SB1903`,
-        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+        errorMessage: 'An error has occurred. Please contact CSD for details.',
     };
 
     public static getBalanceFailed: BaseResult = {
-        errorCode: `SB1903`,
-        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+        errorCode: `SB1902`,
+        errorMessage: 'Cannot update the account balance.',
     };
 
     public static accountClosed: BaseResult = {
         errorCode: '2002',
-        errorMessage: 'Tài khoản đã bị đóng. Phiên đăng nhập sẽ hết hạn sau 10 giây. Vui lòng liên hệ với cấp trên để biết thêm chi tiết.',
+        errorMessage: 'Account has been closed. Please contact your upline for details, thank you.',
     };
 }
 
