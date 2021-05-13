@@ -13,7 +13,6 @@ async function bootstrap() {
     app.register(helmet, { contentSecurityPolicy: false });
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
-    console.log(corsWhiteList);
     app.enableCors({
         origin: (origin, callback) => {
             if (corsWhiteList.indexOf(origin) !== -1 || !origin) {

@@ -140,7 +140,13 @@ export class AuthService {
         }
 
         const latestUID = await this.userInfosService.getLatestUserInfoUID();
-        const param = new CreateUserInfoParam(session.userId, characterName, session.currency, latestUID);
+        const param = new CreateUserInfoParam(
+            session.userId,
+            characterName,
+            session.currency,
+            latestUID,
+            request.avatar ?? (Math.random() * 40 + 1) >> 0,
+        );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
         if (!upsetResult || upsetResult?.upserted?.length === 0) {
