@@ -3,7 +3,9 @@ import { ConfigService } from "@nestjs/config";
 import { Severity } from "@sentry/node";
 import axios, { AxiosInstance } from "axios";
 
-import { OpenIdClient, SentryLogger } from "../common/providers";
+import { SentryLogger } from "../common/providers";
+import { AuthConfig } from "../config/auth-config";
+import { OpenIdClientHelper } from "../helpers";
 import { VerifyTokenResponse } from "../ow-api/models/verify-token-response";
 import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest, NotifyLoginResponse } from "./models";
 import { BaseResult } from "./models/base-respone";
@@ -19,17 +21,17 @@ interface ApiConfig {
 class Errors {
     public static enterPortalFailed: BaseResult = {
         errorCode: `SB1903`,
-        errorMessage: 'An error has occurred. Please contact CSD for details.',
+        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
     };
 
     public static getBalanceFailed: BaseResult = {
         errorCode: `SB1902`,
-        errorMessage: 'Cannot update the account balance.',
+        errorMessage: 'Không thể cập nhật số tiền trong tài khoản.',
     };
 
     public static accountClosed: BaseResult = {
         errorCode: '2002',
-        errorMessage: 'Account has been closed. Please contact your upline for details, thank you.',
+        errorMessage: 'Tài khoản đã bị đóng. Phiên đăng nhập sẽ hết hạn sau 10 giây. Vui lòng liên hệ với cấp trên để biết thêm chi tiết.',
     };
 }
 
@@ -38,14 +40,13 @@ export class OWApiClient {
     private readonly instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
     private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
+    private readonly openIdClient: OpenIdClientHelper;
 
-    constructor(
-        private readonly configService: ConfigService,
-        private readonly openIdClient: OpenIdClient,
-        private readonly logger: SentryLogger,
-    ) {
+    constructor(private readonly configService: ConfigService, private readonly logger: SentryLogger) {
+        const authConfig = this.configService.get<AuthConfig>('auth');
+        this.openIdClient = new OpenIdClientHelper(authConfig);
+
         const apiConfig = this.configService.get<ApiConfig>('api');
-
         this.instance = axios.create({
             baseURL: apiConfig.baseURL,
             timeout: apiConfig.requestTimeout || this.defaultRequestTimeout,

@@ -1,9 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'fastify-helmet';
-import { AppModule } from './app.module';
-import { SentryLogger } from './common/providers/logger.service';
+import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import helmet from "fastify-helmet";
+
+import { AppModule } from "./app.module";
+import { SentryLogger } from "./common/providers/logger.service";
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
@@ -12,6 +13,7 @@ async function bootstrap() {
     app.register(helmet, { contentSecurityPolicy: false });
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
+    console.log(corsWhiteList);
     app.enableCors({
         origin: (origin, callback) => {
             if (corsWhiteList.indexOf(origin) !== -1 || !origin) {
