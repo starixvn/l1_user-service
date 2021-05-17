@@ -1,6 +1,5 @@
-import { Result } from "../models";
+import { Result } from "../../shared/models/result";
 
-export const invalidSession = new Result('SB0002', 'Invalid Session');
 export const invalidNicknameLength = new Result('SB0012', 'Độ dài từ 3 đến 14 ký tự !!');
 export const invalidNicknameChars = new Result('SB0013', 'Tên không chứa ký tự đặc biệt !!');
 export const isDisableAccount = new Result('2002', 'Account is locked');

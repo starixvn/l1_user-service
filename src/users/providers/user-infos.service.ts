@@ -10,7 +10,7 @@ export class UserInfosService {
     constructor(@InjectModel(UserInfo.name) private readonly userInfoModel: Model<UserInfoDocument>) {}
 
     async getUserInfo(UID: string): Promise<UserInfo> {
-        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency').lean();
+        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency settings').lean();
     }
 
     async isExistingCharacterName(characterName: string): Promise<boolean> {
@@ -49,5 +49,9 @@ export class UserInfosService {
 
     async updateMemberStakeLevel(userId: string, minBet: number, maxBet: number) {
         return this.userInfoModel.updateOne({ id: userId }, { minBet: minBet, maxBet: maxBet, betLimitModifiedDate: new Date() }).exec();
+    }
+
+    async updateSettings(userId: string, key: string, value: any) {
+        return this.userInfoModel.updateOne({ id: userId }, { $set: { [`settings.${key}`]: value } }).exec();
     }
 }

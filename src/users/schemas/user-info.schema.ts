@@ -4,6 +4,17 @@ import { Document } from "mongoose";
 type UserInfoDocument = UserInfo & Document;
 
 @Schema()
+class Settings {
+    @Prop({ default: false })
+    quickBet: boolean;
+
+    @Prop({ default: false })
+    darkMode: boolean;
+}
+
+const SettingsSchema = SchemaFactory.createForClass(Settings);
+
+@Schema()
 class UserInfo {
     @Prop({ required: true, unique: true })
     id: string;
@@ -58,7 +69,11 @@ class UserInfo {
 
     @Prop()
     betLimitModifiedDate: Date;
+
+    @Prop({ type: SettingsSchema, default: { quickBet: false, darkMode: false } })
+    settings: Settings;
 }
+
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);
 
 export { UserInfoDocument, UserInfo, UserInfoSchema };
