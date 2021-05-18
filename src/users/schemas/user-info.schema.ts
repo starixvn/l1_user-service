@@ -72,6 +72,9 @@ class UserInfo {
 
     @Prop({ type: SettingsSchema })
     settings: Settings;
+
+    @Prop({ default: false })
+    isSignedInSM: boolean;
 }
 
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);

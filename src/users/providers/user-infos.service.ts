@@ -1,16 +1,16 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { CreateUserInfoParam } from "../params";
-import { UserInfo, UserInfoDocument } from "../schemas";
+import { CreateUserInfoParam } from '../params';
+import { UserInfo, UserInfoDocument } from '../schemas';
 
 Injectable();
 export class UserInfosService {
     constructor(@InjectModel(UserInfo.name) private readonly userInfoModel: Model<UserInfoDocument>) {}
 
     async getUserInfo(UID: string): Promise<UserInfo> {
-        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency settings').lean();
+        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency settings isSignedInSM').lean();
     }
 
     async isExistingCharacterName(characterName: string): Promise<boolean> {
@@ -53,5 +53,9 @@ export class UserInfosService {
 
     async updateSettings(userId: string, key: string, value: any) {
         return this.userInfoModel.updateOne({ id: userId }, { $set: { [`settings.${key}`]: value } }).exec();
+    }
+
+    async updateUserSignInSMStatus(userId: string) {
+        return this.userInfoModel.updateOne({ id: userId }, { $set: { isSignedInSM: true } }).exec();
     }
 }

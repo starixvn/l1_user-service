@@ -14,14 +14,8 @@ import { VerifySessionRequest } from "../users/models";
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
 import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
 import { UserDocument, UserSession } from "../users/schemas";
-import {
-    duplicateNickname,
-    invalidNicknameChars,
-    invalidNicknameLength,
-    invalidSession,
-    sameWithUsername,
-} from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse, Result } from "./models/result";
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
 
 @Injectable()
 export class AuthService {
