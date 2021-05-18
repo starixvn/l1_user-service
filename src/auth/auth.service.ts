@@ -19,7 +19,7 @@ import {
     invalidSession,
     sameWithUsername,
 } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, Result } from "./models/result";
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse, Result } from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -73,9 +73,11 @@ export class AuthService {
             return new Result();
         }
 
-        await this.userSessionsService.updateReCheckInTime(request.session);
-
-        return this.GetBalanceBySession(session, userInfo.name, false);
+        const getBalanceResponse = await this.GetBalanceBySession(session, userInfo.name, false);
+        return new ReCheckInResponse(
+            getBalanceResponse.balance,
+            getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
+        );
     }
 
     async verifySession(request: VerifySessionRequest) {

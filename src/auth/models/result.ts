@@ -21,10 +21,17 @@ export class AuthenticateResult {
 }
 
 export class GetBalanceResult extends Result {
-    isDisableAccount: boolean;
-
     constructor(readonly errorCode: string, readonly message: string, readonly balance = 0) {
         super(errorCode, message);
-        this.isDisableAccount = this.errorCode === '2002';
+    }
+}
+
+export class ReCheckInResponse extends GetBalanceResult {
+    isDisableAccount: boolean;
+
+    constructor(readonly balance = 0, readonly apiError: Result = null) {
+        super('0', '', balance);
+
+        this.isDisableAccount = apiError && apiError.errorCode === '2002';
     }
 }
