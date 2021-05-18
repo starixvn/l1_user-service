@@ -9,7 +9,7 @@ class Settings {
     quickBet: boolean;
 
     @Prop({ default: '' })
-    darkMode: string;
+    theme: string;
 }
 
 const SettingsSchema = SchemaFactory.createForClass(Settings);
