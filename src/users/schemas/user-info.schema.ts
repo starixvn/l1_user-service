@@ -1,15 +1,15 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 type UserInfoDocument = UserInfo & Document;
 
 @Schema()
 class Settings {
-    @Prop({ default: false })
+    @Prop({ default: undefined })
     quickBet: boolean;
 
-    @Prop({ default: false })
-    darkMode: boolean;
+    @Prop({ default: '' })
+    darkMode: string;
 }
 
 const SettingsSchema = SchemaFactory.createForClass(Settings);
@@ -70,7 +70,7 @@ class UserInfo {
     @Prop()
     betLimitModifiedDate: Date;
 
-    @Prop({ type: SettingsSchema, default: { quickBet: false, darkMode: false } })
+    @Prop({ type: SettingsSchema })
     settings: Settings;
 }
 
