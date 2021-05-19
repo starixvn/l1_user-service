@@ -1,74 +1,37 @@
-import { BaseResult } from "src/ow-api/models";
-
 export class Result {
     isSuccessful: boolean;
-    message: string;
 
-    constructor(isSuccessful: boolean, message: string) {
-        this.isSuccessful = isSuccessful;
-        this.message = message;
+    constructor(readonly errorCode = '0', readonly message = '') {
+        this.isSuccessful = this.errorCode === '0';
     }
-}
-
-export class SuccessResult extends Result {
-    constructor() {
-        super(true, null);
-    }
-}
-
-export class FailedResult extends Result {
-    constructor(message: string) {
-        super(false, message);
-    }
-}
-
-export class ExpiredSessionResult {
-    isSessionExpired: boolean = true;
 }
 
 export class AuthorizeResult {
-    authorized: boolean;
-    user: any;
-
-    constructor(authorized: boolean, user: any = null) {
-        this.authorized = authorized;
-        this.user = user;
-    }
+    constructor(readonly authorized: boolean, readonly user: any = null) {}
 }
 
 export class AuthenticateResult {
-    isAuthenticated: boolean;
-    username: string;
-    language: string;
-    ss: string;
+    constructor(
+        readonly isAuthenticated: boolean,
+        readonly username: string = null,
+        readonly language: string = null,
+        readonly ss: string = null,
+        readonly system: number = 0,
+    ) {}
+}
 
-    constructor(isAuthenticated: boolean, username = null, language = null, ss = null) {
-        this.isAuthenticated = isAuthenticated;
-        this.username = username;
-        this.language = language;
-        this.ss = ss;
+export class GetBalanceResult extends Result {
+    constructor(readonly errorCode: string, readonly message: string, readonly balance = 0) {
+        super(errorCode, message);
     }
 }
 
-export class ReCheckInResult extends Result {
-    balance: number;
+export class ReCheckInResponse extends GetBalanceResult {
     isDisableAccount: boolean;
-    apiError: BaseResult;
 
-    constructor(isSuccessful: boolean, balance = 0, isDisableAccount = false, apiError = null, message = '') {
-        super(isSuccessful, message);
-        this.balance = balance;
-        this.isDisableAccount = isDisableAccount;
-        this.apiError = apiError;
-    }
-}
+    constructor(readonly balance = 0, readonly apiError: Result = null) {
+        super('0', '', balance);
 
-export class CreateCharacterNameResult extends Result {
-    user: any;
-
-    constructor(isSuccessful: boolean, message: string = '', user: any = null) {
-        super(isSuccessful, message);
-
-        this.user = user;
+        this.isDisableAccount = apiError && apiError.errorCode === '2002';
     }
 }

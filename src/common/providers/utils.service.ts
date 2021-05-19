@@ -8,7 +8,7 @@ export class UtilsService {
             result = ip.split(',')[0].trim();
         }
 
-        if (result.substr(0, 7) == '::ffff:') {
+        if (result.substr(0, 7) === '::ffff:') {
             result = result.substr(7);
         }
 

@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { GlobalConfigModule } from "src/global-config/global-config.module";
-import { OWApiModule } from "src/ow-api/ow-api.module";
-import { UsersModule } from "src/users/users.module";
 
+import { GlobalConfigModule } from "../global-config/global-config.module";
+import { OWApiModule } from "../ow-api/ow-api.module";
+import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, Post, Query } from "@nestjs/common";
-import { VerifySessionRequest } from "src/users/models";
 
 import { AuthService, CreateNicknameRequest } from ".";
+import { VerifySessionRequest } from "../users/models";
 
 @Controller('auth')
 export class AuthController {
@@ -12,7 +12,7 @@ export class AuthController {
         @Headers('user-agent') userAgent: string,
         @Headers('X-Forwarded-For') ip: string,
         @Query('token') token: string,
-        @Query('system') system: number = 1,
+        @Query('system') system = 1,
     ) {
         return this.authService.signIn(ip, token, userAgent, system);
     }
@@ -35,5 +35,10 @@ export class AuthController {
     @Post('session/verify')
     verifySession(@Body() body: VerifySessionRequest) {
         return this.authService.verifySession(body);
+    }
+
+    @Post('balance')
+    getBalance(@Body() body: VerifySessionRequest) {
+        return this.authService.getBalance(body);
     }
 }

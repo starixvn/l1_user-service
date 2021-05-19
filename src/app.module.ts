@@ -10,6 +10,7 @@ import configuration from "./config/configuration";
 import { GlobalConfigModule } from "./global-config/global-config.module";
 import { HealthModule } from "./health";
 import { OWApiModule } from "./ow-api/ow-api.module";
+import { SettingsModule } from "./settings/settings.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -31,6 +32,7 @@ import { UsersModule } from "./users/users.module";
         AuthModule,
         HealthModule,
         GlobalConfigModule,
+        SettingsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

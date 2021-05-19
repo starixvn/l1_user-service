@@ -1,21 +1,14 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { Issuer, TokenSet } from "openid-client";
 
-interface AuthConfig {
-    uri: string;
-    clientId: string;
-    clientSecret: string;
-}
+import { AuthConfig } from "../config/auth-config";
 
-@Injectable()
-export class OpenIdClient {
+export class OpenIdClientHelper {
     private readonly authConfig: AuthConfig;
     private readonly beforeTokenExpired = 60 * 5;
     private tokenSet: TokenSet;
 
-    constructor(protected readonly configService: ConfigService) {
-        this.authConfig = this.configService.get<AuthConfig>('auth');
+    constructor(authConfig: AuthConfig) {
+        this.authConfig = authConfig;
     }
 
     async getBearerToken() {

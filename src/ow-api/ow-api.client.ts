@@ -2,9 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Severity } from "@sentry/node";
 import axios, { AxiosInstance } from "axios";
-import { OpenIdClient, SentryLogger } from "src/common/providers";
-import { VerifyTokenResponse } from "src/ow-api/models/verify-token-response";
 
+import { SentryLogger } from "../common/providers";
+import { AuthConfig } from "../config/auth-config";
+import { OpenIdClientHelper } from "../helpers";
+import { VerifyTokenResponse } from "../ow-api/models/verify-token-response";
 import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest, NotifyLoginResponse } from "./models";
 import { BaseResult } from "./models/base-respone";
 import { VerifyTokenRequest } from "./models/verify-token-request";
@@ -23,8 +25,8 @@ class Errors {
     };
 
     public static getBalanceFailed: BaseResult = {
-        errorCode: `SB1903`,
-        errorMessage: 'Đã xảy ra lỗi. Vui lòng liên hệ bộ phận CSKH để đươc hỗ trợ.',
+        errorCode: `SB1902`,
+        errorMessage: 'Không thể cập nhật số tiền trong tài khoản.',
     };
 
     public static accountClosed: BaseResult = {
@@ -35,17 +37,16 @@ class Errors {
 
 @Injectable()
 export class OWApiClient {
-    private instance: AxiosInstance;
+    private readonly instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
     private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
+    private readonly openIdClient: OpenIdClientHelper;
 
-    constructor(
-        private readonly configService: ConfigService,
-        private readonly openIdClient: OpenIdClient,
-        private readonly logger: SentryLogger,
-    ) {
+    constructor(private readonly configService: ConfigService, private readonly logger: SentryLogger) {
+        const authConfig = this.configService.get<AuthConfig>('auth');
+        this.openIdClient = new OpenIdClientHelper(authConfig);
+
         const apiConfig = this.configService.get<ApiConfig>('api');
-
         this.instance = axios.create({
             baseURL: apiConfig.baseURL,
             timeout: apiConfig.requestTimeout || this.defaultRequestTimeout,
@@ -100,7 +101,7 @@ export class OWApiClient {
     }
 
     isDisabledAccountResult(result: BaseResult) {
-        return result.errorCode == Errors.accountClosed.errorCode;
+        return result.errorCode === Errors.accountClosed.errorCode;
     }
 
     isErrorResult(result: BaseResult) {
