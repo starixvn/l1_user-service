@@ -143,7 +143,7 @@ export class AuthService {
             characterName,
             session.currency,
             latestUID,
-            request.avatar ?? (Math.random() * 40 + 1) >> 0,
+            request.avatar || (Math.random() * 40 + 1) >> 0,
         );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
