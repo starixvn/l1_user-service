@@ -1,10 +1,4 @@
-export class Result {
-    isSuccessful: boolean;
-
-    constructor(readonly errorCode = '0', readonly message = '') {
-        this.isSuccessful = this.errorCode === '0';
-    }
-}
+import { Result } from "../../shared/models/result";
 
 export class AuthorizeResult {
     constructor(readonly authorized: boolean, readonly user: any = null) {}

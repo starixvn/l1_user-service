@@ -8,18 +8,14 @@ import { SentryLogger, UtilsService } from "../common/providers";
 import { GlobalConfigService } from "../global-config/global-config.service";
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
 import { OWApiClient } from "../ow-api/ow-api.client";
+import { Result } from "../shared/models/result";
+import { invalidSession } from "../users/constants/errors";
 import { VerifySessionRequest } from "../users/models";
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
 import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
 import { UserDocument, UserSession } from "../users/schemas";
-import {
-    duplicateNickname,
-    invalidNicknameChars,
-    invalidNicknameLength,
-    invalidSession,
-    sameWithUsername,
-} from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse, Result } from "./models/result";
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -147,7 +143,7 @@ export class AuthService {
             characterName,
             session.currency,
             latestUID,
-            request.avatar ?? (Math.random() * 40 + 1) >> 0,
+            request.avatar || (Math.random() * 40 + 1) >> 0,
         );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
@@ -176,6 +172,8 @@ export class AuthService {
 
         return this.GetBalanceBySession(session, userInfo.name, true);
     }
+
+    async updateSettings() {}
 
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
         const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
