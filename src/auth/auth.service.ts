@@ -69,7 +69,7 @@ export class AuthService {
             return new Result();
         }
 
-        const getBalanceResponse = await this.GetBalanceBySession(session, userInfo.name, false);
+        const getBalanceResponse = await this.getBalanceBySession(session, userInfo.name, false);
         return new ReCheckInResponse(
             getBalanceResponse.balance,
             getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
@@ -102,7 +102,7 @@ export class AuthService {
 
         await this.notifyLogin(session, userInfo.name);
 
-        const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
+        const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
         const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
@@ -153,7 +153,7 @@ export class AuthService {
 
         await this.notifyLogin(session, characterName, true);
 
-        const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
+        const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
@@ -170,10 +170,10 @@ export class AuthService {
             return invalidSession;
         }
 
-        return this.GetBalanceBySession(session, userInfo.name, true);
+        return this.getBalanceBySession(session, userInfo.name, true);
     }
 
-    private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
+    private async getBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
         const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
         const response = await this.apiClient.getBalance(
             getBalanceRequest,
