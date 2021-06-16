@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { Result } from "../shared/models/result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { Result } from '../shared/models/result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -173,8 +173,6 @@ export class AuthService {
         return this.GetBalanceBySession(session, userInfo.name, true);
     }
 
-    async updateSettings() {}
-
     private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
         const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
         const response = await this.apiClient.getBalance(
@@ -296,8 +294,8 @@ export class AuthService {
     }
 
     private composeBeforeCallMessage(session: UserSession, characterName: string, params: any) {
-        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${
-            characterName ? `\n\tCharacter: ${characterName} ` : ''
-        }\n\tParams:${JSON.stringify(params)}`;
+        const nameDisplay = characterName ? `\n\tCharacter: ${characterName} ` : '';
+
+        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
     }
 }
