@@ -363,6 +363,7 @@ __pycache__/
 # OpenCover UI analysis results
 OpenCover/
 coverage/
+reports/
 
 ### macOS template
 # General
