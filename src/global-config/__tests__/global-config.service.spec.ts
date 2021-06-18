@@ -1,8 +1,8 @@
-import { getModelToken } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
 
-import { GlobalConfigService } from "../global-config.service";
-import { GlobalConfig } from "../schemas/global-config.schema";
+import { GlobalConfigService } from '../global-config.service';
+import { GlobalConfig } from '../schemas/global-config.schema';
 
 describe('', () => {
     let service: GlobalConfigService;
