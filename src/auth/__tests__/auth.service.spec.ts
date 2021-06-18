@@ -1,17 +1,16 @@
-import { Test } from '@nestjs/testing';
-import { OWApiClient } from '../../ow-api/ow-api.client';
-import { VerifyTokenResponse } from '../../ow-api/models';
-import { AuthService } from '../auth.service';
-import { SentryLogger } from '../../common/providers/logger.service';
-import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
-import { ConfigService } from '@nestjs/config';
-import { UtilsService } from '../../common/providers';
-import { GlobalConfigService } from '../../global-config/global-config.service';
-import { UserInfo, UserSession } from '../../users/schemas';
-import { AuthorizeResult, ReCheckInResponse } from '../models';
-import { VerifySessionRequest } from '../../users/models';
-import { Result } from '../../shared/models/result';
-import { invalidSession } from '../../users/constants/errors';
+import { ConfigService } from "@nestjs/config";
+import { Test } from "@nestjs/testing";
+
+import { UtilsService } from "../../common/providers";
+import { SentryLogger } from "../../common/providers/logger.service";
+import { GlobalConfigService } from "../../global-config/global-config.service";
+import { VerifyTokenResponse } from "../../ow-api/models";
+import { OWApiClient } from "../../ow-api/ow-api.client";
+import { VerifySessionRequest } from "../../users/models";
+import { UserInfosService, UserSessionsService, UsersService } from "../../users/providers";
+import { UserInfo, UserSession } from "../../users/schemas";
+import { AuthService } from "../auth.service";
+import { ReCheckInResponse } from "../models";
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');

@@ -24,6 +24,6 @@ export class GlobalConfigService {
     }
 
     async getConfig(typeName: string): Promise<GlobalConfig> {
-        return this.globalConfigModel.findOne({ type: typeName }).lean();
+        return this.globalConfigModel.findOne({ type: typeName });
     }
 }
