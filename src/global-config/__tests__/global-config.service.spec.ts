@@ -29,9 +29,8 @@ describe('', () => {
 
     it('getConfig', async () => {
         globalConfigModel.findOne = jest.fn().mockReturnValue({ configs: { mbc: [1, 2, 3, 4] } });
-        const result = await service.getConfig('game_site_exclusions');
 
-        console.log(result);
+        await service.getConfig('game_site_exclusions');
 
         expect(globalConfigModel.findOne).toHaveBeenCalled();
     });
