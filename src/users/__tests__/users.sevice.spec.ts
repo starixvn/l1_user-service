@@ -1,9 +1,9 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../providers';
-import { User, UserInfo, UserDocument, UserSchema } from '../schemas';
+import { User, UserDocument, UserSchema } from '../schemas';
 import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
-import { Model, ObjectId } from 'mongoose';
+import { Model } from 'mongoose';
 import { CreateUserParam } from '../params';
 
 const user = new User();
@@ -33,9 +33,10 @@ describe('UserInfosService test', () => {
         await userModel.insertMany(user);
     });
 
-    afterAll(async () => {
-        await closeInMongodConnection();
+    afterAll(async (done) => {
         jest.clearAllMocks();
+        await closeInMongodConnection();
+        done();
     });
 
     describe('getByUsername test', () => {

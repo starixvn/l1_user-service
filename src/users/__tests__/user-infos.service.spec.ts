@@ -28,8 +28,8 @@ describe('UserInfosService test', () => {
     });
 
     afterAll(async () => {
-        await closeInMongodConnection();
         jest.clearAllMocks();
+        await closeInMongodConnection();
     });
 
     describe('getUserInfo test', () => {
