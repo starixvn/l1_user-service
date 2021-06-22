@@ -1,0 +1,67 @@
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from '../providers';
+import { User, UserInfo, UserDocument, UserSchema } from '../schemas';
+import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { Model, ObjectId } from 'mongoose';
+import { CreateUserParam } from '../params';
+
+const user = new User();
+user.local = {
+    username: 'userName',
+    clientId: 'id',
+    currency: 'USS',
+    memberId: 123,
+    memberName: 'memberName',
+    password: 'pass',
+    regDate: new Date(),
+};
+
+describe('UserInfosService test', () => {
+    let service: UsersService;
+    let userModel: Model<UserDocument>;
+
+    beforeAll(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [UsersService],
+            imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+        }).compile();
+
+        service = module.get<UsersService>(UsersService);
+        userModel = module.get<Model<UserDocument>>(`${User.name}Model`);
+
+        await userModel.insertMany(user);
+    });
+
+    afterAll(async () => {
+        await closeInMongodConnection();
+        jest.clearAllMocks();
+    });
+
+    describe('getByUsername test', () => {
+        it('should return user info that matched query user name', async () => {
+            const actualResult = await service.getByUsername(user.local.username);
+
+            expect(actualResult.local.username).toEqual(user.local.username);
+        });
+    });
+
+    describe('getById test', () => {
+        it('should return user info that matched query user id', async () => {
+            jest.spyOn(userModel, 'findById');
+            await service.getById('5e5a329a75285d73cfbfdae4');
+
+            expect(userModel.findById).toHaveBeenCalledWith('5e5a329a75285d73cfbfdae4');
+        });
+    });
+
+    describe('createUser test', () => {
+        const createUserRequest = new CreateUserParam('user1', 'pass', new Date(), 'clientId', 111, 'memberName', 'uus');
+        it('should call create user', async () => {
+            jest.spyOn(userModel.prototype, 'save');
+            await service.createUser(createUserRequest);
+
+            expect(userModel.prototype.save).toHaveBeenCalled();
+        });
+    });
+});
