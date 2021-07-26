@@ -245,7 +245,7 @@ export class AuthService {
         system: number,
     ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
-        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
+        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName, siteName } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
@@ -271,15 +271,11 @@ export class AuthService {
                     this.formatCurrency(currency),
                     clientId,
                     memberName,
-                    this.getSiteName(seq),
+                    siteName,
                     system,
                 ),
             );
         }
-    }
-
-    private getSiteName(seq: string) {
-        return seq.split(',')[2];
     }
 
     private async notifyLogin(session: UserSession, characterName: string, isFirstLogin = false) {
