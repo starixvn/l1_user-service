@@ -36,7 +36,7 @@ export class AuthService {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
-        if (data && data.isSuccessful) {
+        if (data && data.isSuccessful && data.appType === system) {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
@@ -247,9 +247,6 @@ export class AuthService {
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
-            await this.userSessionsService.updateSystem(session.sessionId, system);
-            session.system = system;
-
             return session;
         } else {
             return this.userSessionsService.createUserSession(
