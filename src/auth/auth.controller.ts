@@ -12,9 +12,9 @@ export class AuthController {
         @Headers('user-agent') userAgent: string,
         @Headers('X-Forwarded-For') ip: string,
         @Query('token') token: string,
-        @Query('system') system: number = 1,
+        @Query('system') system,
     ) {
-        return this.authService.signIn(ip, token, userAgent, system);
+        return this.authService.signIn(ip, token, userAgent, parseInt(system) || 1);
     }
 
     @Post('reCheckIn')

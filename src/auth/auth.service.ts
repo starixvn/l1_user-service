@@ -35,8 +35,8 @@ export class AuthService {
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
-        console.log(`Valid System:${data.appType === system}` );
-        if (data && data.isSuccessful) {
+        
+        if (data && data.isSuccessful && data.appType === system) {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
