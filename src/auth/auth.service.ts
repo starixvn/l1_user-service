@@ -36,7 +36,7 @@ export class AuthService {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
-        if (data && data.isSuccessful && data.appType === system) {
+        if (data && data.isSuccessful) {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
