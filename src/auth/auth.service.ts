@@ -48,6 +48,7 @@ export class AuthService {
                     `Request: ${JSON.stringify(request)}`,
                     `Result: ${JSON.stringify(data)}`,
                     `IP Info: ${request.ip}`,
+                    `System: ${system}`,
                 ].join('\n'),
             );
 
