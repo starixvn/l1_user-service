@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { GlobalConfig, GlobalConfigDocument } from "./schemas/global-config.schema";
+import { GlobalConfig, GlobalConfigDocument } from './schemas/global-config.schema';
 
 @Injectable()
 export class GlobalConfigService {
@@ -24,6 +24,6 @@ export class GlobalConfigService {
     }
 
     async getConfig(typeName: string): Promise<GlobalConfig> {
-        return this.globalConfigModel.findOne({ type: typeName }).lean();
+        return this.globalConfigModel.findOne({ type: typeName });
     }
 }

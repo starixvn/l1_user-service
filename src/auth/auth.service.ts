@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { Result } from "../shared/models/result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { Result } from '../shared/models/result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -35,8 +35,8 @@ export class AuthService {
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
-
-        if (data && data.isSuccessful) {
+        
+        if (data && data.isSuccessful && data.appType === system) {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
@@ -48,6 +48,7 @@ export class AuthService {
                     `Request: ${JSON.stringify(request)}`,
                     `Result: ${JSON.stringify(data)}`,
                     `IP Info: ${request.ip}`,
+                    `System: ${system}`,
                 ].join('\n'),
             );
 
@@ -69,7 +70,7 @@ export class AuthService {
             return new Result();
         }
 
-        const getBalanceResponse = await this.GetBalanceBySession(session, userInfo.name, false);
+        const getBalanceResponse = await this.getBalanceBySession(session, userInfo.name, false);
         return new ReCheckInResponse(
             getBalanceResponse.balance,
             getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
@@ -102,7 +103,7 @@ export class AuthService {
 
         await this.notifyLogin(session, userInfo.name);
 
-        const getBalanceResult = await this.GetBalanceBySession(session, userInfo.name, true);
+        const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
         const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
@@ -153,7 +154,7 @@ export class AuthService {
 
         await this.notifyLogin(session, characterName, true);
 
-        const getBalanceResult = await this.GetBalanceBySession(session, param.name, true);
+        const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
@@ -170,12 +171,10 @@ export class AuthService {
             return invalidSession;
         }
 
-        return this.GetBalanceBySession(session, userInfo.name, true);
+        return this.getBalanceBySession(session, userInfo.name, true);
     }
 
-    async updateSettings() {}
-
-    private async GetBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
+    private async getBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
         const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
         const response = await this.apiClient.getBalance(
             getBalanceRequest,
@@ -245,13 +244,10 @@ export class AuthService {
         system: number,
     ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
-        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName } = verifyTokenResult;
+        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName, siteName } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
-            await this.userSessionsService.updateSystem(session.sessionId, system);
-            session.system = system;
-
             return session;
         } else {
             return this.userSessionsService.createUserSession(
@@ -271,15 +267,11 @@ export class AuthService {
                     this.formatCurrency(currency),
                     clientId,
                     memberName,
-                    this.getSiteName(seq),
+                    siteName,
                     system,
                 ),
             );
         }
-    }
-
-    private getSiteName(seq: string) {
-        return seq.split(',')[2];
     }
 
     private async notifyLogin(session: UserSession, characterName: string, isFirstLogin = false) {
@@ -300,8 +292,8 @@ export class AuthService {
     }
 
     private composeBeforeCallMessage(session: UserSession, characterName: string, params: any) {
-        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${
-            characterName ? `\n\tCharacter: ${characterName} ` : ''
-        }\n\tParams:${JSON.stringify(params)}`;
+        const nameDisplay = characterName ? `\n\tCharacter: ${characterName} ` : '';
+
+        return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
     }
 }

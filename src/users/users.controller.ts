@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Put } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';

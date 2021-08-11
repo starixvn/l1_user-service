@@ -11,4 +11,6 @@ export interface VerifyTokenResponse {
     code: number;
     message: string;
     isSuccessful: boolean;
+    siteName: string;
+    appType: number;
 }
