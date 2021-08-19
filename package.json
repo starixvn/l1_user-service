@@ -47,6 +47,8 @@
         "validator": "^13.5.2"
     },
     "devDependencies": {
+        "@commitlint/cli": "^13.1.0",
+        "@commitlint/config-conventional": "^13.1.0",
         "@nestjs/cli": "7.5.4",
         "@nestjs/schematics": "7.2.7",
         "@nestjs/testing": "7.6.5",
@@ -59,6 +61,7 @@
         "eslint": "7.18.0",
         "eslint-config-prettier": "7.2.0",
         "eslint-plugin-import": "2.22.1",
+        "husky": "^7.0.1",
         "jest": "26.6.3",
         "jest-extended": "^0.11.5",
         "jest-sonar-reporter": "^2.0.0",
