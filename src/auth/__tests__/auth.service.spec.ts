@@ -1,20 +1,19 @@
-import { ConfigService } from '@nestjs/config';
-import { getModelToken } from '@nestjs/mongoose';
-import { Test } from '@nestjs/testing';
-import { Result } from '../../shared/models/result';
-import { invalidSession } from '../../users/constants/errors';
+import { ConfigService } from "@nestjs/config";
+import { Test } from "@nestjs/testing";
 
-import { UtilsService } from '../../common/providers';
-import { SentryLogger } from '../../common/providers/logger.service';
-import { GlobalConfigService } from '../../global-config/global-config.service';
-import { GetBalanceRequest, VerifyTokenResponse } from '../../ow-api/models';
-import { OWApiClient } from '../../ow-api/ow-api.client';
-import { VerifySessionRequest } from '../../users/models';
-import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
-import { User, UserInfo, UserSession } from '../../users/schemas';
-import { AuthService } from '../auth.service';
-import { AuthenticateResult, AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
-import { duplicateNickname } from '../constants/errors';
+import { UtilsService } from "../../common/providers";
+import { SentryLogger } from "../../common/providers/logger.service";
+import { GlobalConfigService } from "../../global-config/global-config.service";
+import { VerifyTokenResponse } from "../../ow-api/models";
+import { OWApiClient } from "../../ow-api/ow-api.client";
+import { Result } from "../../shared/models/result";
+import { invalidSession } from "../../users/constants/errors";
+import { VerifySessionRequest } from "../../users/models";
+import { UserInfosService, UserSessionsService, UsersService } from "../../users/providers";
+import { UserInfo, UserSession } from "../../users/schemas";
+import { AuthService } from "../auth.service";
+import { duplicateNickname } from "../constants/errors";
+import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from "../models";
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -35,6 +34,8 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         code: 3,
         message: '',
         isSuccessful,
+        appType: 1,
+        siteName: "lumi"
     };
 };
 
