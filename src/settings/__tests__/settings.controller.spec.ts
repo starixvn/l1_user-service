@@ -33,7 +33,7 @@ describe('SettingsController test', () => {
 
             jest.spyOn(settingsService, 'getSettings').mockResolvedValue(expectResult);
 
-            expect(await settingsController.getSettings()).toBe(expectResult);
+            expect(await settingsController.getSettings('')).toBe(expectResult);
         });
     });
 });
