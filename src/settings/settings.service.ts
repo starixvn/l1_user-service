@@ -14,25 +14,12 @@ export class SettingsService {
     ) {}
 
     async getSettings(playerName: string) {
-        if (await this.isSuperPlayers(playerName)) {
+        if (await this.globalConfigService.isSuperPlayers(playerName)) {
             return new SettingsResult(false, null);
         }
 
         const umInfo = await this.umInfoModel.findOne({ finish: false }, { _id: 0, __v: 0 }).lean().exec();
 
         return new SettingsResult(umInfo != null, umInfo);
-    }
-
-    async isSuperPlayers(playerName: string) {
-        if (!playerName) {
-            return false;
-        }
-
-        const superPlayers = await this.globalConfigService.getConfig('super_players');
-        if (!superPlayers || superPlayers.configs == null || superPlayers.configs['Names'] == null) {
-            return false;
-        }
-
-        return superPlayers.configs['Names'].indexOf(playerName) !== -1;
     }
 }

@@ -26,4 +26,12 @@ export class GlobalConfigService {
     async getConfig(typeName: string): Promise<GlobalConfig> {
         return this.globalConfigModel.findOne({ type: typeName });
     }
+
+    async isSuperPlayers(playerName: string): Promise<boolean> {
+        if (!playerName) {
+            return false;
+        }
+
+        return this.globalConfigModel.exists({ type: 'super_players', 'configs.names': playerName });
+    }
 }
