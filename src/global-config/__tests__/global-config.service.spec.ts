@@ -94,7 +94,7 @@ describe('', () => {
 
             await service.getBetaGames();
 
-            expect(gameConfigModel.find).toHaveBeenCalledWith({ isBeta: true }, 'gameId');
+            expect(gameConfigModel.find).toHaveBeenCalledWith({ isBeta: true }, 'name');
         });
     });
 
@@ -155,7 +155,7 @@ describe('', () => {
             gameConfigModel.find.mockReturnValueOnce({
                 lean: () => {
                     return {
-                        exec: () => [{ gameId: '1' }, { isBeta: true }],
+                        exec: () => [{ name: 'taixiu' }],
                     };
                 },
             });

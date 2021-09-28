@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 
 import { GlobalConfig, GlobalConfigDocument } from './schemas/global-config.schema';
 import { GameConfig, GameConfigDocument } from './schemas/game-config.schema';
+import gameNames from './game-names';
 
 @Injectable()
 export class GlobalConfigService {
