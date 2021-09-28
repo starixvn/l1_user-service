@@ -35,7 +35,7 @@ export class AuthService {
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
-        
+
         if (data && data.isSuccessful && data.appType === system) {
             const user = await this.createUserIfNotExist(data);
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
@@ -106,7 +106,7 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, request.username);
 
         return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
