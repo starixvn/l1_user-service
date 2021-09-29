@@ -13,11 +13,11 @@ export class UserSessionsService {
     constructor(@InjectModel(UserSession.name) private readonly userSessionModel: Model<UserSessionDocument>) {}
 
     async getUserSession(sessionId: string): Promise<UserSession> {
-        return this.userSessionModel.findOne({ sessionId: sessionId });
+        return this.userSessionModel.findOne({ sessionId: sessionId }).lean().exec();
     }
 
     async getUserSessionByToken(token: string): Promise<UserSession> {
-        return this.userSessionModel.findOne({ ssoToken: token });
+        return this.userSessionModel.findOne({ ssoToken: token }).lean().exec();
     }
 
     async createUserSession(param: CreateUserSessionParam): Promise<UserSession> {
@@ -26,12 +26,8 @@ export class UserSessionsService {
         return userSessionCreated.save();
     }
 
-    async updateReCheckInTime(sessionId: string) {
-        return this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
-    }
-
-    async updateSystem(sessionId: string, system: number) {
-        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { system: system } }).exec();
+    async updateReCheckInTime(sessionId: string):Promise<UserSessionDocument> {     
+        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 
     async verifySession(request: VerifySessionRequest) {
