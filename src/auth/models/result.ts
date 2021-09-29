@@ -1,3 +1,4 @@
+import { UMInfo } from "../../settings/schemas";
 import { Result } from "../../shared/models/result";
 
 export class AuthorizeResult {
@@ -5,13 +6,17 @@ export class AuthorizeResult {
 }
 
 export class AuthenticateResult {
+    readonly isUM: boolean ;
     constructor(
         readonly isAuthenticated: boolean,
+        readonly umInfo: UMInfo = null,
         readonly username: string = null,
         readonly language: string = null,
         readonly ss: string = null,
-        readonly system: number = 0,
-    ) {}
+        readonly system: number = 0,                
+    ) {
+        this.isUM = umInfo != null;
+    }
 }
 
 export class GetBalanceResult extends Result {
