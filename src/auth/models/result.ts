@@ -1,19 +1,20 @@
-import { UMInfo } from "../../settings/schemas";
-import { Result } from "../../shared/models/result";
+import { UMInfo } from '../../settings/schemas';
+import { Result } from '../../shared/models/result';
 
 export class AuthorizeResult {
     constructor(readonly authorized: boolean, readonly user: any = null) {}
 }
 
 export class AuthenticateResult {
-    readonly isUM: boolean ;
+    readonly isUM: boolean;
     constructor(
         readonly isAuthenticated: boolean,
         readonly umInfo: UMInfo = null,
         readonly username: string = null,
         readonly language: string = null,
         readonly ss: string = null,
-        readonly system: number = 0,                
+        readonly system: number = 0,
+        readonly memberName: string = null,
     ) {
         this.isUM = umInfo != null;
     }

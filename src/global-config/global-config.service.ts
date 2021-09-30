@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 
 import { GlobalConfig, GlobalConfigDocument } from './schemas/global-config.schema';
 import { GameConfig, GameConfigDocument } from './schemas/game-config.schema';
-import gameNames from './game-names';
 
 @Injectable()
 export class GlobalConfigService {
@@ -26,11 +25,13 @@ export class GlobalConfigService {
 
         return settings
             ? Object.keys(settings)
-                  .filter(
-                      (gameId) =>
-                          (isSuperPlayers && betaGames.some((g) => g.gameId?.toString() === gameId)) ||
-                          !settings[gameId].some((x) => x.toLowerCase() === siteName.toLowerCase()),
-                  )
+                  .filter((gameId) => {
+                      const isBeta = betaGames.some((g) => g.gameId?.toString() === gameId);
+                      return (
+                          (isBeta && isSuperPlayers) ||
+                          (!isBeta && !settings[gameId].some((x) => x.toLowerCase() === siteName.toLowerCase()))
+                      );
+                  })
                   .map((gameId) => parseInt(gameId))
             : [];
     }

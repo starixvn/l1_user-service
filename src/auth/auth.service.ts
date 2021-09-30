@@ -1,22 +1,22 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { SettingsService } from "../settings/settings.service";
-import { Result } from "../shared/models/result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { SettingsService } from '../settings/settings.service';
+import { Result } from '../shared/models/result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -35,23 +35,31 @@ export class AuthService {
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        const settings = await this.settingService.getSettings();         
+        const settings = await this.settingService.getSettings();
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
-        const data = await this.apiClient.verifyToken(request);  
+        const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful && data.appType === system) {
             const user = settings.isUM ? await this.usersService.getByUsername(data.memberKey) : await this.createUserIfNotExist(data);
 
             if (settings.isUM) {
                 const isSuperPlayer = await this.globalConfigService.isSuperPlayers(user.local.memberName);
-                if(!isSuperPlayer){
+                if (!isSuperPlayer) {
                     return new AuthenticateResult(false, settings.umInfo);
                 }
-            } 
+            }
 
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
-            
-            return new AuthenticateResult(true, settings.umInfo, userSession.username, userSession.language, userSession.sessionId, userSession.system);
+
+            return new AuthenticateResult(
+                true,
+                settings.umInfo,
+                userSession.username,
+                userSession.language,
+                userSession.sessionId,
+                userSession.system,
+                userSession.memberName,
+            );
         } else {
             this.logger.log(
                 [
@@ -94,12 +102,12 @@ export class AuthService {
 
         if (settings.isUM) {
             const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
-            if(isSuperPlayer){
+            if (isSuperPlayer) {
                 return new Result();
             }
-        } 
+        }
 
-        return isAuthenticated ? new Result('0','', settings.umInfo) : invalidSession;
+        return isAuthenticated ? new Result('0', '', settings.umInfo) : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
@@ -110,7 +118,7 @@ export class AuthService {
         }
 
         const user = await this.usersService.getByUsername(request.username);
-        
+
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
             return invalidSession;
@@ -176,7 +184,7 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, characterName);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }
