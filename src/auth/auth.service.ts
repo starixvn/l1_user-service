@@ -1,9 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
 import { generate } from "randomstring";
-import { SettingsResult } from "src/settings/models";
 import validator from "validator";
 
 import { CreateNicknameRequest } from ".";
@@ -11,7 +8,7 @@ import { SentryLogger, UtilsService } from "../common/providers";
 import { GlobalConfigService } from "../global-config/global-config.service";
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
 import { OWApiClient } from "../ow-api/ow-api.client";
-import { UMInfo, UMInfoDocument } from "../settings/schemas";
+import { SettingsService } from "../settings/settings.service";
 import { Result } from "../shared/models/result";
 import { invalidSession } from "../users/constants/errors";
 import { VerifySessionRequest } from "../users/models";
@@ -34,27 +31,27 @@ export class AuthService {
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
         private readonly globalConfigService: GlobalConfigService,
-        @InjectModel(UMInfo.name) private readonly umInfoModel: Model<UMInfoDocument>,
+        private readonly settingService: SettingsService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        const umInfo = await this.getUmInfo();            
+        const settings = await this.settingService.getSettings();         
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);  
 
         if (data && data.isSuccessful && data.appType === system) {
-            const user = umInfo ? await this.usersService.getByUsername(data.memberKey) : await this.createUserIfNotExist(data);
+            const user = settings.isUM ? await this.usersService.getByUsername(data.memberKey) : await this.createUserIfNotExist(data);
 
-            if (umInfo) {
+            if (settings.isUM) {
                 const isSuperPlayer = await this.globalConfigService.isSuperPlayers(user.local.memberName);
                 if(!isSuperPlayer){
-                    return new AuthenticateResult(false, umInfo);
+                    return new AuthenticateResult(false, settings.umInfo);
                 }
             } 
 
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
             
-            return new AuthenticateResult(true, umInfo, userSession.username, userSession.language, userSession.sessionId, userSession.system);
+            return new AuthenticateResult(true, settings.umInfo, userSession.username, userSession.language, userSession.sessionId, userSession.system);
         } else {
             this.logger.log(
                 [
@@ -66,7 +63,7 @@ export class AuthService {
                 ].join('\n'),
             );
 
-            return new AuthenticateResult(false,umInfo);
+            return new AuthenticateResult(false, settings.umInfo);
         }
     }
 
@@ -92,17 +89,17 @@ export class AuthService {
     }
 
     async verifySession(request: VerifySessionRequest) {
-        const umInfo = await this.getUmInfo();
+        const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
-        if (umInfo) {
+        if (settings.isUM) {
             const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
             if(isSuperPlayer){
                 return new Result();
             }
         } 
 
-        return isAuthenticated ? new Result('0','', umInfo) : invalidSession;
+        return isAuthenticated ? new Result('0','', settings.umInfo) : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
@@ -315,12 +312,5 @@ export class AuthService {
         const nameDisplay = characterName ? `\n\tCharacter: ${characterName} ` : '';
 
         return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
-    }
-
-    private async getUmInfo(){
-        return this.umInfoModel
-            .findOne({ finish: false, start : {$lt: new Date()} }, { _id: 0, __v: 0 })
-            .lean()
-            .exec();
     }
 }
