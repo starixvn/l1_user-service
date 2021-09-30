@@ -1,9 +1,9 @@
-import { getModelToken } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
 
-import { GlobalConfigService } from '../global-config.service';
-import { GlobalConfig } from '../schemas/global-config.schema';
-import { GameConfig } from '../schemas/game-config.schema';
+import { GlobalConfigService } from "../global-config.service";
+import { GameConfig } from "../schemas/game-config.schema";
+import { GlobalConfig } from "../schemas/global-config.schema";
 
 class GlobalConfigModel {
     save: jest.Mock;
@@ -94,7 +94,7 @@ describe('', () => {
 
             await service.getBetaGames();
 
-            expect(gameConfigModel.find).toHaveBeenCalledWith({ isBeta: true }, 'name');
+            expect(gameConfigModel.find).toHaveBeenCalledWith({ isBeta: true }, 'gameId');
         });
     });
 
@@ -155,7 +155,7 @@ describe('', () => {
             gameConfigModel.find.mockReturnValueOnce({
                 lean: () => {
                     return {
-                        exec: () => [{ name: 'taixiu' }],
+                        exec: () => [{ gameId: '1' }, { isBeta: true }],
                     };
                 },
             });
