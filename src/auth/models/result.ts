@@ -2,7 +2,10 @@ import { UMInfo } from '../../settings/schemas';
 import { Result } from '../../shared/models/result';
 
 export class AuthorizeResult {
-    constructor(readonly authorized: boolean, readonly user: any = null) {}
+    readonly isUM: boolean;
+    constructor(readonly authorized: boolean, readonly user: any = null, readonly umInfo: UMInfo = null) {
+        this.isUM = umInfo !== null;
+    }
 }
 
 export class AuthenticateResult {
@@ -16,7 +19,7 @@ export class AuthenticateResult {
         readonly system: number = 0,
         readonly memberName: string = null,
     ) {
-        this.isUM = umInfo != null;
+        this.isUM = umInfo !== null;
     }
 }
 

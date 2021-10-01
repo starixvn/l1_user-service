@@ -111,11 +111,19 @@ export class AuthService {
     }
 
     async authorize(request: VerifySessionRequest) {
+        const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
             return invalidSession;
         }
+
+        if (settings.isUM) {
+            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
+            if(!isSuperPlayer){
+                return new AuthorizeResult(false, null, settings.umInfo);
+            }
+        } 
 
         const user = await this.usersService.getByUsername(request.username);
 
