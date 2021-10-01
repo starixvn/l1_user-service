@@ -44,9 +44,22 @@ export class AuthService {
 
             if (settings.isUM ) {
                 const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
-                if (!isSuperPlayer) {
-                    return new AuthenticateResult(false, settings.umInfo);
-                }
+
+                if(isSuperPlayer){
+                    const superPlayerSession = await this.addSessionIfNotExist(user, request, data, system);
+
+                    return new AuthenticateResult(
+                        true,
+                        null,
+                        superPlayerSession.username,
+                        superPlayerSession.language,
+                        superPlayerSession.sessionId,
+                        superPlayerSession.system,
+                        superPlayerSession.memberName,
+                    );
+                }                
+
+                return new AuthenticateResult(false, settings.umInfo);
             }
 
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
