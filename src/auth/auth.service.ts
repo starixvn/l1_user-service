@@ -11,7 +11,7 @@ import { OWApiClient } from '../ow-api/ow-api.client';
 import { SettingsService } from '../settings/settings.service';
 import { Result } from '../shared/models/result';
 import { invalidSession } from '../users/constants/errors';
-import { UMResult } from "../shared/models/um-result";
+import { UMResult } from '../shared/models/um-result';
 import { VerifySessionRequest } from '../users/models';
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
 import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
@@ -114,14 +114,15 @@ export class AuthService {
         const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
+        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
         if (settings.isUM) {
             const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
             if (isSuperPlayer) {
                 return new Result();
             }
-        }
 
-        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
+            return new Result('0', '', umResult);
+        }
 
         return isAuthenticated ? new Result('0', '', umResult) : invalidSession;
     }
