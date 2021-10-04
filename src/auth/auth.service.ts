@@ -1,22 +1,22 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { SettingsService } from "../settings/settings.service";
-import { Result } from "../shared/models/result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { SettingsService } from '../settings/settings.service';
+import { Result } from '../shared/models/result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -40,12 +40,12 @@ export class AuthService {
         const data = await this.apiClient.verifyToken(request);
 
         if (data && data.isSuccessful && data.appType === system) {
-            const user = settings.isUM ? await this.usersService.getByUsername(data.memberKey) : await this.createUserIfNotExist(data);
+            const user = settings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
 
-            if (settings.isUM ) {
+            if (settings.isUM) {
                 const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
 
-                if(isSuperPlayer){
+                if (isSuperPlayer) {
                     const superPlayerSession = await this.addSessionIfNotExist(user, request, data, system);
 
                     return new AuthenticateResult(
@@ -57,7 +57,7 @@ export class AuthService {
                         superPlayerSession.system,
                         superPlayerSession.memberName,
                     );
-                }                
+                }
 
                 return new AuthenticateResult(false, settings.umInfo);
             }
@@ -133,10 +133,10 @@ export class AuthService {
 
         if (settings.isUM) {
             const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
-            if(!isSuperPlayer){
+            if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, settings.umInfo);
             }
-        } 
+        }
 
         const user = await this.usersService.getByUsername(request.username);
 
@@ -156,7 +156,7 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, request.username);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
 
         return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
@@ -205,7 +205,7 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, characterName);
+        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }

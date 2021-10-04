@@ -1,9 +1,9 @@
-import { Test } from "@nestjs/testing";
+import { Test } from '@nestjs/testing';
 
-import { Result } from "../../shared/models/result";
-import { AuthController } from "../auth.controller";
-import { AuthService } from "../auth.service";
-import { ReCheckInResponse } from "../models";
+import { Result } from '../../shared/models/result';
+import { AuthController } from '../auth.controller';
+import { AuthService } from '../auth.service';
+import { ReCheckInResponse } from '../models';
 
 jest.mock('../auth.service');
 
@@ -30,7 +30,8 @@ describe('AuthController test', () => {
                 ss: 'session',
                 system: 1,
                 isUM: false,
-                umInfo: null
+                umInfo: null,
+                memberName: null,
             };
 
             jest.spyOn(authService, 'signIn').mockResolvedValue(expectResult);

@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get } from '@nestjs/common';
 
-import { SettingsService } from "./settings.service";
+import { SettingsService } from './settings.service';
 
 @Controller('settings')
 export class SettingsController {

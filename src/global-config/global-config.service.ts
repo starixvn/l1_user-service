@@ -12,7 +12,7 @@ export class GlobalConfigService {
         @InjectModel(GameConfig.name) private readonly gameConfigModel: Model<GameConfigDocument>,
     ) {}
 
-    async getOfferedGames(siteName: string, username: string = '') {
+    async getOfferedGames(siteName: string, username = '') {
         if (!siteName) {
             return [];
         }
