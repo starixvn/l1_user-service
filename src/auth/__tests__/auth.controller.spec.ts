@@ -31,7 +31,7 @@ describe('AuthController test', () => {
                 system: 1,
                 isUM: false,
                 umInfo: null,
-                memberName: null,
+                memberName: ''
             };
 
             jest.spyOn(authService, 'signIn').mockResolvedValue(expectResult);

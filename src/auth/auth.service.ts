@@ -11,6 +11,7 @@ import { OWApiClient } from '../ow-api/ow-api.client';
 import { SettingsService } from '../settings/settings.service';
 import { Result } from '../shared/models/result';
 import { invalidSession } from '../users/constants/errors';
+import { UMResult } from "../shared/models/um-result";
 import { VerifySessionRequest } from '../users/models';
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
 import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
@@ -59,14 +60,14 @@ export class AuthService {
                     );
                 }
 
-                return new AuthenticateResult(false, settings.umInfo);
+                return new AuthenticateResult(false, new UMResult(settings.umInfo.start, settings.umInfo.end));
             }
 
             const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
             return new AuthenticateResult(
                 true,
-                settings.umInfo,
+                settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null,
                 userSession.username,
                 userSession.language,
                 userSession.sessionId,
@@ -84,7 +85,7 @@ export class AuthService {
                 ].join('\n'),
             );
 
-            return new AuthenticateResult(false, settings.umInfo);
+            return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
         }
     }
 
@@ -120,7 +121,9 @@ export class AuthService {
             }
         }
 
-        return isAuthenticated ? new Result('0', '', settings.umInfo) : invalidSession;
+        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
+
+        return isAuthenticated ? new Result('0', '', umResult) : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
