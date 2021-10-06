@@ -1,10 +1,9 @@
-import { UMInfo } from "../../settings/schemas";
 import { Result } from "../../shared/models/result";
 import { UMResult } from "../../shared/models/um-result";
 
 export class AuthorizeResult {
     readonly isUM: boolean;
-    constructor(readonly authorized: boolean, readonly user: any = null, readonly umInfo: UMInfo = null) {
+    constructor(readonly authorized: boolean, readonly user: any = null, readonly umInfo: UMResult = null) {
         this.isUM = umInfo !== null;
     }
 }
