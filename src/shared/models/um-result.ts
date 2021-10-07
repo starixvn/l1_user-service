@@ -1,4 +1,3 @@
 export class UMResult {
-    constructor(readonly startTime : Date, readonly endTime : Date) {
-    }
+    constructor(readonly startTime: Date, readonly endTime: Date) {}
 }
