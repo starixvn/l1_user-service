@@ -211,7 +211,28 @@ describe('AuthService test', () => {
             expect(actualResult.isSuccessful).toBe(false);
         });
 
-        it('should return successful when UM and member is super player', async () => {
+        it('should return successful when UM and member is super player and authenticated', async () => {
+            // arrange
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
+                isAuthenticated: true,
+                session: new UserSession(),
+            });
+
+            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+                isUM: true,
+                umInfo: new UMInfo(),
+            });
+
+            jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
+
+            // act
+            const actualResult = await authService.verifySession(verifySessionRequest);
+
+            // assert
+            expect(actualResult.isSuccessful).toBe(true);
+        });
+
+        it('should return unsuccessful when UM and member is super player but not authenticated', async () => {
             // arrange
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: false,
@@ -229,7 +250,7 @@ describe('AuthService test', () => {
             const actualResult = await authService.verifySession(verifySessionRequest);
 
             // assert
-            expect(actualResult.isSuccessful).toBe(true);
+            expect(actualResult.isSuccessful).toBe(false);
         });
     });
 

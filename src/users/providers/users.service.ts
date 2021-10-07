@@ -1,16 +1,16 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { LeanDocument, Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { LeanDocument, Model } from 'mongoose';
 
-import { CreateUserParam } from "../params";
-import { User, UserDocument } from "../schemas";
+import { CreateUserParam } from '../params';
+import { User, UserDocument } from '../schemas';
 
 @Injectable()
 export class UsersService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
-    async getByUsername(username: string){
-        return this.userModel.findOne({ 'local.username': username }).lean().exec();
+    async getByUsername(username: string) {
+        return this.userModel.findOne({ 'local.username': username });
     }
 
     async getByMemberName(memberName: string) {
