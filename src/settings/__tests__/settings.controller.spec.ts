@@ -1,7 +1,8 @@
-import { Test } from '@nestjs/testing';
-import { SettingsResult } from '../models';
-import { SettingsController } from '../settings.controller';
-import { SettingsService } from '../settings.service';
+import { Test } from "@nestjs/testing";
+
+import { SettingsResult } from "../models";
+import { SettingsController } from "../settings.controller";
+import { SettingsService } from "../settings.service";
 
 jest.mock('../settings.service');
 

@@ -6,6 +6,7 @@ import { SentryLogger } from "../../common/providers/logger.service";
 import { GlobalConfigService } from "../../global-config/global-config.service";
 import { VerifyTokenResponse } from "../../ow-api/models";
 import { OWApiClient } from "../../ow-api/ow-api.client";
+import { SettingsService } from "../../settings/settings.service";
 import { Result } from "../../shared/models/result";
 import { invalidSession } from "../../users/constants/errors";
 import { VerifySessionRequest } from "../../users/models";
@@ -19,6 +20,7 @@ jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
 jest.mock('../../common/providers/logger.service');
 jest.mock('../../global-config/global-config.service');
+jest.mock('../../settings/settings.service');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -80,6 +82,7 @@ describe('AuthService test', () => {
                     provide: UserInfosService,
                     useValue: stubUserInfoService,
                 },
+                SettingsService
             ],
         }).compile();
 
@@ -90,6 +93,7 @@ describe('AuthService test', () => {
         it('should return authentication successful and create user when request token is valid', async () => {
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValue(verifyTokenResponse);
+            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValue({isUM: false, umInfo: null});
             const createUserIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'createUserIfNotExist');
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {

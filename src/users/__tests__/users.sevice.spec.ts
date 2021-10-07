@@ -47,6 +47,14 @@ describe('UserInfosService test', () => {
         });
     });
 
+    describe('getByMemberName test', () => {
+        it('should return user info that matched query user name', async () => {
+            const actualResult = await service.getByMemberName(user.local.memberName);
+
+            expect(actualResult.local.memberName).toEqual(user.local.memberName);
+        });
+    });
+
     describe('getById test', () => {
         it('should return user info that matched query user id', async () => {
             jest.spyOn(userModel, 'findById');

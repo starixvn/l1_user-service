@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+
 import { Result } from '../../shared/models/result';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
@@ -28,6 +29,9 @@ describe('AuthController test', () => {
                 language: 'en',
                 ss: 'session',
                 system: 1,
+                isUM: false,
+                umInfo: null,
+                memberName: ''
             };
 
             jest.spyOn(authService, 'signIn').mockResolvedValue(expectResult);
