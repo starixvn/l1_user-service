@@ -1,11 +1,13 @@
 import { ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
+import { stub } from "jest-micro-auto-stub";
 
 import { UtilsService } from "../../common/providers";
 import { SentryLogger } from "../../common/providers/logger.service";
 import { GlobalConfigService } from "../../global-config/global-config.service";
 import { VerifyTokenResponse } from "../../ow-api/models";
 import { OWApiClient } from "../../ow-api/ow-api.client";
+import { UMInfo } from "../../settings/schemas";
 import { SettingsService } from "../../settings/settings.service";
 import { Result } from "../../shared/models/result";
 import { invalidSession } from "../../users/constants/errors";
@@ -41,25 +43,8 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
     };
 };
 
-class StubUsersService {
-    getByUsername = jest.fn();
-    getById = jest.fn();
-    createUser = jest.fn();
-}
-
-class StubUserInfoService {
-    getUserInfo = jest.fn();
-    isExistingCharacterName = jest.fn();
-    getLatestUserInfoUID = jest.fn();
-    upSertUserInfo = jest.fn();
-    updateBalance = jest.fn();
-    updateMemberStakeLevel = jest.fn();
-    updateSettings = jest.fn();
-    updateUserSignInSMStatus = jest.fn();
-}
-
-const stubUsersService = new StubUsersService();
-const stubUserInfoService = new StubUserInfoService();
+const stubUsersService = stub(UsersService);
+const stubUserInfoService = stub(UserInfosService);
 
 describe('AuthService test', () => {
     let authService: AuthService;
@@ -184,7 +169,7 @@ describe('AuthService test', () => {
         const verifySessionRequest: VerifySessionRequest = { username: 'user1', session: 'session', browserUserAgent: 'userAgent' };
 
         it('should return unsuccessful result when session is invalid', async () => {
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValue({
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: false,
                 session: new UserSession(),
             });
@@ -195,13 +180,55 @@ describe('AuthService test', () => {
         });
 
         it('should return successful result when session is valid', async () => {
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValue({
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: new UserSession(),
             });
 
             const actualResult = await authService.verifySession(verifySessionRequest);
 
+            expect(actualResult.isSuccessful).toBe(true);
+        });
+
+        it('should always return unsuccessful when UM and member is NOT super player', async () => {
+            // arrange
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
+                isAuthenticated: false,
+                session: new UserSession(),
+            });
+
+            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+                isUM: true,
+                umInfo: new UMInfo(),
+            });
+
+            jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(false);
+
+            // act
+            const actualResult = await authService.verifySession(verifySessionRequest);
+
+            // assert
+            expect(actualResult.isSuccessful).toBe(false);
+        });
+
+        it('should return successful when UM and member is super player', async () => {
+            // arrange
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
+                isAuthenticated: false,
+                session: new UserSession(),
+            });
+
+            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+                isUM: true,
+                umInfo: new UMInfo(),
+            });
+
+            jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
+
+            // act
+            const actualResult = await authService.verifySession(verifySessionRequest);
+
+            // assert
             expect(actualResult.isSuccessful).toBe(true);
         });
     });
