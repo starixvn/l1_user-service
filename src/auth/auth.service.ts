@@ -1,23 +1,23 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { SettingsService } from "../settings/settings.service";
-import { Result } from "../shared/models/result";
-import { UMResult } from "../shared/models/um-result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { SettingsService } from '../settings/settings.service';
+import { Result } from '../shared/models/result';
+import { UMResult } from '../shared/models/um-result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -74,19 +74,19 @@ export class AuthService {
                 userSession.system,
                 userSession.memberName,
             );
-        } else {
-            this.logger.log(
-                [
-                    `Authentication Failed`,
-                    `Request: ${JSON.stringify(request)}`,
-                    `Result: ${JSON.stringify(data)}`,
-                    `IP Info: ${request.ip}`,
-                    `System: ${system}`,
-                ].join('\n'),
-            );
-
-            return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
         }
+
+        this.logger.log(
+            [
+                `Authentication Failed`,
+                `Request: ${JSON.stringify(request)}`,
+                `Result: ${JSON.stringify(data)}`,
+                `IP Info: ${request.ip}`,
+                `System: ${system}`,
+            ].join('\n'),
+        );
+
+        return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
     }
 
     async reCheckIn(request: VerifySessionRequest) {
@@ -146,7 +146,7 @@ export class AuthService {
 
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
-            
+
             return invalidSession;
         }
 

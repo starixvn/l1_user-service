@@ -10,15 +10,15 @@ export class UsersService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
     async getByUsername(username: string): Promise<UserDocument> {
-        return this.userModel.findOne({ 'local.username': username });
+        return this.userModel.findOne({ 'local.username': username }).lean();
     }
 
     async getByMemberName(memberName: string): Promise<UserDocument> {
-        return this.userModel.findOne({ 'local.memberName': memberName });
+        return this.userModel.findOne({ 'local.memberName': memberName }).lean();
     }
 
     async getById(id: string): Promise<User> {
-        return this.userModel.findById(id);
+        return this.userModel.findById(id).lean();
     }
 
     async createUser(createUserParam: CreateUserParam): Promise<UserDocument> {
