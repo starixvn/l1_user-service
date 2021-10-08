@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { LeanDocument, Model } from 'mongoose';
+import { Model } from "mongoose";
 
 import { CreateUserParam } from '../params';
 import { User, UserDocument } from '../schemas';
