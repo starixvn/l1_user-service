@@ -13,7 +13,7 @@ export class CreateUserSessionParam {
         readonly userId: string,
         readonly language: string,
         readonly currency: string,
-        readonly clientId: string,
+        readonly partnerId: string,
         readonly memberName: string,
         readonly siteName: string,
         readonly system: number,

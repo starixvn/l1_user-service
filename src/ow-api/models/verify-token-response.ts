@@ -2,7 +2,7 @@ export interface VerifyTokenResponse {
     memberId: number;
     memberName: string;
     siteId: string;
-    clientId: string;
+    partnerId: string;
     domain: string;
     language: string;
     currency: string;

@@ -1,13 +1,14 @@
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserSessionsService } from '../providers';
-import { UserSession, UserSessionDocument, UserSessionSchema } from '../schemas';
-import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
-import { Model } from 'mongoose';
-import { CreateUserSessionParam } from '../params';
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { Model } from "mongoose";
+
+import { closeInMongodConnection, rootMongooseTestModule } from "../../shared/test-utils/mongoose-test-module";
+import { CreateUserSessionParam } from "../params";
+import { UserSessionsService } from "../providers";
+import { UserSession, UserSessionDocument, UserSessionSchema } from "../schemas";
 
 const user = new UserSession();
-user.clientId = '1';
+user.partnerId = '1';
 user.sessionId = 'sessionId';
 user.recheckInTime = new Date();
 user.ssoToken = 'token';

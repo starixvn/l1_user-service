@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
 
 export type UserDocument = User & Document;
 
@@ -15,7 +15,7 @@ class Local {
     regDate: Date;
 
     @Prop()
-    clientId: string;
+    partnerId: string;
 
     @Prop()
     memberId: number;

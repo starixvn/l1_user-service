@@ -43,24 +43,9 @@ export class AuthService {
 
         if (data && data.isSuccessful && data.appType === system) {
             const user = settings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
+            const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
 
-            if (settings.isUM) {
-                const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
-
-                if (isSuperPlayer) {
-                    const superPlayerSession = await this.addSessionIfNotExist(user, request, data, system);
-
-                    return new AuthenticateResult(
-                        true,
-                        null,
-                        superPlayerSession.username,
-                        superPlayerSession.language,
-                        superPlayerSession.sessionId,
-                        superPlayerSession.system,
-                        superPlayerSession.memberName,
-                    );
-                }
-
+            if (settings.isUM && !isSuperPlayer) {
                 return new AuthenticateResult(false, new UMResult(settings.umInfo.start, settings.umInfo.end));
             }
 
@@ -68,7 +53,7 @@ export class AuthService {
 
             return new AuthenticateResult(
                 true,
-                settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null,
+                !isSuperPlayer && settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null,
                 userSession.username,
                 userSession.language,
                 userSession.sessionId,
@@ -277,7 +262,7 @@ export class AuthService {
     }
 
     private async createUserIfNotExist(verifyTokenResult: VerifyTokenResponse) {
-        const { memberKey, memberId, memberName, clientId, currency } = verifyTokenResult;
+        const { memberKey, memberId, memberName, partnerId, currency } = verifyTokenResult;
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
@@ -286,7 +271,7 @@ export class AuthService {
                     memberKey,
                     `${memberKey}@#QWE`,
                     new Date(),
-                    clientId,
+                    partnerId,
                     memberId,
                     memberName,
                     this.formatCurrency(currency),
@@ -302,7 +287,7 @@ export class AuthService {
         system: number,
     ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
-        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName, siteName } = verifyTokenResult;
+        const { memberKey, seq, memberId, siteId, language, currency, partnerId, memberName, siteName } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
@@ -323,7 +308,7 @@ export class AuthService {
                     user.id,
                     language,
                     this.formatCurrency(currency),
-                    clientId,
+                    partnerId,
                     memberName,
                     siteName,
                     system,

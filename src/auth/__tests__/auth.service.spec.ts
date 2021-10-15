@@ -29,7 +29,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         memberId: 1,
         memberName: 'user1',
         siteId: '77',
-        clientId: 'id',
+        partnerId: 'id',
         domain: 'localhost',
         language: 'en',
         currency: 'UUS',
