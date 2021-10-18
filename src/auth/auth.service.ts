@@ -133,15 +133,15 @@ export class AuthService {
         const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
-        if (!isAuthenticated) {
-            return invalidSession;
-        }
-
         if (settings.isUM) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
+            const isSuperPlayer = isAuthenticated ? await this.globalConfigService.isSuperPlayers(session.memberName) : false;
             if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
             }
+        }
+
+        if (!isAuthenticated) {
+            return invalidSession;
         }
 
         const user = await this.usersService.getByUsername(request.username);
