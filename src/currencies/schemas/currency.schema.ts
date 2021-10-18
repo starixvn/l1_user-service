@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, ObjectId } from "mongoose";
+import { Document } from "mongoose";
 
 export type CurrencyDocument = Currency & Document;
 
@@ -21,10 +21,10 @@ export class Currency {
     isTest: boolean;
 
     @Prop({ required: true })
-    partnerId: ObjectId;
+    partnerId: string;
 
     @Prop({ required: true })
-    currencyGroupId: ObjectId;
+    groupId: string;
 }
 
 export const CurrencySchema = SchemaFactory.createForClass(Currency);

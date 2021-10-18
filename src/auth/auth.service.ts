@@ -1,24 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { LeanDocument } from 'mongoose';
-import { generate } from 'randomstring';
-import validator from 'validator';
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { LeanDocument } from "mongoose";
+import { generate } from "randomstring";
+import validator from "validator";
 
-import { CreateNicknameRequest } from '.';
-import { SentryLogger, UtilsService } from '../common/providers';
-import { GlobalConfigService } from '../global-config/global-config.service';
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
-import { OWApiClient } from '../ow-api/ow-api.client';
-import { SettingsService } from '../settings/settings.service';
-import { Result } from '../shared/models/result';
-import { UMResult } from '../shared/models/um-result';
-import { invalidSession } from '../users/constants/errors';
-import { VerifySessionRequest } from '../users/models';
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
-import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
-import { UserDocument, UserSession } from '../users/schemas';
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
+import { CreateNicknameRequest } from ".";
+import { SentryLogger, UtilsService } from "../common/providers";
+import { CurrenciesService } from "../currencies/currencies.service";
+import { GlobalConfigService } from "../global-config/global-config.service";
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
+import { OWApiClient } from "../ow-api/ow-api.client";
+import { SettingsService } from "../settings/settings.service";
+import { Result } from "../shared/models/result";
+import { UMResult } from "../shared/models/um-result";
+import { invalidSession } from "../users/constants/errors";
+import { VerifySessionRequest } from "../users/models";
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
+import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
+import { UserDocument, UserSession } from "../users/schemas";
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
         private readonly configService: ConfigService,
         private readonly globalConfigService: GlobalConfigService,
         private readonly settingService: SettingsService,
+        private readonly currenciesService: CurrenciesService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
@@ -149,9 +151,10 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
+        const currency = await this.currenciesService.getPartnerCurrency(session.partnerId);
+        const offerGames = await this.currenciesService.getOfferedGames(currency.groupId);
 
-        return new AuthorizeResult(true, { ...userInfo, offerGames });
+        return new AuthorizeResult(true, { ...userInfo, exchangeRate: currency.rate, offerGames });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -198,9 +201,10 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
+        const currency = await this.currenciesService.getPartnerCurrency(session.partnerId);
+        const offerGames = await this.currenciesService.getOfferedGames(currency.groupId);
 
-        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
+        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, exchangeRate: currency.rate, offerGames });
     }
 
     async getBalance(request: VerifySessionRequest) {

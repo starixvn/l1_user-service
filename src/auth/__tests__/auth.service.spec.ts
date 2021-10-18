@@ -4,6 +4,7 @@ import { stub } from 'jest-micro-auto-stub';
 
 import { UtilsService } from '../../common/providers';
 import { SentryLogger } from '../../common/providers/logger.service';
+import { CurrenciesService } from "../../currencies/currencies.service";
 import { GlobalConfigService } from '../../global-config/global-config.service';
 import { VerifyTokenResponse } from '../../ow-api/models';
 import { OWApiClient } from '../../ow-api/ow-api.client';
@@ -23,6 +24,7 @@ jest.mock('../../users/providers');
 jest.mock('../../common/providers/logger.service');
 jest.mock('../../global-config/global-config.service');
 jest.mock('../../settings/settings.service');
+jest.mock('../../currencies/currencies.service');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -69,6 +71,7 @@ describe('AuthService test', () => {
                     useValue: stubUserInfoService,
                 },
                 SettingsService,
+                CurrenciesService,
             ],
         }).compile();
 
@@ -398,9 +401,15 @@ describe('AuthService test', () => {
             });
             jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
-            stubUsersService.getByUsername.mockResolvedValueOnce({});
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce({ name: 'user1' });
-            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
+            jest.spyOn(CurrenciesService.prototype, 'getPartnerCurrency').mockResolvedValue({
+                groupId: '1',
+                name: 'currency',
+                code: '123',
+                rate: 2,
+                enabled: true,
+                isTest: false,
+                partnerId: 'abc',
+            });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;

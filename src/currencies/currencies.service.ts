@@ -10,4 +10,12 @@ export class CurrenciesService {
         @InjectModel(Currency.name) private readonly currencyModel: Model<CurrencyDocument>,
         @InjectModel(GameOfCurrencyGroup.name) private readonly gameOfCurrencyGroupModel: Model<GameOfCurrencyGroupDocument>,
     ) {}
+
+    async getPartnerCurrency(partnerId: string) {
+        return this.currencyModel.findOne({ partnerId, enabled: true }, 'name rate groupId').lean().exec();
+    }
+
+    async getOfferedGames(groupId: string) {
+        return this.gameOfCurrencyGroupModel.find({ groupId, enabled: true }, 'gameId minBet maxBet maxBetPerChoices chips').lean().exec();
+    }
 }

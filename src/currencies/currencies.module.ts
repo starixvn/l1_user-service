@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { CurrenciesService } from "./currencies.service";
 import { Currency, CurrencySchema, GameOfCurrencyGroup, GameOfCurrencyGroupSchema } from "./schemas";
 
 @Module({
@@ -8,5 +9,7 @@ import { Currency, CurrencySchema, GameOfCurrencyGroup, GameOfCurrencyGroupSchem
         MongooseModule.forFeature([{ name: Currency.name, schema: CurrencySchema }]),
         MongooseModule.forFeature([{ name: GameOfCurrencyGroup.name, schema: GameOfCurrencyGroupSchema }]),
     ],
+    providers: [CurrenciesService],
+    exports: [CurrenciesService],
 })
 export class CurrenciesModule {}
