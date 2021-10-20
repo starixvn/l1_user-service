@@ -1,10 +1,18 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
 import * as mongoose from "mongoose";
 
-import { Chip } from "./chip.schema";
+export type GameOfCurrencyGroupDocument = GameOfCurrencyGroup & mongoose.Document;
 
-export type GameOfCurrencyGroupDocument = GameOfCurrencyGroup & Document;
+@Schema()
+class Chip {
+    @Prop({ required: true })
+    value: number;
+
+    @Prop({ required: true })
+    text: string;
+}
+
+const ChipSchema = SchemaFactory.createForClass(Chip);
 
 @Schema()
 export class GameOfCurrencyGroup {
@@ -26,7 +34,7 @@ export class GameOfCurrencyGroup {
     @Prop({ type: Object })
     maxBetPerChoices: object;
 
-    @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chip' }] })
+    @Prop({ type: [ChipSchema] })
     chips: Chip[];
 }
 
