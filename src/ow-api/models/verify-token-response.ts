@@ -5,7 +5,10 @@ export interface VerifyTokenResponse {
     partnerId: string;
     domain: string;
     language: string;
-    currency: string;
+    currencyCode: string;
+    currencyName: string;
+    currencyGroupId: string;
+    multiplier: number;
     seq: string;
     memberKey: string;
     code: number;

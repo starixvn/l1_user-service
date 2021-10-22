@@ -151,10 +151,9 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
-        const currency = await this.currenciesService.getPartnerCurrency(session.partnerId);
-        const offerGames = await this.currenciesService.getOfferedGames(currency.groupId);
+        const offerGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
 
-        return new AuthorizeResult(true, { ...userInfo, exchangeRate: currency.rate, offerGames });
+        return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -179,7 +178,7 @@ export class AuthService {
             return new AuthorizeResult(true, userInfo);
         }
 
-        const characterName = this.generateCharacterName(request.nickname, session.currency);
+        const characterName = this.generateCharacterName(request.nickname, session.currencyName);
         if (await this.userInfosService.isExistingCharacterName(characterName)) {
             return duplicateNickname;
         }
@@ -188,7 +187,7 @@ export class AuthService {
         const param = new CreateUserInfoParam(
             session.userId,
             characterName,
-            session.currency,
+            session.currencyName,
             latestUID,
             request.avatar || (Math.random() * 40 + 1) >> 0,
         );
@@ -201,10 +200,9 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const currency = await this.currenciesService.getPartnerCurrency(session.partnerId);
-        const offerGames = await this.currenciesService.getOfferedGames(currency.groupId);
+        const offerGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
 
-        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, exchangeRate: currency.rate, offerGames });
+        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }
 
     async getBalance(request: VerifySessionRequest) {
@@ -266,7 +264,7 @@ export class AuthService {
     }
 
     private async createUserIfNotExist(verifyTokenResult: VerifyTokenResponse) {
-        const { memberKey, memberId, memberName, partnerId, currency } = verifyTokenResult;
+        const { memberKey, memberId, memberName, partnerId, currencyName } = verifyTokenResult;
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
@@ -278,7 +276,7 @@ export class AuthService {
                     partnerId,
                     memberId,
                     memberName,
-                    this.formatCurrency(currency),
+                    this.formatCurrency(currencyName),
                 ),
             )
         );
@@ -291,7 +289,20 @@ export class AuthService {
         system: number,
     ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
-        const { memberKey, seq, memberId, siteId, language, currency, partnerId, memberName, siteName } = verifyTokenResult;
+        const {
+            memberKey,
+            seq,
+            memberId,
+            siteId,
+            language,
+            currencyCode,
+            currencyName,
+            currencyGroupId,
+            multiplier,
+            partnerId,
+            memberName,
+            siteName,
+        } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
@@ -311,7 +322,10 @@ export class AuthService {
                     siteId,
                     user.id,
                     language,
-                    this.formatCurrency(currency),
+                    currencyCode,
+                    this.formatCurrency(currencyName),
+                    currencyGroupId,
+                    multiplier,
                     partnerId,
                     memberName,
                     siteName,

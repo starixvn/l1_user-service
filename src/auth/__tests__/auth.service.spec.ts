@@ -34,7 +34,10 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         partnerId: 'id',
         domain: 'localhost',
         language: 'en',
-        currency: 'UUS',
+        currencyCode: 'UUS',
+        currencyName: 'UUS',
+        currencyGroupId: '1',
+        multiplier: 1,
         seq: '123',
         memberKey: 'memberKey',
         code: 3,
@@ -401,6 +404,9 @@ describe('AuthService test', () => {
             });
             jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
+            stubUsersService.getByUsername.mockReturnValueOnce({});
+            stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
+
             jest.spyOn(CurrenciesService.prototype, 'getPartnerCurrency').mockResolvedValue({
                 groupId: '1',
                 name: 'currency',

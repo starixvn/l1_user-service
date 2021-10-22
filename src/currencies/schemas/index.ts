@@ -1,2 +1,1 @@
-export * from './currency.schema';
-export * from './game-of-currency-group.schema';
+export * from './currency_group_game.schema';

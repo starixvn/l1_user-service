@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import * as mongoose from "mongoose";
 
-export type GameOfCurrencyGroupDocument = GameOfCurrencyGroup & mongoose.Document;
+export type CurrencyGroupGameDocument = CurrencyGroupGame & mongoose.Document;
 
 @Schema()
 class Chip {
@@ -10,17 +10,23 @@ class Chip {
 
     @Prop({ required: true })
     text: string;
+
+    @Prop({ required: true })
+    color: string;
 }
 
 const ChipSchema = SchemaFactory.createForClass(Chip);
 
 @Schema()
-export class GameOfCurrencyGroup {
+export class CurrencyGroupGame {
     @Prop({ required: true })
     groupId: string;
 
     @Prop({ required: true })
     gameId: number;
+
+    @Prop({ required: true })
+    gameName: string;
 
     @Prop({ required: true })
     enabled: boolean;
@@ -38,4 +44,4 @@ export class GameOfCurrencyGroup {
     chips: Chip[];
 }
 
-export const GameOfCurrencyGroupSchema = SchemaFactory.createForClass(GameOfCurrencyGroup);
+export const CurrencyGroupGameSchema = SchemaFactory.createForClass(CurrencyGroupGame);

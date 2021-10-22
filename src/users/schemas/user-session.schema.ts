@@ -42,7 +42,16 @@ export class UserSession {
     language: string;
 
     @Prop()
-    currency: string;
+    currencyCode: string;
+
+    @Prop()
+    currencyName: string;
+
+    @Prop()
+    currencyGroupId: string;
+
+    @Prop()
+    multiplier: number;
 
     @Prop()
     partnerId: string;
