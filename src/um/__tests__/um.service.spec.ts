@@ -2,10 +2,9 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 
-import { GlobalConfigService } from "../../global-config/global-config.service";
 import { closeInMongodConnection, rootMongooseTestModule } from "../../shared/test-utils/mongoose-test-module";
 import { UMInfo, UMInfoDocument, UMInfoSchema } from "../schemas";
-import { SettingsService } from "../settings.service";
+import { UMService } from "../um.service";
 
 class StubGlobalConfigService {
     getConfig = jest.fn();
@@ -15,23 +14,17 @@ class StubGlobalConfigService {
 const stubGlobalConfigService = new StubGlobalConfigService();
 
 describe('UserInfosService test', () => {
-    let service: SettingsService;
+    let service: UMService;
     let model: Model<UMInfoDocument>;
 
     beforeEach(async () => {
         jest.clearAllMocks();
         const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                SettingsService,
-                {
-                    provide: GlobalConfigService,
-                    useValue: stubGlobalConfigService,
-                },
-            ],
+            providers: [UMService],
             imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: UMInfo.name, schema: UMInfoSchema }])],
         }).compile();
 
-        service = module.get<SettingsService>(SettingsService);
+        service = module.get<UMService>(UMService);
         model = module.get<Model<UMInfoDocument>>(`${UMInfo.name}Model`);
     });
 
@@ -45,10 +38,9 @@ describe('UserInfosService test', () => {
         it('should get umInfo', async () => {
             jest.spyOn(model, 'findOne');
 
-            await service.getSettings();
+            await service.getUMResult();
 
             expect(model.findOne).toHaveBeenCalled();
         });
-
     });
 });

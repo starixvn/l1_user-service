@@ -2,28 +2,28 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
 
-import { UtilsService } from '../../common/providers';
-import { SentryLogger } from '../../common/providers/logger.service';
+import { UtilsService } from "../../common/providers";
+import { SentryLogger } from "../../common/providers/logger.service";
 import { CurrenciesService } from "../../currencies/currencies.service";
-import { GlobalConfigService } from '../../global-config/global-config.service';
-import { VerifyTokenResponse } from '../../ow-api/models';
-import { OWApiClient } from '../../ow-api/ow-api.client';
-import { UMInfo } from '../../settings/schemas';
-import { SettingsService } from '../../settings/settings.service';
-import { Result } from '../../shared/models/result';
-import { invalidSession } from '../../users/constants/errors';
-import { VerifySessionRequest } from '../../users/models';
-import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
-import { UserInfo, UserSession } from '../../users/schemas';
-import { AuthService } from '../auth.service';
-import { duplicateNickname } from '../constants/errors';
-import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
+import { GlobalConfigService } from "../../global-config/global-config.service";
+import { VerifyTokenResponse } from "../../ow-api/models";
+import { OWApiClient } from "../../ow-api/ow-api.client";
+import { Result } from "../../shared/models/result";
+import { UMInfo } from "../../um/schemas";
+import { UMService } from "../../um/um.service";
+import { invalidSession } from "../../users/constants/errors";
+import { VerifySessionRequest } from "../../users/models";
+import { UserInfosService, UserSessionsService, UsersService } from "../../users/providers";
+import { UserInfo, UserSession } from "../../users/schemas";
+import { AuthService } from "../auth.service";
+import { duplicateNickname } from "../constants/errors";
+import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from "../models";
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
 jest.mock('../../common/providers/logger.service');
 jest.mock('../../global-config/global-config.service');
-jest.mock('../../settings/settings.service');
+jest.mock('../../um/um.service');
 jest.mock('../../currencies/currencies.service');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
@@ -73,7 +73,7 @@ describe('AuthService test', () => {
                     provide: UserInfosService,
                     useValue: stubUserInfoService,
                 },
-                SettingsService,
+                UMService,
                 CurrenciesService,
             ],
         }).compile();
@@ -86,7 +86,7 @@ describe('AuthService test', () => {
             // arrange
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const createUserIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'createUserIfNotExist');
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {
@@ -110,7 +110,7 @@ describe('AuthService test', () => {
             // arrange
             const verifyTokenResponse = getVerifyTokenRequest(false);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
 
             // act
             const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
@@ -123,7 +123,7 @@ describe('AuthService test', () => {
             // arrange
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
             jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(false);
             stubUsersService.getByMemberName.mockResolvedValueOnce({ local: {} });
 
@@ -138,7 +138,7 @@ describe('AuthService test', () => {
             // arrange
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
             jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
             stubUsersService.getByMemberName.mockResolvedValueOnce(null);
 
@@ -153,7 +153,7 @@ describe('AuthService test', () => {
             // arrange
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
             jest.spyOn(GlobalConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {
@@ -254,7 +254,7 @@ describe('AuthService test', () => {
                 isAuthenticated: false,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
 
             // act
             const actualResult = await authService.verifySession(verifySessionRequest);
@@ -269,7 +269,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
 
             // act
             const actualResult = await authService.verifySession(verifySessionRequest);
@@ -285,7 +285,7 @@ describe('AuthService test', () => {
                 session: new UserSession(),
             });
 
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
                 isUM: true,
                 umInfo: new UMInfo(),
             });
@@ -306,7 +306,7 @@ describe('AuthService test', () => {
                 session: new UserSession(),
             });
 
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
                 isUM: true,
                 umInfo: new UMInfo(),
             });
@@ -327,7 +327,7 @@ describe('AuthService test', () => {
                 session: new UserSession(),
             });
 
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
                 isUM: true,
                 umInfo: new UMInfo(),
             });
@@ -368,7 +368,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             stubUsersService.getByUsername.mockResolvedValueOnce(null);
 
             // act
@@ -385,7 +385,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             stubUsersService.getByUsername.mockResolvedValueOnce({});
             stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
 
@@ -402,7 +402,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
             jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
 
@@ -423,7 +423,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
                 isUM: true,
                 umInfo: new UMInfo(),
             });

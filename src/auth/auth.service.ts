@@ -10,9 +10,9 @@ import { CurrenciesService } from "../currencies/currencies.service";
 import { GlobalConfigService } from "../global-config/global-config.service";
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
 import { OWApiClient } from "../ow-api/ow-api.client";
-import { SettingsService } from "../settings/settings.service";
 import { Result } from "../shared/models/result";
 import { UMResult } from "../shared/models/um-result";
+import { UMService } from "../um/um.service";
 import { invalidSession } from "../users/constants/errors";
 import { VerifySessionRequest } from "../users/models";
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
@@ -34,12 +34,12 @@ export class AuthService {
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
         private readonly globalConfigService: GlobalConfigService,
-        private readonly settingService: SettingsService,
+        private readonly umService: UMService,
         private readonly currenciesService: CurrenciesService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        const settings = await this.settingService.getSettings();
+        const settings = await this.umService.getUMResult();
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
 
@@ -99,7 +99,7 @@ export class AuthService {
     }
 
     async verifySession(request: VerifySessionRequest) {
-        const settings = await this.settingService.getSettings();
+        const settings = await this.umService.getUMResult();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
 
@@ -117,7 +117,7 @@ export class AuthService {
     }
 
     async authorize(request: VerifySessionRequest) {
-        const settings = await this.settingService.getSettings();
+        const settings = await this.umService.getUMResult();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
 
