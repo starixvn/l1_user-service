@@ -404,18 +404,10 @@ describe('AuthService test', () => {
             });
             jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
+            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
+
             stubUsersService.getByUsername.mockReturnValueOnce({});
             stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
-
-            jest.spyOn(CurrenciesService.prototype, 'getPartnerCurrency').mockResolvedValue({
-                groupId: '1',
-                name: 'currency',
-                code: '123',
-                rate: 2,
-                enabled: true,
-                isTest: false,
-                partnerId: 'abc',
-            });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
