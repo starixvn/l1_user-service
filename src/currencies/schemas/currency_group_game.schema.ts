@@ -4,23 +4,9 @@ import * as mongoose from "mongoose";
 export type CurrencyGroupGameDocument = CurrencyGroupGame & mongoose.Document;
 
 @Schema()
-class Chip {
-    @Prop({ required: true })
-    value: number;
-
-    @Prop({ required: true })
-    text: string;
-
-    @Prop({ required: true })
-    color: string;
-}
-
-const ChipSchema = SchemaFactory.createForClass(Chip);
-
-@Schema()
 export class CurrencyGroupGame {
     @Prop({ required: true })
-    groupId: string;
+    groupId: mongoose.Types.ObjectId;
 
     @Prop({ required: true })
     gameId: number;
