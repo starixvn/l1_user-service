@@ -220,7 +220,13 @@ export class AuthService {
     }
 
     private async getBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
-        const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
+        const getBalanceRequest = new GetBalanceRequest(
+            userSession.owSeq,
+            userSession.siteId,
+            userSession.memberId,
+            userSession.language,
+            userSession.partnerId,
+        );
         const response = await this.apiClient.getBalance(
             getBalanceRequest,
             this.composeBeforeCallMessage(userSession, nickname, getBalanceRequest),
@@ -343,6 +349,7 @@ export class AuthService {
             session.language,
             characterName,
             isFirstLogin,
+            session.partnerId,
         );
 
         return this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
