@@ -1,19 +1,20 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { MongooseModule } from "@nestjs/mongoose";
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
-import { CommonModule } from "./common/common.module";
-import configuration from "./config/configuration";
-import { CurrenciesModule } from "./currencies/currencies.module";
-import { GlobalConfigModule } from "./global-config/global-config.module";
-import { HealthModule } from "./health";
-import { OWApiModule } from "./ow-api/ow-api.module";
-import { SettingsModule } from "./settings/settings.module";
-import { UMModule } from "./um/um.module";
-import { UsersModule } from "./users/users.module";
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
+import configuration from './config/configuration';
+import { CurrenciesModule } from './currencies/currencies.module';
+import { CurrencyGroupModule } from './currency-groups/currency-group.module';
+import { GlobalConfigModule } from './global-config/global-config.module';
+import { HealthModule } from './health';
+import { OWApiModule } from './ow-api/ow-api.module';
+import { SettingsModule } from './settings/settings.module';
+import { UMModule } from './um/um.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
     imports: [
@@ -37,6 +38,7 @@ import { UsersModule } from "./users/users.module";
         SettingsModule,
         CurrenciesModule,
         UMModule,
+        CurrencyGroupModule,
     ],
     controllers: [AppController],
     providers: [AppService],
