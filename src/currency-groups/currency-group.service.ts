@@ -1,33 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserSessionsService } from '../users/providers';
-import { AuthService } from '../auth';
 
 import { CurrencyGroup, CurrencyGroupDocument } from './schemas';
+import { OWApiClient } from 'src/ow-api/ow-api.client';
+import { UpdateMemberAuthRequest } from 'src/ow-api/models';
 
 @Injectable()
 export class CurrencyGroupService {
     constructor(
         @InjectModel(CurrencyGroup.name) private readonly currencyGroupModel: Model<CurrencyGroupDocument>,
-        private readonly authService: AuthService,
-        private readonly userSessionService: UserSessionsService,
+        private readonly owApi: OWApiClient,
     ) {}
 
     async getAllCurrencyGroups() {
         return this.currencyGroupModel.find({ enabled: true }).lean().exec();
     }
 
-    async signInAndUpdateUserSession(userAgent: string, ip: string, groupId: string, token: string, system: number) {
-        const auth = await this.authService.signIn(ip, token, userAgent, system);
+    async updateMemberAuth(groupId: string, token: string, gameId: number, language: string) {
+        const request = new UpdateMemberAuthRequest(token, language, gameId, groupId);
+        const result = await this.owApi.updateMemberAuth(request);
 
-        if (auth.isAuthenticated) {
-            await this.userSessionService.updateCurrencyGroup(auth.ss, groupId);
-
-            // TODO send request to api and return the redirect url
-            return '/';
-        } else {
-            return '/currency-group/error';
-        }
+        return result ? result.redirectUri : '/CurrencyGroup/error';
     }
 }

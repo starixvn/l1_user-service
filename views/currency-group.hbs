@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Currency</title>
+  <title>Currency Group Selection</title>
   <link rel="stylesheet" href="/mini.css/mini-default.min.css" />
 </head>
 
@@ -11,8 +11,10 @@
 
   <fieldset>
     <legend>Currency Group Selection</legend>
-    <form id="currency" action="currency-group/group" method="get">
+    <form id="currency" action="CurrencyGroup/group" method="get">
       <input name="token" type="text" value="{{token}}" hidden="true" />
+      <input name="language" type="text" value="{{language}}" hidden="true" />
+      <input name="gameId" type="number" value="{{gameId}}" hidden="true" />
       <div class="input-group vertical">
         <label for="group">Currency Group</label>
         <select name="group" type="string" id="group" form="currency">

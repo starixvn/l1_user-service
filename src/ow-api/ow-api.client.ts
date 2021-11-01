@@ -1,15 +1,23 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { Severity } from "@sentry/node";
-import axios, { AxiosInstance } from "axios";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Severity } from '@sentry/node';
+import axios, { AxiosInstance } from 'axios';
 
-import { SentryLogger } from "../common/providers";
-import { AuthConfig } from "../config/auth-config";
-import { OpenIdClientHelper } from "../helpers";
-import { VerifyTokenResponse } from "../ow-api/models/verify-token-response";
-import { BaseResponse, GetBalanceRequest, GetBalanceResponse, NotifyLoginRequest, NotifyLoginResponse } from "./models";
-import { BaseResult } from "./models/base-respone";
-import { VerifyTokenRequest } from "./models/verify-token-request";
+import { SentryLogger } from '../common/providers';
+import { AuthConfig } from '../config/auth-config';
+import { OpenIdClientHelper } from '../helpers';
+import { VerifyTokenResponse } from '../ow-api/models/verify-token-response';
+import {
+    BaseResponse,
+    GetBalanceRequest,
+    GetBalanceResponse,
+    NotifyLoginRequest,
+    NotifyLoginResponse,
+    SingleSignOnResponse,
+    UpdateMemberAuthRequest,
+} from './models';
+import { BaseResult } from './models/base-respone';
+import { VerifyTokenRequest } from './models/verify-token-request';
 
 interface ApiConfig {
     baseURL: string;
@@ -106,6 +114,16 @@ export class OWApiClient {
 
     isErrorResult(result: BaseResult) {
         return (result?.errorCode ?? 0) !== 0;
+    }
+
+    public async updateMemberAuth(request: UpdateMemberAuthRequest) {
+        try {
+            return await this.sendPostRequest<SingleSignOnResponse>('/AuthVerification/UpdateMemberAuth', request);
+        } catch (error) {
+            this.logger.error(error);
+
+            return null;
+        }
     }
 
     private async sendPostRequest<T>(url: string, data?: any) {
