@@ -1,0 +1,82 @@
+import { Test } from '@nestjs/testing';
+import { CurrencyGroupController } from '../currency-group.controller';
+import { CurrencyGroupService } from '../currency-group.service';
+
+describe('CurrencyGroupController', () => {
+    let controller: CurrencyGroupController;
+    const service = {
+        getAllCurrencyGroups: jest.fn(),
+        updateMemberAuth: jest.fn(),
+    };
+
+    beforeAll(async () => {
+        const module = await Test.createTestingModule({
+            controllers: [CurrencyGroupController],
+            providers: [{ provide: CurrencyGroupService, useValue: service }],
+        }).compile();
+
+        controller = module.get<CurrencyGroupController>(CurrencyGroupController);
+    });
+
+    describe('constructor', () => {
+        it('controller instance should be defined', () => {
+            expect(controller).toBeDefined();
+        });
+    });
+
+    describe('index', () => {
+        it('should execute service', async () => {
+            service.getAllCurrencyGroups.mockImplementation(() => []);
+            const token = 'token';
+            const language = 'language';
+            const gameId = '1';
+            const expected = { token, language, gameId, groups: [] };
+
+            const actual = await controller.index(token, language, gameId);
+
+            expect(actual).toStrictEqual(expected);
+            expect(service.getAllCurrencyGroups.mock.calls.length).toBe(1);
+        });
+    });
+
+    describe('chooseCurrencyGroup', () => {
+        it('when token is invalid should return error url', async () => {
+            const token = null;
+            const language = 'language';
+            const gameId = '1';
+            const groupId = 'groupId';
+            const expected = { url: 'error' };
+
+            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId);
+
+            expect(actual).toStrictEqual(expected);
+            expect(service.updateMemberAuth.mock.calls.length).toBe(0);
+        });
+
+        it('when token is valid should execute service', async () => {
+            service.updateMemberAuth.mockImplementation(() => 'apiUrl');
+            const token = 'token';
+            const language = 'language';
+            const gameId = '1';
+            const groupId = 'groupId';
+            const expected = { url: 'apiUrl' };
+
+            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId);
+
+            expect(actual).toStrictEqual(expected);
+            expect(service.updateMemberAuth.mock.calls.length).toBe(1);
+        });
+    });
+
+    describe('error', () => {
+        it('should return input data', () => {
+            service.getAllCurrencyGroups.mockImplementation(() => []);
+            const message = 'message';
+            const expected = { message };
+
+            const actual = controller.error(message);
+
+            expect(actual).toStrictEqual(expected);
+        });
+    });
+});

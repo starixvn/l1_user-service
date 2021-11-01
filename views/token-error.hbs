@@ -8,7 +8,13 @@
 </head>
 
 <body>
+    {{#if message}}
+    <p>{{message}}</p>
+    {{/if}}
+    {{#unless message}}
     <p>Your token is invalid or has expired.</p>
+    {{/unless}}
+
 </body>
 
 </html>

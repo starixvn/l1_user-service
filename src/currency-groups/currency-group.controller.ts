@@ -32,5 +32,7 @@ export class CurrencyGroupController {
 
     @Get('error')
     @Render('token-error.hbs')
-    invalidSession() {}
+    error(@Query('message') message: string) {
+        return { message };
+    }
 }
