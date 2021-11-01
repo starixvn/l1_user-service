@@ -26,7 +26,7 @@ export class CurrencyGroupController {
 
             return { url };
         } else {
-            return { url: '/CurrencyGroup/error' };
+            return { url: 'error' };
         }
     }
 
