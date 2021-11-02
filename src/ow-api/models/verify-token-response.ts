@@ -8,6 +8,7 @@ export interface VerifyTokenResponse {
     currencyCode: string;
     currencyName: string;
     currencyGroupId: string;
+    isTestCurrency: boolean;
     multiplier: number;
     seq: string;
     memberKey: string;

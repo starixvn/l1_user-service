@@ -15,6 +15,7 @@ export class CreateUserSessionParam {
         readonly currencyCode: string,
         readonly currencyName: string,
         readonly currencyGroupId: string,
+        readonly isTestCurrency: boolean,
         readonly multiplier: number,
         readonly partnerId: string,
         readonly memberName: string,

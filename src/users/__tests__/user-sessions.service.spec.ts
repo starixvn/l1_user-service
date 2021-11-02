@@ -67,6 +67,7 @@ describe('UserInfosService test', () => {
             'VND',
             'VND',
             '',
+            false,
             1000,
             '',
             '',

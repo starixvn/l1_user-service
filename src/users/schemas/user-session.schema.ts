@@ -51,6 +51,9 @@ export class UserSession {
     currencyGroupId: string;
 
     @Prop()
+    isTestCurrency: boolean;
+
+    @Prop()
     multiplier: number;
 
     @Prop()

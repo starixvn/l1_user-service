@@ -37,6 +37,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         currencyCode: 'UUS',
         currencyName: 'UUS',
         currencyGroupId: '1',
+        isTestCurrency: false,
         multiplier: 1,
         seq: '123',
         memberKey: 'memberKey',
