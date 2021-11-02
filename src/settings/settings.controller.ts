@@ -1,8 +1,8 @@
 import { Body, Controller, Post } from "@nestjs/common";
-import { invalidSession } from "src/users/constants/errors";
-import { UserSessionsService } from "src/users/providers";
 
+import { invalidSession } from "../users/constants/errors";
 import { VerifySessionRequest } from "../users/models";
+import { UserSessionsService } from "../users/providers";
 import { SettingsService } from "./settings.service";
 
 @Controller('settings')
