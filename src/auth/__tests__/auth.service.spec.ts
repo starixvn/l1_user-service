@@ -2,22 +2,22 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
 
-import { UtilsService } from "../../common/providers";
-import { SentryLogger } from "../../common/providers/logger.service";
-import { CurrenciesService } from "../../currencies/currencies.service";
-import { GlobalConfigService } from "../../global-config/global-config.service";
-import { VerifyTokenResponse } from "../../ow-api/models";
-import { OWApiClient } from "../../ow-api/ow-api.client";
-import { Result } from "../../shared/models/result";
-import { UMInfo } from "../../um/schemas";
-import { UMService } from "../../um/um.service";
-import { invalidSession } from "../../users/constants/errors";
-import { VerifySessionRequest } from "../../users/models";
-import { UserInfosService, UserSessionsService, UsersService } from "../../users/providers";
-import { UserInfo, UserSession } from "../../users/schemas";
-import { AuthService } from "../auth.service";
-import { duplicateNickname } from "../constants/errors";
-import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from "../models";
+import { UtilsService } from '../../common/providers';
+import { SentryLogger } from '../../common/providers/logger.service';
+import { CurrenciesService } from '../../currencies/currencies.service';
+import { GlobalConfigService } from '../../global-config/global-config.service';
+import { VerifyTokenResponse } from '../../ow-api/models';
+import { OWApiClient } from '../../ow-api/ow-api.client';
+import { Result } from '../../shared/models/result';
+import { UMInfo } from '../../um/schemas';
+import { UMService } from '../../um/um.service';
+import { invalidSession } from '../../users/constants/errors';
+import { VerifySessionRequest } from '../../users/models';
+import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
+import { UserInfo, UserSession } from '../../users/schemas';
+import { AuthService } from '../auth.service';
+import { duplicateNickname } from '../constants/errors';
+import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -352,8 +352,7 @@ describe('AuthService test', () => {
                 isAuthenticated: false,
                 session: new UserSession(),
             });
-            jest.spyOn(SettingsService.prototype, 'getSettings').mockResolvedValueOnce({ isUM: false, umInfo: null });
-
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);
 
             // act

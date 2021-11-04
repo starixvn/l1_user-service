@@ -1,25 +1,25 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { LeanDocument } from "mongoose";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { LeanDocument } from 'mongoose';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { CurrenciesService } from "../currencies/currencies.service";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { Result } from "../shared/models/result";
-import { UMResult } from "../shared/models/um-result";
-import { UMService } from "../um/um.service";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { CurrenciesService } from '../currencies/currencies.service';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { Result } from '../shared/models/result';
+import { UMResult } from '../shared/models/um-result';
+import { UMService } from '../um/um.service';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -39,42 +39,43 @@ export class AuthService {
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        const settings = await this.umService.getUMResult();
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
+        const umSettings = await this.umService.getUMResult(data?.partnerId);
 
-        if (data && data.isSuccessful && data.appType === system) {
-            const user = settings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
-            const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
-
-            if (settings.isUM && !isSuperPlayer) {
-                return new AuthenticateResult(false, new UMResult(settings.umInfo.start, settings.umInfo.end));
-            }
-
-            const userSession = await this.addSessionIfNotExist(user, request, data, system);
-
-            return new AuthenticateResult(
-                true,
-                !isSuperPlayer && settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null,
-                userSession.username,
-                userSession.language,
-                userSession.sessionId,
-                userSession.system,
-                userSession.memberName,
+        const isValidToken = data && data.isSuccessful && data.appType === system;
+        if (!isValidToken) {
+            this.logger.log(
+                [
+                    `Authentication Failed`,
+                    `Request: ${JSON.stringify(request)}`,
+                    `Result: ${JSON.stringify(data)}`,
+                    `IP Info: ${request.ip}`,
+                    `System: ${system}`,
+                ].join('\n'),
             );
+
+            return new AuthenticateResult(false, umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null);
         }
 
-        this.logger.log(
-            [
-                `Authentication Failed`,
-                `Request: ${JSON.stringify(request)}`,
-                `Result: ${JSON.stringify(data)}`,
-                `IP Info: ${request.ip}`,
-                `System: ${system}`,
-            ].join('\n'),
-        );
+        const user = umSettings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
+        const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
 
-        return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
+        if (umSettings.isUM && !isSuperPlayer) {
+            return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end));
+        }
+
+        const userSession = await this.addSessionIfNotExist(user, request, data, system);
+
+        return new AuthenticateResult(
+            true,
+            !isSuperPlayer && umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null,
+            userSession.username,
+            userSession.language,
+            userSession.sessionId,
+            userSession.system,
+            userSession.memberName,
+        );
     }
 
     async reCheckIn(request: VerifySessionRequest) {
@@ -99,37 +100,30 @@ export class AuthService {
     }
 
     async verifySession(request: VerifySessionRequest) {
-        const settings = await this.umService.getUMResult();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
-
-        if (settings.isUM && session) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
-
-            if (isSuperPlayer) {
-                return isAuthenticated ? new Result() : invalidSession;
-            }
-
-            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
+        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        if (umSettings.isUM) {
+            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session?.memberName);
+            return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
-        return isAuthenticated ? new Result('0', '', umResult) : invalidSession;
+        return isAuthenticated ? new Result('0', '', umInfo) : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
-        const settings = await this.umService.getUMResult();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
-
-        if (settings.isUM) {
-            const isSuperPlayer = isAuthenticated ? await this.globalConfigService.isSuperPlayers(session.memberName) : false;
+        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        if (umSettings.isUM) {
+            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session?.memberName);
             if (!isSuperPlayer) {
-                return new AuthorizeResult(false, null, umResult);
+                return new AuthorizeResult(false, null, umInfo);
             }
         }
 
         if (!isAuthenticated) {
-            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
+            return new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
         const user = await this.usersService.getByUsername(request.username);
