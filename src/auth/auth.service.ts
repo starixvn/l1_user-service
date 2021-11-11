@@ -7,7 +7,7 @@ import validator from 'validator';
 import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
 import { CurrenciesService } from '../currencies/currencies.service';
-import { GlobalConfigService } from '../global-config/global-config.service';
+import { PartnerConfigService } from "../partner-config/partner-config.service";
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { Result } from '../shared/models/result';
@@ -33,7 +33,7 @@ export class AuthService {
         private readonly userInfosService: UserInfosService,
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
-        private readonly globalConfigService: GlobalConfigService,
+        private readonly partnerConfigService: PartnerConfigService,
         private readonly umService: UMService,
         private readonly currenciesService: CurrenciesService,
     ) {}
@@ -59,7 +59,7 @@ export class AuthService {
         }
 
         const user = umSettings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
-        const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
+        const isSuperPlayer = user ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId) : false;
 
         if (umSettings.isUM && !isSuperPlayer) {
             return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end));
@@ -104,7 +104,7 @@ export class AuthService {
         const umSettings = await this.umService.getUMResult(session?.partnerId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session?.memberName);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
             return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
@@ -116,7 +116,7 @@ export class AuthService {
         const umSettings = await this.umService.getUMResult(session?.partnerId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session?.memberName);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
             if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, umInfo);
             }
@@ -142,10 +142,9 @@ export class AuthService {
 
         await this.notifyLogin(session, userInfo.name);
 
+        const offerGames = await this.getOfferGames(session);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
-
-        const offerGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
 
         return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
@@ -194,7 +193,7 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
+        const offerGames = await this.getOfferGames(session);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }
@@ -355,5 +354,21 @@ export class AuthService {
         const nameDisplay = characterName ? `\n\tCharacter: ${characterName} ` : '';
 
         return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
+    }
+
+    private async getOfferGames(session: UserSession) {
+        const groupOfferGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
+        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
+
+        const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce( (result, gameId) => {
+            if(gameSiteExclusions[gameId].includes(session.siteName))
+            {
+                result.push(+gameId);
+            }
+
+            return result;
+        }, []);
+
+        return groupOfferGames?.filter(game => !siteExclusionGames.includes(game.gameId)) ?? [];
     }
 }
