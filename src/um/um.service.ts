@@ -11,7 +11,7 @@ export class UMService {
 
     async getSCUM() {
         const umInfo = await this.umInfoModel
-            .findOne({ isPartnerUM: false, finish: false, start: { $lt: new Date() } }, { _id: 0, __v: 0 })
+            .findOne({ isPartnerUm: false, finish: false, start: { $lt: new Date() } }, { _id: 0, __v: 0 })
             .lean()
             .exec();
 
@@ -20,7 +20,7 @@ export class UMService {
 
     async getPartnerUM(partnerId) {
         const umInfo = await this.umInfoModel
-            .findOne({ isPartnerUM: true, finish: false, start: { $lt: new Date() }, partnerId }, { _id: 0, __v: 0 })
+            .findOne({ isPartnerUm: true, finish: false, start: { $lt: new Date() }, partnerId }, { _id: 0, __v: 0 })
             .lean()
             .exec();
 

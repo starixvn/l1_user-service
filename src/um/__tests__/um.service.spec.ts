@@ -54,7 +54,7 @@ describe('UserInfosService test', () => {
             await service.getSCUM();
 
             // assert
-            expect(model.findOne).toHaveBeenCalledWith(expect.objectContaining({ isPartnerUM: false, finish: false }), expect.any(Object));
+            expect(model.findOne).toHaveBeenCalledWith(expect.objectContaining({ isPartnerUm: false, finish: false }), expect.any(Object));
         });
     });
 
@@ -67,7 +67,7 @@ describe('UserInfosService test', () => {
             await service.getPartnerUM(null);
 
             // assert
-            expect(model.findOne).toHaveBeenCalledWith(expect.objectContaining({ isPartnerUM: true, finish: false }), expect.any(Object));
+            expect(model.findOne).toHaveBeenCalledWith(expect.objectContaining({ isPartnerUm: true, finish: false }), expect.any(Object));
         });
     });
 
