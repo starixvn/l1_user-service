@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
-import { CurrencyGroup, CurrencyGroupDocument } from './schemas';
+import { CurrencyDocument, Currency, CurrencyGroup, CurrencyGroupDocument } from './schemas';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { UpdateMemberAuthRequest } from '../ow-api/models';
 import { SentryLogger } from '../common/providers';
@@ -11,6 +11,7 @@ import { SentryLogger } from '../common/providers';
 export class CurrencyGroupService {
     constructor(
         @InjectModel(CurrencyGroup.name) private readonly currencyGroupModel: Model<CurrencyGroupDocument>,
+        @InjectModel(Currency.name) private readonly currencyModel: Model<CurrencyDocument>,
         private readonly owApi: OWApiClient,
         private readonly logger: SentryLogger,
     ) {}
@@ -23,6 +24,14 @@ export class CurrencyGroupService {
 
             return [];
         }
+    }
+
+    async getCurrencyGroup(groupId: string) {
+        return this.currencyGroupModel.findById(new Types.ObjectId(groupId)).lean().exec();
+    }
+
+    async getCurrency(currencyName: string) {
+        return this.currencyModel.findOne({ name: currencyName }).lean().exec();
     }
 
     async getCurrencyGroupsByPartner(partnerId: string) {

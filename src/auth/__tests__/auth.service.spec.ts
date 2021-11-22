@@ -4,8 +4,8 @@ import { stub } from 'jest-micro-auto-stub';
 
 import { UtilsService } from '../../common/providers';
 import { SentryLogger } from '../../common/providers/logger.service';
-import { CurrenciesService } from '../../currencies/currencies.service';
-import { PartnerConfigService } from "../../partner-config/partner-config.service";
+import { CurrencyGroupGameService } from '../../currency-group-games/currency-group-games.service';
+import { PartnerConfigService } from '../../partner-config/partner-config.service';
 import { VerifyTokenResponse } from '../../ow-api/models';
 import { OWApiClient } from '../../ow-api/ow-api.client';
 import { Result } from '../../shared/models/result';
@@ -18,13 +18,15 @@ import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
+import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
 jest.mock('../../common/providers/logger.service');
 jest.mock('../../partner-config/partner-config.service');
 jest.mock('../../um/um.service');
-jest.mock('../../currencies/currencies.service');
+jest.mock('../../currency-group-games/currency-group-games.service');
+jest.mock('../../currency-groups/currency-group.service');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -75,7 +77,8 @@ describe('AuthService test', () => {
                     useValue: stubUserInfoService,
                 },
                 UMService,
-                CurrenciesService,
+                CurrencyGroupGameService,
+                CurrencyGroupService,
             ],
         }).compile();
 

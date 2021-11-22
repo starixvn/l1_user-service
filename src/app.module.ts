@@ -7,7 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import configuration from './config/configuration';
-import { CurrenciesModule } from './currencies/currencies.module';
+import { CurrencyGroupGamesModule } from './currency-group-games/currency-group-games.module';
 import { CurrencyGroupModule } from './currency-groups/currency-group.module';
 import { GlobalConfigModule } from './global-config/global-config.module';
 import { HealthModule } from './health';
@@ -36,7 +36,7 @@ import { UsersModule } from './users/users.module';
         HealthModule,
         GlobalConfigModule,
         SettingsModule,
-        CurrenciesModule,
+        CurrencyGroupGamesModule,
         UMModule,
         CurrencyGroupModule,
     ],

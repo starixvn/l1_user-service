@@ -6,8 +6,8 @@ import validator from 'validator';
 
 import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
-import { CurrenciesService } from '../currencies/currencies.service';
-import { PartnerConfigService } from "../partner-config/partner-config.service";
+import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
+import { PartnerConfigService } from '../partner-config/partner-config.service';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { Result } from '../shared/models/result';
@@ -20,6 +20,7 @@ import { UserInfosService, UserSessionsService, UsersService } from '../users/pr
 import { UserDocument, UserSession } from '../users/schemas';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
+import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,8 @@ export class AuthService {
         private readonly configService: ConfigService,
         private readonly partnerConfigService: PartnerConfigService,
         private readonly umService: UMService,
-        private readonly currenciesService: CurrenciesService,
+        private readonly currencyGroupGameService: CurrencyGroupGameService,
+        private readonly currencyGroupService: CurrencyGroupService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
@@ -357,18 +359,24 @@ export class AuthService {
     }
 
     private async getOfferGames(session: UserSession) {
-        const groupOfferGames = await this.currenciesService.getOfferedGames(session.currencyGroupId);
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
+        const currency = await this.currencyGroupService.getCurrency(session.currencyName);
+
+        if (!currency?.enabled || !currencyGroup?.enabled) {
+            return [];
+        }
+
+        const groupOfferGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
         const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
 
-        const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce( (result, gameId) => {
-            if(gameSiteExclusions[gameId].includes(session.siteName))
-            {
+        const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
+            if (gameSiteExclusions[gameId].includes(session.siteName)) {
                 result.push(+gameId);
             }
 
             return result;
         }, []);
 
-        return groupOfferGames?.filter(game => !siteExclusionGames.includes(game.gameId)) ?? [];
+        return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
     }
 }

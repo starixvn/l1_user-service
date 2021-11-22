@@ -5,7 +5,7 @@ import { Model, Types } from "mongoose";
 import { CurrencyGroupGame, CurrencyGroupGameDocument } from "./schemas";
 
 @Injectable()
-export class CurrenciesService {
+export class CurrencyGroupGameService {
     constructor(@InjectModel(CurrencyGroupGame.name) private readonly gameOfCurrencyGroupModel: Model<CurrencyGroupGameDocument>) {}
 
     async getOfferedGames(groupId: string) {
