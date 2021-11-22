@@ -7,6 +7,7 @@ describe('CurrencyGroupController', () => {
     const service = {
         getAllCurrencyGroups: jest.fn(),
         updateMemberAuth: jest.fn(),
+        getCurrencyGroupsByPartner: jest.fn(),
     };
 
     beforeAll(async () => {
@@ -26,16 +27,21 @@ describe('CurrencyGroupController', () => {
 
     describe('index', () => {
         it('should execute service', async () => {
-            service.getAllCurrencyGroups.mockImplementation(() => []);
+            service.getCurrencyGroupsByPartner.mockImplementation((partner) => {
+                expect(partner).toBe('partnerId');
+
+                return [];
+            });
             const token = 'token';
             const language = 'language';
             const gameId = '1';
             const expected = { token, language, gameId, groups: [] };
+            const partnerId = 'partnerId';
 
-            const actual = await controller.index(token, language, gameId);
+            const actual = await controller.index(token, language, gameId, partnerId);
 
             expect(actual).toStrictEqual(expected);
-            expect(service.getAllCurrencyGroups.mock.calls.length).toBe(1);
+            expect(service.getCurrencyGroupsByPartner.mock.calls.length).toBe(1);
         });
     });
 

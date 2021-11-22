@@ -7,8 +7,13 @@ export class CurrencyGroupController {
 
     @Get()
     @Render('currency-group.hbs')
-    async index(@Query('token') token: string, @Query('lang') language: string, @Query('gameId') gameId: string) {
-        const groups = await this.currencyGroupService.getAllCurrencyGroups();
+    async index(
+        @Query('token') token: string,
+        @Query('lang') language: string,
+        @Query('gameId') gameId: string,
+        @Query('partnerId') partnerId: string,
+    ) {
+        const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
 
         return { groups, token, language, gameId };
     }

@@ -72,6 +72,45 @@ describe('CurrencyGroupService', () => {
         });
     });
 
+    describe('getCurrencyGroupsByPartner', () => {
+        it('when exception occur should return an empty list', async () => {
+            const spy = jest.spyOn(model, 'find').mockReturnValue({
+                lean: function (): any {
+                    return {
+                        exec: async function () {
+                            throw new Error();
+                        },
+                    };
+                },
+            } as any);
+            const partnerId = 'id';
+            const actual = await service.getCurrencyGroupsByPartner(partnerId);
+
+            expect(actual).toStrictEqual([]);
+            expect(logger.error).toBeCalled();
+            expect(spy).toBeCalled();
+        });
+
+        it('should return data from model', async () => {
+            const entity = new CurrencyGroup();
+            const spy = jest.spyOn(model, 'find').mockReturnValue({
+                lean: function (): any {
+                    return {
+                        exec: async function () {
+                            return [entity];
+                        },
+                    };
+                },
+            } as any);
+
+            const partnerId = 'id';
+            const actual = await service.getCurrencyGroupsByPartner(partnerId);
+
+            expect(actual).toStrictEqual([entity]);
+            expect(spy).toBeCalled();
+        });
+    });
+
     describe('updateMemberAuth', () => {
         test.each([
             [null, 'error?message='],

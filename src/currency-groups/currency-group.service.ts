@@ -25,6 +25,18 @@ export class CurrencyGroupService {
         }
     }
 
+    async getCurrencyGroupsByPartner(partnerId: string) {
+        try {
+            const queryObject = partnerId ? { enabled: true, partnerId } : { enabled: true };
+
+            return await this.currencyGroupModel.find(queryObject).lean().exec();
+        } catch (error) {
+            this.logger.error(error);
+
+            return [];
+        }
+    }
+
     async updateMemberAuth(groupId: string, token: string, gameId: number, language: string) {
         const request = new UpdateMemberAuthRequest(token, language, gameId, groupId);
         const result = await this.owApi.updateMemberAuth(request);
