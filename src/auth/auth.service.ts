@@ -360,7 +360,7 @@ export class AuthService {
 
     private async getOfferGames(session: UserSession) {
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
-        const currency = await this.currencyGroupService.getCurrency(session.currencyName);
+        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session.partnerId);
 
         if (!currency?.enabled || !currencyGroup?.enabled) {
             return [];

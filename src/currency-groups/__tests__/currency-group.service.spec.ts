@@ -88,7 +88,7 @@ describe('CurrencyGroupService', () => {
                 },
             } as any);
 
-            const actual = await service.getCurrency('test');
+            const actual = await service.getCurrency('UUS', 'partnerId');
 
             expect(actual).toStrictEqual(entity);
             expect(spy).toBeCalled();
@@ -98,7 +98,7 @@ describe('CurrencyGroupService', () => {
     describe('getCurrencyGroup', () => {
         it('should return data from model', async () => {
             const entity = new CurrencyGroup();
-            const spy = jest.spyOn(currencyGroupModel, 'findOne').mockReturnValue({
+            const spy = jest.spyOn(currencyGroupModel, 'findById').mockReturnValue({
                 lean: function (): any {
                     return {
                         exec: async function () {
