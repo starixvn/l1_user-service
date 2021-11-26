@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, LeanDocument } from 'mongoose';
 
 import { CreateUserParam } from '../params';
 import { User, UserDocument } from '../schemas';
@@ -9,16 +9,30 @@ import { User, UserDocument } from '../schemas';
 export class UsersService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
-    async getByUsername(username: string): Promise<UserDocument> {
-        return this.userModel.findOne({ 'local.username': username });
+    mapIdField(user: LeanDocument<UserDocument>) {
+        if (user) {
+            user.id = user._id;
+        }
+
+        return user;
     }
 
-    async getByMemberName(memberName: string): Promise<UserDocument> {
-        return this.userModel.findOne({ 'local.memberName': memberName });
+    async getByUsername(username: string) {
+        const result = await this.userModel.findOne({ 'local.username': username }).lean().exec();
+        this.mapIdField(result);
+
+        return result;
     }
 
-    async getById(id: string): Promise<User> {
-        return this.userModel.findById(id);
+    async getByMemberName(memberName: string) {
+        const result = await this.userModel.findOne({ 'local.memberName': memberName }).lean().exec();
+        this.mapIdField(result);
+
+        return result;
+    }
+
+    async getById(id: string) {
+        return this.userModel.findById(id).lean().exec();
     }
 
     async createUser(createUserParam: CreateUserParam): Promise<UserDocument> {

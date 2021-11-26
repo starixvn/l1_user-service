@@ -1,23 +1,24 @@
-import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { generate } from "randomstring";
-import validator from "validator";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { LeanDocument } from 'mongoose';
+import { generate } from 'randomstring';
+import validator from 'validator';
 
-import { CreateNicknameRequest } from ".";
-import { SentryLogger, UtilsService } from "../common/providers";
-import { GlobalConfigService } from "../global-config/global-config.service";
-import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from "../ow-api/models";
-import { OWApiClient } from "../ow-api/ow-api.client";
-import { SettingsService } from "../settings/settings.service";
-import { Result } from "../shared/models/result";
-import { UMResult } from "../shared/models/um-result";
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from "../users/params";
-import { UserInfosService, UserSessionsService, UsersService } from "../users/providers";
-import { UserDocument, UserSession } from "../users/schemas";
-import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from "./constants/errors";
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from "./models/result";
+import { CreateNicknameRequest } from '.';
+import { SentryLogger, UtilsService } from '../common/providers';
+import { GlobalConfigService } from '../global-config/global-config.service';
+import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
+import { OWApiClient } from '../ow-api/ow-api.client';
+import { SettingsService } from '../settings/settings.service';
+import { Result } from '../shared/models/result';
+import { UMResult } from '../shared/models/um-result';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
+import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
+import { UserDocument, UserSession } from '../users/schemas';
+import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 
 @Injectable()
 export class AuthService {
@@ -74,19 +75,19 @@ export class AuthService {
                 userSession.system,
                 userSession.memberName,
             );
-        } else {
-            this.logger.log(
-                [
-                    `Authentication Failed`,
-                    `Request: ${JSON.stringify(request)}`,
-                    `Result: ${JSON.stringify(data)}`,
-                    `IP Info: ${request.ip}`,
-                    `System: ${system}`,
-                ].join('\n'),
-            );
-
-            return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
         }
+
+        this.logger.log(
+            [
+                `Authentication Failed`,
+                `Request: ${JSON.stringify(request)}`,
+                `Result: ${JSON.stringify(data)}`,
+                `IP Info: ${request.ip}`,
+                `System: ${system}`,
+            ].join('\n'),
+        );
+
+        return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
     }
 
     async reCheckIn(request: VerifySessionRequest) {
@@ -113,15 +114,16 @@ export class AuthService {
     async verifySession(request: VerifySessionRequest) {
         const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-
         const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
-        if (settings.isUM) {
+
+        if (settings.isUM && session) {
             const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
+
             if (isSuperPlayer) {
                 return isAuthenticated ? new Result() : invalidSession;
             }
 
-            return new Result('0', '', umResult);
+            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
         }
 
         return isAuthenticated ? new Result('0', '', umResult) : invalidSession;
@@ -130,23 +132,24 @@ export class AuthService {
     async authorize(request: VerifySessionRequest) {
         const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-
-        if (!isAuthenticated) {
-            return invalidSession;
-        }
+        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
 
         if (settings.isUM) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
+            const isSuperPlayer = isAuthenticated ? await this.globalConfigService.isSuperPlayers(session.memberName) : false;
             if (!isSuperPlayer) {
-                return new AuthorizeResult(false, null, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
+                return new AuthorizeResult(false, null, umResult);
             }
+        }
+
+        if (!isAuthenticated) {
+            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
         }
 
         const user = await this.usersService.getByUsername(request.username);
 
         if (!user) {
             this.logger.log(`Account not found at ${new Date()} Info: ${JSON.stringify(request)}`);
-            
+
             return invalidSession;
         }
 
@@ -293,7 +296,7 @@ export class AuthService {
     }
 
     private async addSessionIfNotExist(
-        user: UserDocument,
+        user: LeanDocument<UserDocument>,
         verifyTokenParam: VerifyTokenRequest,
         verifyTokenResult: VerifyTokenResponse,
         system: number,

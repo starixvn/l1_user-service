@@ -1,14 +1,14 @@
-import { getModelToken } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
 
-import { GlobalConfigService } from "../global-config.service";
-import { GameConfig } from "../schemas/game-config.schema";
-import { GlobalConfig } from "../schemas/global-config.schema";
+import { GlobalConfigService } from '../global-config.service';
+import { GameConfig } from '../schemas/game-config.schema';
+import { GlobalConfig } from '../schemas/global-config.schema';
 
 class GlobalConfigModel {
     save: jest.Mock;
-    findOne: jest.Mock;
     exists: jest.Mock;
+    findOne: jest.Mock;
 }
 
 class GameConfigModel {
@@ -40,7 +40,11 @@ describe('', () => {
     });
 
     it('getConfig', async () => {
-        globalConfigModel.findOne = jest.fn().mockReturnValue({ configs: { mbc: [1, 2, 3, 4] } });
+        globalConfigModel.findOne = jest.fn().mockReturnValue({
+            lean: () => {
+                return { configs: { mbc: [1, 2, 3, 4] } };
+            },
+        });
 
         await service.getConfig('game_site_exclusions');
 
@@ -110,7 +114,7 @@ describe('', () => {
         it('when not have settings should returns []', async () => {
             // arrange
             const siteName = 'siteName';
-            globalConfigModel.findOne.mockReturnValueOnce(null);
+            globalConfigModel.findOne.mockReturnValueOnce({ lean: () => null });
             gameConfigModel.find.mockReturnValueOnce({
                 lean: () => {
                     return {
@@ -129,7 +133,12 @@ describe('', () => {
         it('when have settings and is not super players should returns allow game for site', async () => {
             // arrange
             const siteName = 'siteName';
-            globalConfigModel.findOne.mockReturnValueOnce({ configs: { 1: ['siteName'], 2: [], 3: [] } });
+            globalConfigModel.findOne.mockReturnValueOnce({
+                lean: () => {
+                    return { configs: { 1: ['siteName'], 2: [], 3: [] } };
+                },
+            });
+
             globalConfigModel.exists.mockReturnValueOnce(true);
             gameConfigModel.find.mockReturnValueOnce({
                 lean: () => {
@@ -150,7 +159,12 @@ describe('', () => {
             // arrange
             const siteName = 'siteName';
             const username = 'username';
-            globalConfigModel.findOne.mockReturnValueOnce({ configs: { 1: ['siteName'], 2: ['siteName'], 3: [] } });
+            globalConfigModel.findOne.mockReturnValueOnce({
+                lean: () => {
+                    return { configs: { 1: ['siteName'], 2: ['siteName'], 3: [] } };
+                },
+            });
+
             globalConfigModel.exists.mockReturnValueOnce(true);
             gameConfigModel.find.mockReturnValueOnce({
                 lean: () => {
