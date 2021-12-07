@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { VerifySessionRequest, VerifySessionResult } from "../models";
-import { CreateUserSessionParam } from "../params/create-user-session.param";
-import { UserSession, UserSessionDocument } from "../schemas/user-session.schema";
+import { VerifySessionRequest, VerifySessionResult } from '../models';
+import { CreateUserSessionParam } from '../params/create-user-session.param';
+import { UserSession, UserSessionDocument } from '../schemas/user-session.schema';
 
 @Injectable()
 export class UserSessionsService {
@@ -26,7 +26,7 @@ export class UserSessionsService {
         return userSessionCreated.save();
     }
 
-    async updateReCheckInTime(sessionId: string):Promise<UserSessionDocument> {     
+    async updateReCheckInTime(sessionId: string): Promise<UserSessionDocument> {
         return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 
@@ -46,5 +46,9 @@ export class UserSessionsService {
         const differenceInMinutes = Math.abs(Date.now() - userSession.recheckInTime.getTime()) / (1000 * 60);
 
         return differenceInMinutes > this.sessionTimeoutInMinutes;
+    }
+
+    async updateCurrencyGroup(sessionId: string, currencyGroupId: string): Promise<UserSessionDocument> {
+        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { currencyGroupId } }).exec();
     }
 }

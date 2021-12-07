@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
 
 export type UserSessionDocument = UserSession & Document;
 
@@ -42,10 +42,22 @@ export class UserSession {
     language: string;
 
     @Prop()
-    currency: string;
+    currencyCode: string;
 
     @Prop()
-    clientId: string;
+    currencyName: string;
+
+    @Prop()
+    currencyGroupId: string;
+
+    @Prop()
+    isTestCurrency: boolean;
+
+    @Prop()
+    multiplier: number;
+
+    @Prop()
+    partnerId: string;
 
     @Prop()
     memberName: string;

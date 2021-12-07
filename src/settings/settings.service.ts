@@ -1,19 +1,27 @@
-import { Injectable } from "@nestjs/common";
+import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { Cache } from "cache-manager";
 import { Model } from "mongoose";
 
-import { SettingsResult } from "./models";
-import { UMInfo, UMInfoDocument } from "./schemas";
+import { Chip, ChipDocument } from "./schemas/chip.schema";
 
 @Injectable()
 export class SettingsService {
+    private readonly chipsCacheKey = 'Chips';
+
     constructor(
-        @InjectModel(UMInfo.name) private readonly umInfoModel: Model<UMInfoDocument>
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+        @InjectModel(Chip.name) private readonly chipModel: Model<ChipDocument>,
     ) {}
 
-    async getSettings() {
-        const umInfo = await this.umInfoModel.findOne({ finish: false, start : {$lt: new Date()} }, { _id: 0, __v: 0 }).lean().exec();
+    async getChips() {
+        const cachedChips = await this.cacheManager.get(this.chipsCacheKey);
+        if (cachedChips) {
+            return cachedChips;
+        }
 
-        return new SettingsResult(umInfo != null, umInfo);
+        const chips = await this.chipModel.find({}, { _id: 0, __v: 0 }).lean().exec();
+        await this.cacheManager.set(this.chipsCacheKey, chips, { ttl: 60 });
+        return chips;
     }
 }

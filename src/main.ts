@@ -1,16 +1,26 @@
-import { NestFactory } from "@nestjs/core";
-import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import helmet from "fastify-helmet";
+import { NestFactory } from '@nestjs/core';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'fastify-helmet';
+import { join } from 'path';
 
-import { AppModule } from "./app.module";
-import { SentryLogger } from "./common/providers/logger.service";
+import { AppModule } from './app.module';
+import { SentryLogger } from './common/providers/logger.service';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));
-    app.register(helmet, { contentSecurityPolicy: false });
+    app.register(helmet, { contentSecurityPolicy: false, frameguard: false });
+    app.useStaticAssets({
+        root: join(__dirname, '..', 'public'),
+    });
+    app.setViewEngine({
+        engine: {
+            handlebars: require('handlebars'),
+        },
+        templates: join(__dirname, '..', 'views'),
+    });
 
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
     app.enableCors({
@@ -22,6 +32,8 @@ async function bootstrap() {
             }
         },
     });
+
+    await app.init();
 
     const config = new DocumentBuilder()
         .setTitle('User Service')

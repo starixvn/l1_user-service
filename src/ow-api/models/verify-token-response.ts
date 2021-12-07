@@ -2,10 +2,14 @@ export interface VerifyTokenResponse {
     memberId: number;
     memberName: string;
     siteId: string;
-    clientId: string;
+    partnerId: string;
     domain: string;
     language: string;
-    currency: string;
+    currencyCode: string;
+    currencyName: string;
+    currencyGroupId: string;
+    isTestCurrency: boolean;
+    multiplier: number;
     seq: string;
     memberKey: string;
     code: number;

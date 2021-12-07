@@ -5,3 +5,5 @@ export * from './verify-token-request';
 export * from './verify-token-response';
 export * from './notify-login-request';
 export * from './notify-login-response';
+export * from './update-member-auth-request';
+export * from './single-sign-on-response';

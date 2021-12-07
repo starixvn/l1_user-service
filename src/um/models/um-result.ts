@@ -1,6 +1,6 @@
 import { UMInfo } from "../schemas";
 
-export class SettingsResult {
+export class UMResult {
     readonly isUM: boolean;
     readonly umInfo: UMInfo;
 

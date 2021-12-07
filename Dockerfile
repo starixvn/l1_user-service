@@ -20,5 +20,7 @@ COPY package.json .
 COPY yarn.lock .
 RUN yarn install --prod
 COPY --from=builder /app/dist ./dist
+COPY views views
+COPY public public
 
 CMD [ "node", "./dist/main.js" ]

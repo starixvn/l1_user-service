@@ -1,13 +1,13 @@
-import { Module } from "@nestjs/common";
+import { CacheModule, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { GlobalConfigModule } from "../global-config/global-config.module";
-import { UMInfo, UMInfoSchema } from "./schemas";
+import { UsersModule } from "../users/users.module";
+import { Chip, ChipSchema } from "./schemas/chip.schema";
 import { SettingsController } from "./settings.controller";
 import { SettingsService } from "./settings.service";
 
 @Module({
-    imports: [MongooseModule.forFeature([{ name: UMInfo.name, schema: UMInfoSchema, collection: 'um_info' }]), GlobalConfigModule],
+    imports: [CacheModule.register(), MongooseModule.forFeature([{ name: Chip.name, schema: ChipSchema }]), UsersModule],
     providers: [SettingsService],
     controllers: [SettingsController],
     exports: [SettingsService],

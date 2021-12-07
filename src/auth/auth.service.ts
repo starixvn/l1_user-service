@@ -6,12 +6,13 @@ import validator from 'validator';
 
 import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
-import { GlobalConfigService } from '../global-config/global-config.service';
+import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
+import { PartnerConfigService } from '../partner-config/partner-config.service';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
-import { SettingsService } from '../settings/settings.service';
 import { Result } from '../shared/models/result';
 import { UMResult } from '../shared/models/um-result';
+import { UMService } from '../um/um.service';
 import { invalidSession } from '../users/constants/errors';
 import { VerifySessionRequest } from '../users/models';
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
@@ -19,6 +20,7 @@ import { UserInfosService, UserSessionsService, UsersService } from '../users/pr
 import { UserDocument, UserSession } from '../users/schemas';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
+import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 
 @Injectable()
 export class AuthService {
@@ -32,62 +34,50 @@ export class AuthService {
         private readonly userInfosService: UserInfosService,
         private readonly utilsService: UtilsService,
         private readonly configService: ConfigService,
-        private readonly globalConfigService: GlobalConfigService,
-        private readonly settingService: SettingsService,
+        private readonly partnerConfigService: PartnerConfigService,
+        private readonly umService: UMService,
+        private readonly currencyGroupGameService: CurrencyGroupGameService,
+        private readonly currencyGroupService: CurrencyGroupService,
     ) {}
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
-        const settings = await this.settingService.getSettings();
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
+        const umSettings = await this.umService.getUMResult(data?.partnerId);
 
-        if (data && data.isSuccessful && data.appType === system) {
-            const user = settings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
-
-            if (settings.isUM) {
-                const isSuperPlayer = user ? await this.globalConfigService.isSuperPlayers(user.local.memberName) : false;
-
-                if (isSuperPlayer) {
-                    const superPlayerSession = await this.addSessionIfNotExist(user, request, data, system);
-
-                    return new AuthenticateResult(
-                        true,
-                        null,
-                        superPlayerSession.username,
-                        superPlayerSession.language,
-                        superPlayerSession.sessionId,
-                        superPlayerSession.system,
-                        superPlayerSession.memberName,
-                    );
-                }
-
-                return new AuthenticateResult(false, new UMResult(settings.umInfo.start, settings.umInfo.end));
-            }
-
-            const userSession = await this.addSessionIfNotExist(user, request, data, system);
-
-            return new AuthenticateResult(
-                true,
-                settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null,
-                userSession.username,
-                userSession.language,
-                userSession.sessionId,
-                userSession.system,
-                userSession.memberName,
+        const isValidToken = data && data.isSuccessful && data.appType === system;
+        if (!isValidToken) {
+            this.logger.log(
+                [
+                    `Authentication Failed`,
+                    `Request: ${JSON.stringify(request)}`,
+                    `Result: ${JSON.stringify(data)}`,
+                    `IP Info: ${request.ip}`,
+                    `System: ${system}`,
+                ].join('\n'),
             );
+
+            return new AuthenticateResult(false, umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null);
         }
 
-        this.logger.log(
-            [
-                `Authentication Failed`,
-                `Request: ${JSON.stringify(request)}`,
-                `Result: ${JSON.stringify(data)}`,
-                `IP Info: ${request.ip}`,
-                `System: ${system}`,
-            ].join('\n'),
-        );
+        const user = umSettings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
+        const isSuperPlayer = user ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId) : false;
 
-        return new AuthenticateResult(false, settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null);
+        if (umSettings.isUM && !isSuperPlayer) {
+            return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end));
+        }
+
+        const userSession = await this.addSessionIfNotExist(user, request, data, system);
+
+        return new AuthenticateResult(
+            true,
+            !isSuperPlayer && umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null,
+            userSession.username,
+            userSession.language,
+            userSession.sessionId,
+            userSession.system,
+            userSession.memberName,
+        );
     }
 
     async reCheckIn(request: VerifySessionRequest) {
@@ -112,37 +102,30 @@ export class AuthService {
     }
 
     async verifySession(request: VerifySessionRequest) {
-        const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
-
-        if (settings.isUM && session) {
-            const isSuperPlayer = await this.globalConfigService.isSuperPlayers(session.memberName);
-
-            if (isSuperPlayer) {
-                return isAuthenticated ? new Result() : invalidSession;
-            }
-
-            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
+        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        if (umSettings.isUM) {
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
+            return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
-        return isAuthenticated ? new Result('0', '', umResult) : invalidSession;
+        return isAuthenticated ? new Result('0', '', umInfo) : invalidSession;
     }
 
     async authorize(request: VerifySessionRequest) {
-        const settings = await this.settingService.getSettings();
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umResult = settings.umInfo ? new UMResult(settings.umInfo.start, settings.umInfo.end) : null;
-
-        if (settings.isUM) {
-            const isSuperPlayer = isAuthenticated ? await this.globalConfigService.isSuperPlayers(session.memberName) : false;
+        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        if (umSettings.isUM) {
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
             if (!isSuperPlayer) {
-                return new AuthorizeResult(false, null, umResult);
+                return new AuthorizeResult(false, null, umInfo);
             }
         }
 
         if (!isAuthenticated) {
-            return new Result(invalidSession.errorCode, invalidSession.message, umResult);
+            return new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
         const user = await this.usersService.getByUsername(request.username);
@@ -161,10 +144,9 @@ export class AuthService {
 
         await this.notifyLogin(session, userInfo.name);
 
+        const offerGames = await this.getOfferGames(session);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
-
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
 
         return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
@@ -191,7 +173,7 @@ export class AuthService {
             return new AuthorizeResult(true, userInfo);
         }
 
-        const characterName = this.generateCharacterName(request.nickname, session.currency);
+        const characterName = this.generateCharacterName(request.nickname, session.currencyName);
         if (await this.userInfosService.isExistingCharacterName(characterName)) {
             return duplicateNickname;
         }
@@ -200,7 +182,7 @@ export class AuthService {
         const param = new CreateUserInfoParam(
             session.userId,
             characterName,
-            session.currency,
+            session.currencyName,
             latestUID,
             request.avatar || (Math.random() * 40 + 1) >> 0,
         );
@@ -213,7 +195,7 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.globalConfigService.getOfferedGames(session.siteName, session.memberName);
+        const offerGames = await this.getOfferGames(session);
 
         return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
     }
@@ -233,7 +215,13 @@ export class AuthService {
     }
 
     private async getBalanceBySession(userSession: UserSession, nickname: string, captureBalance: boolean) {
-        const getBalanceRequest = new GetBalanceRequest(userSession.owSeq, userSession.siteId, userSession.memberId, userSession.language);
+        const getBalanceRequest = new GetBalanceRequest(
+            userSession.owSeq,
+            userSession.siteId,
+            userSession.memberId,
+            userSession.language,
+            userSession.partnerId,
+        );
         const response = await this.apiClient.getBalance(
             getBalanceRequest,
             this.composeBeforeCallMessage(userSession, nickname, getBalanceRequest),
@@ -277,7 +265,7 @@ export class AuthService {
     }
 
     private async createUserIfNotExist(verifyTokenResult: VerifyTokenResponse) {
-        const { memberKey, memberId, memberName, clientId, currency } = verifyTokenResult;
+        const { memberKey, memberId, memberName, partnerId, currencyName } = verifyTokenResult;
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
@@ -286,10 +274,10 @@ export class AuthService {
                     memberKey,
                     `${memberKey}@#QWE`,
                     new Date(),
-                    clientId,
+                    partnerId,
                     memberId,
                     memberName,
-                    this.formatCurrency(currency),
+                    this.formatCurrency(currencyName),
                 ),
             )
         );
@@ -302,7 +290,21 @@ export class AuthService {
         system: number,
     ) {
         const { token, browserUserAgent, ip } = verifyTokenParam;
-        const { memberKey, seq, memberId, siteId, language, currency, clientId, memberName, siteName } = verifyTokenResult;
+        const {
+            memberKey,
+            seq,
+            memberId,
+            siteId,
+            language,
+            currencyCode,
+            currencyName,
+            currencyGroupId,
+            isTestCurrency,
+            multiplier,
+            partnerId,
+            memberName,
+            siteName,
+        } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
         if (session) {
@@ -322,8 +324,12 @@ export class AuthService {
                     siteId,
                     user.id,
                     language,
-                    this.formatCurrency(currency),
-                    clientId,
+                    currencyCode,
+                    this.formatCurrency(currencyName),
+                    currencyGroupId,
+                    isTestCurrency,
+                    multiplier,
+                    partnerId,
                     memberName,
                     siteName,
                     system,
@@ -340,6 +346,7 @@ export class AuthService {
             session.language,
             characterName,
             isFirstLogin,
+            session.partnerId,
         );
 
         return this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
@@ -349,5 +356,27 @@ export class AuthService {
         const nameDisplay = characterName ? `\n\tCharacter: ${characterName} ` : '';
 
         return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
+    }
+
+    private async getOfferGames(session: UserSession) {
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
+        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session.partnerId);
+
+        if (!currency?.enabled || !currencyGroup?.enabled) {
+            return [];
+        }
+
+        const groupOfferGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
+        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
+
+        const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
+            if (gameSiteExclusions[gameId].includes(session.siteName)) {
+                result.push(+gameId);
+            }
+
+            return result;
+        }, []);
+
+        return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
     }
 }
