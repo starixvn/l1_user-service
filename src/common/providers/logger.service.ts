@@ -1,6 +1,6 @@
-import { Injectable, LoggerService } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import * as Sentry from "@sentry/node";
+import { Injectable, LoggerService } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as Sentry from '@sentry/node';
 
 interface SentryConfig {
     dns: string;
@@ -26,7 +26,9 @@ export class SentryLogger implements LoggerService {
     }
 
     log(message: string, context = Sentry.Severity.Info) {
-        Sentry.captureMessage(message, context);
+        const level = Sentry.Severity.fromString(context);
+
+        Sentry.captureMessage(message, level);
     }
 
     error(exception: any) {
