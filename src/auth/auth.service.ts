@@ -372,7 +372,9 @@ export class AuthService {
         const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
 
         const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
-            if (gameSiteExclusions[gameId].includes(session.siteName)) {
+            const exclusionSites = gameSiteExclusions[gameId]?.map((site) => site?.toLocaleLowerCase());
+
+            if (exclusionSites.includes(session.siteName.toLocaleLowerCase())) {
                 result.push(+gameId);
             }
 
