@@ -1,11 +1,11 @@
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { Model } from "mongoose";
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Model } from 'mongoose';
 
-import { closeInMongodConnection, rootMongooseTestModule } from "../../shared/test-utils/mongoose-test-module";
-import { CreateUserParam } from "../params";
-import { UsersService } from "../providers";
-import { User, UserDocument, UserSchema } from "../schemas";
+import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { CreateUserParam } from '../params';
+import { UsersService } from '../providers';
+import { User, UserDocument, UserSchema } from '../schemas';
 
 const user = new User();
 user.local = {
@@ -15,6 +15,7 @@ user.local = {
     memberId: 123,
     memberName: 'memberName',
     password: 'pass',
+    clientId: null,
     regDate: new Date(),
 };
 

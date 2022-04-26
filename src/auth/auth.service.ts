@@ -61,7 +61,9 @@ export class AuthService {
         }
 
         const user = umSettings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
-        const isSuperPlayer = user ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId) : false;
+        const isSuperPlayer = user
+            ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
+            : false;
 
         if (umSettings.isUM && !isSuperPlayer) {
             return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end));
@@ -370,7 +372,9 @@ export class AuthService {
         const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
 
         const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
-            if (gameSiteExclusions[gameId].includes(session.siteName)) {
+            const exclusionSites = gameSiteExclusions[gameId]?.map((site) => site?.toLocaleLowerCase());
+
+            if (exclusionSites.includes(session.siteName.toLocaleLowerCase())) {
                 result.push(+gameId);
             }
 
