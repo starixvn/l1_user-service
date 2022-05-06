@@ -22,10 +22,12 @@ async function bootstrap() {
         templates: join(__dirname, '..', 'views'),
     });
 
+    const isLocal = process.env.ENV.toLocaleLowerCase().indexOf('local') !== -1;
+    console.log(process.env.ENV.toLocaleLowerCase());
     const corsWhiteList = process.env.CORS_WHITELIST.split(',');
     app.enableCors({
         origin: (origin, callback) => {
-            if (corsWhiteList.indexOf(origin) !== -1 || !origin) {
+            if (corsWhiteList.indexOf(origin) !== -1 || !origin || isLocal) {
                 callback(null, true);
             } else {
                 callback(new Error(`Not allowed by CORS ${origin}`));
