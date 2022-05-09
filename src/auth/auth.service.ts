@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LeanDocument } from 'mongoose';
 import { generate } from 'randomstring';
@@ -21,24 +21,24 @@ import { UserDocument, UserSession } from '../users/schemas';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
+import * as Chance from 'chance';
 
 @Injectable()
 export class AuthService {
     private readonly UUSCurrency = 'UUS';
 
-    constructor(
-        private readonly logger: SentryLogger,
-        private readonly apiClient: OWApiClient,
-        private readonly usersService: UsersService,
-        private readonly userSessionsService: UserSessionsService,
-        private readonly userInfosService: UserInfosService,
-        private readonly utilsService: UtilsService,
-        private readonly configService: ConfigService,
-        private readonly partnerConfigService: PartnerConfigService,
-        private readonly umService: UMService,
-        private readonly currencyGroupGameService: CurrencyGroupGameService,
-        private readonly currencyGroupService: CurrencyGroupService,
-    ) {}
+    @Inject(SentryLogger) private readonly logger: SentryLogger;
+    @Inject(OWApiClient) private readonly apiClient: OWApiClient;
+    @Inject(UsersService) private readonly usersService: UsersService;
+    @Inject(UserSessionsService) private readonly userSessionsService: UserSessionsService;
+    @Inject(UserInfosService) private readonly userInfosService: UserInfosService;
+    @Inject(UtilsService) private readonly utilsService: UtilsService;
+    @Inject(ConfigService) private readonly configService: ConfigService;
+    @Inject(PartnerConfigService) private readonly partnerConfigService: PartnerConfigService;
+    @Inject(UMService) private readonly umService: UMService;
+    @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
+    @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
+    private readonly chance = new Chance();
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
@@ -186,7 +186,7 @@ export class AuthService {
             characterName,
             session.currencyName,
             latestUID,
-            request.avatar || (Math.random() * 40 + 1) >> 0,
+            request.avatar || this.chance.integer({ min: 1, max: 41 }),
         );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
@@ -313,21 +313,21 @@ export class AuthService {
             return session;
         } else {
             return this.userSessionsService.createUserSession(
-                new CreateUserSessionParam(
-                    token,
-                    `${generate()}_${memberKey}`,
-                    seq,
-                    memberKey,
+                new CreateUserSessionParam({
+                    ssoToken: token,
+                    sessionId: `${generate()}_${memberKey}`,
+                    owSeq: seq,
+                    username: memberKey,
                     memberId,
-                    new Date(),
-                    new Date(),
+                    ssoTime: new Date(),
+                    recheckInTime: new Date(),
                     ip,
                     browserUserAgent,
-                    siteId,
-                    user.id,
+                    siteId: siteId,
+                    userId: user.id,
                     language,
-                    currencyCode,
-                    this.formatCurrency(currencyName),
+                    currencyCode: currencyCode,
+                    currencyName: this.formatCurrency(currencyName),
                     currencyGroupId,
                     isTestCurrency,
                     multiplier,
@@ -335,7 +335,7 @@ export class AuthService {
                     memberName,
                     siteName,
                     system,
-                ),
+                }),
             );
         }
     }

@@ -19,7 +19,7 @@ user.local = {
     regDate: new Date(),
 };
 
-describe('UserInfosService test', () => {
+describe('UserService test', () => {
     let service: UsersService;
     let userModel: Model<UserDocument>;
 

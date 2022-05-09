@@ -8,7 +8,7 @@ import { UserSession } from '../schemas';
 
 jest.mock('../providers');
 
-describe('AuthController test', () => {
+describe('UserController test', () => {
     let userController: UsersController;
 
     beforeEach(async () => {
