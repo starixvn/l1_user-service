@@ -2,10 +2,11 @@ export class NotifyLoginRequest {
     constructor(
         readonly Seq: string,
         readonly SiteId: string,
-        readonly ObCustId: number,
+        readonly PlayerId: number,
         readonly Language: string,
         readonly CharacterName: string,
         readonly FirstLogin: boolean,
-        readonly PartnerId: string,
+        readonly OperatorId: string,
+        readonly OperatorToken: string,
     ) {}
 }

@@ -13,6 +13,9 @@ export class CurrencyGroup {
 
     @Prop()
     partnerId: string;
+
+    @Prop()
+    operatorId: string;
 }
 
 export const CurrencyGroupSchema = SchemaFactory.createForClass(CurrencyGroup);

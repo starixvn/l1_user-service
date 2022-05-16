@@ -21,6 +21,11 @@ export class CreateUserSessionParam {
     readonly siteName: string;
     readonly system: number;
 
+    readonly operatorId: string;
+    readonly playerId: number;
+    readonly playerName: string;
+    readonly operatorToken: string;
+
     constructor({
         ssoToken,
         sessionId,
@@ -43,6 +48,10 @@ export class CreateUserSessionParam {
         memberName,
         siteName,
         system,
+        operatorId,
+        playerId,
+        playerName,
+        operatorToken,
     }: any) {
         this.ssoToken = ssoToken;
         this.sessionId = sessionId;
@@ -65,5 +74,9 @@ export class CreateUserSessionParam {
         this.memberName = memberName;
         this.siteName = siteName;
         this.system = system;
+        this.operatorId = operatorId;
+        this.playerId = playerId;
+        this.playerName = playerName;
+        this.operatorToken = operatorToken;
     }
 }

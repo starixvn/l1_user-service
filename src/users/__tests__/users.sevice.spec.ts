@@ -17,6 +17,9 @@ user.local = {
     password: 'pass',
     clientId: null,
     regDate: new Date(),
+    operatorId: 'id',
+    playerId: 123,
+    playerName: 'playerName',
 };
 
 describe('UserService test', () => {

@@ -72,7 +72,7 @@ export class OWApiClient {
 
     async notifyLogin(request: NotifyLoginRequest, beforeMessage: string) {
         try {
-            const response = await this.sendPostRequest<NotifyLoginResponse>('/Member/EnterPortal', request);
+            const response = await this.sendPostRequest<NotifyLoginResponse>('/Player/EnterPortal', request);
 
             if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Notify Login', request, response, beforeMessage, this.getLogLevel(response));
@@ -89,7 +89,7 @@ export class OWApiClient {
 
     async getBalance(request: GetBalanceRequest, beforeMessage: string) {
         try {
-            const response = await this.sendPostRequest<GetBalanceResponse>('/Member/Balance', request);
+            const response = await this.sendPostRequest<GetBalanceResponse>('/Player/Balance', request);
 
             if (this.isErrorResult(response.result)) {
                 this.logAfterSendToApi('Get Balance', request, response, beforeMessage, this.getLogLevel(response));
@@ -134,7 +134,7 @@ export class OWApiClient {
 
     private logAfterSendToApi(action: string, params, result: BaseResponse, beforeMessage: string, logLevel: Severity) {
         const messages = [
-            `Account ${params.SiteId}_${params.ObCustId} performs ${action} at ${new Date()}`,
+            `Account ${params.SiteId}_${params.PlayerId} performs ${action} at ${new Date()}`,
             '',
             beforeMessage,
             `\nAction Result: ${JSON.stringify(result)}`,

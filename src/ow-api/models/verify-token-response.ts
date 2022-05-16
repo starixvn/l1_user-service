@@ -1,8 +1,8 @@
 export interface VerifyTokenResponse {
-    memberId: number;
-    memberName: string;
+    playerId: number;
+    playerName: string;
     siteId: string;
-    partnerId: string;
+    operatorId: string;
     domain: string;
     language: string;
     currencyCode: string;
@@ -17,4 +17,5 @@ export interface VerifyTokenResponse {
     isSuccessful: boolean;
     siteName: string;
     appType: number;
+    operatorToken: string;
 }

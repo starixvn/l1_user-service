@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 export type UserSessionDocument = UserSession & Document;
 
@@ -67,6 +67,18 @@ export class UserSession {
 
     @Prop()
     system: number;
+
+    @Prop()
+    operatorId: string;
+
+    @Prop()
+    playerId: number;
+
+    @Prop()
+    playerName: string;
+
+    @Prop()
+    operatorToken: string;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);
