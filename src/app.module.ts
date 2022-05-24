@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -15,6 +15,11 @@ import { OWApiModule } from './ow-api/ow-api.module';
 import { SettingsModule } from './settings/settings.module';
 import { UMModule } from './um/um.module';
 import { UsersModule } from './users/users.module';
+import { AdminModule } from './admin/admin.module';
+import { GameResultModule } from './game-result/game-result.module';
+import { AdminMiddleware } from './admin/admin.middleware';
+import { AdminController } from './admin/admin.controller';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
     imports: [
@@ -39,8 +44,15 @@ import { UsersModule } from './users/users.module';
         CurrencyGroupGamesModule,
         UMModule,
         CurrencyGroupModule,
+        AdminModule,
+        GameResultModule,
+        JwtModule.register({}),
     ],
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(AdminMiddleware).forRoutes(AdminController);
+    }
+}

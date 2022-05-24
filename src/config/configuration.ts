@@ -18,6 +18,7 @@ export default () => ({
         uri: process.env.AUTH_URI,
         clientId: 'game-server',
         clientSecret: 'gameserver@20luminet&',
+        audiences: ['api', 'admin-api', 'game-services'],
     },
     sentry: {
         dns: process.env.SENTRY_DNS,
@@ -26,4 +27,10 @@ export default () => ({
         logIdentifier: 'user-service',
     },
     prefixCharacterName: process.env.PREFIX_CHARACTER_NAME,
+    adminSecretKey: process.env.ADMIN_SECRET_KEY,
+    gameResult: {
+        url: process.env.GAME_RESULT_URL,
+        clientId: 'Game Client',
+        clientKey: process.env.GAME_RESULT_CLIENT_KEY,
+    },
 });

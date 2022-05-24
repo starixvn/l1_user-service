@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-
 import { CurrencyGroupGamesModule } from '../currency-group-games/currency-group-games.module';
 import { PartnerConfigModule } from '../partner-config/partner-config.module';
 import { OWApiModule } from '../ow-api/ow-api.module';
