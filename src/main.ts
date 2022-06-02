@@ -6,8 +6,10 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { SentryLogger } from './common/providers/logger.service';
+import otelSDK from './otelSDK';
 
 async function bootstrap() {
+    await otelSDK.start();
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));

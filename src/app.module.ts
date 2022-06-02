@@ -22,6 +22,24 @@ import { AdminController } from './admin/admin.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { GameBackendModule } from './game-backend/game-backend.module';
 import { GameBackendController } from './game-backend/game-backend.controller';
+import { OpenTelemetryModule } from 'nestjs-otel';
+
+const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
+    metrics: {
+        hostMetrics: true, // Includes Host Metrics
+        defaultMetrics: true, // Includes Default Metrics
+        apiMetrics: {
+            enable: true, // Includes api metrics
+            timeBuckets: [], // You can change the default time buckets
+            defaultAttributes: {
+                // You can set default labels for api metrics
+                custom: 'label',
+            },
+            ignoreRoutes: ['/favicon.ico'], // You can ignore specific routes (See https://docs.nestjs.com/middleware#excluding-routes for options)
+            ignoreUndefinedRoutes: false, //Records metrics for all URLs, even undefined ones
+        },
+    },
+});
 
 @Module({
     imports: [
@@ -50,6 +68,7 @@ import { GameBackendController } from './game-backend/game-backend.controller';
         GameResultModule,
         GameBackendModule,
         JwtModule.register({}),
+        OpenTelemetryModuleConfig,
     ],
     controllers: [AppController],
     providers: [AppService],
