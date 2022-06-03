@@ -5,6 +5,7 @@ import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
@@ -31,7 +32,7 @@ const otelSDK = new NodeSDK({
             }),
         ],
     }),
-    instrumentations: [new HttpInstrumentation()],
+    instrumentations: [getNodeAutoInstrumentations() as any],
 });
 
 export default otelSDK;
