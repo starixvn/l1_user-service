@@ -27,7 +27,7 @@ import { OpenTelemetryModule } from 'nestjs-otel';
 const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
     metrics: {
         hostMetrics: true, // Includes Host Metrics
-        defaultMetrics: true, // Includes Default Metrics
+        defaultMetrics: false, // Includes Default Metrics
         apiMetrics: {
             enable: true, // Includes api metrics
             timeBuckets: [], // You can change the default time buckets
