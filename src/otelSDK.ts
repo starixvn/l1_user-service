@@ -5,9 +5,14 @@ import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { Resource } from '@opentelemetry/resources';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import * as process from 'process';
 
 const otelSDK = new NodeSDK({
+    resource: new Resource({
+        [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
+    }),
     spanProcessor: new BatchSpanProcessor(
         new JaegerExporter({
             endpoint: 'http://10.10.50.69:14268/api/traces',
