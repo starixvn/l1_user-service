@@ -1,4 +1,4 @@
-import { CompositePropagator } from '@opentelemetry/core';
+import { CompositePropagator, W3CTraceContextPropagator, W3CBaggagePropagator } from '@opentelemetry/core';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
 import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
@@ -7,6 +7,7 @@ import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-ho
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import * as process from 'process';
 
 const otelSDK = new NodeSDK({
@@ -20,7 +21,15 @@ const otelSDK = new NodeSDK({
     ),
     contextManager: new AsyncLocalStorageContextManager(),
     textMapPropagator: new CompositePropagator({
-        propagators: [new JaegerPropagator()],
+        propagators: [
+            new JaegerPropagator(),
+            new W3CTraceContextPropagator(),
+            new W3CBaggagePropagator(),
+            new B3Propagator(),
+            new B3Propagator({
+                injectEncoding: B3InjectEncoding.MULTI_HEADER,
+            }),
+        ],
     }),
     instrumentations: [new HttpInstrumentation()],
 });
