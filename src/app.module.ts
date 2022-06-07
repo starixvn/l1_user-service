@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -33,9 +33,12 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
             timeBuckets: [], // You can change the default time buckets
             defaultAttributes: {
                 // You can set default labels for api metrics
-                custom: 'label',
+                service: 'user-service',
             },
-            ignoreRoutes: ['/favicon.ico', '/'], // You can ignore specific routes (See https://docs.nestjs.com/middleware#excluding-routes for options)
+            ignoreRoutes: [
+                { path: '/', method: RequestMethod.GET },
+                { path: '/favicon.ico', method: RequestMethod.GET },
+            ], // You can ignore specific routes (See https://docs.nestjs.com/middleware#excluding-routes for options)
             ignoreUndefinedRoutes: false, //Records metrics for all URLs, even undefined ones
         },
     },
