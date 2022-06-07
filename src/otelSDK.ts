@@ -37,7 +37,11 @@ const otelSDK = new NodeSDK({
         ],
     }),
     instrumentations: [
-        new HttpInstrumentation(),
+        new HttpInstrumentation({
+            ignoreOutgoingRequestHook: (req) => {
+                return req.hostname.includes('health');
+            },
+        }),
         new FastifyInstrumentation() as any,
         new MongooseInstrumentation(),
         new NestInstrumentation(),
