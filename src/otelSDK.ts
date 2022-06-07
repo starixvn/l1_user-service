@@ -5,6 +5,7 @@ import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
@@ -14,6 +15,7 @@ import * as process from 'process';
 const otelSDK = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: 'LOCAL',
     }),
     spanProcessor: new BatchSpanProcessor(
         new JaegerExporter({
@@ -26,13 +28,12 @@ const otelSDK = new NodeSDK({
             new JaegerPropagator(),
             new W3CTraceContextPropagator(),
             new W3CBaggagePropagator(),
-            new B3Propagator(),
             new B3Propagator({
                 injectEncoding: B3InjectEncoding.MULTI_HEADER,
             }),
         ],
     }),
-    instrumentations: [getNodeAutoInstrumentations() as any],
+    instrumentations: [new ExpressInstrumentation() as any, new HttpInstrumentation()],
 });
 
 export default otelSDK;
