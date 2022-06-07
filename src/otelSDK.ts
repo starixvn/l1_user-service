@@ -20,6 +20,7 @@ const otelSDK = new NodeSDK({
     }),
     spanProcessor: new BatchSpanProcessor(
         new JaegerExporter({
+            tags: [],
             endpoint: 'http://10.10.50.69:14268/api/traces',
         }),
     ),
