@@ -6,9 +6,8 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { MongooseInstrumentation } from 'opentelemetry-instrumentation-mongoose';
-import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
+import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
 import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
@@ -36,7 +35,16 @@ const otelSDK = new NodeSDK({
             }),
         ],
     }),
-    instrumentations: [new NestInstrumentation() as any, new MongooseInstrumentation()],
+    instrumentations: [
+        new HttpInstrumentation({
+            ignoreOutgoingRequestHook: (req) => {
+                return req.hostname.includes('health');
+            },
+        }),
+        new NestInstrumentation() as any,
+        new MongooseInstrumentation(),
+        new MongoDBInstrumentation(),
+    ],
 });
 
 export default otelSDK;
