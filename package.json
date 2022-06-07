@@ -54,6 +54,7 @@
         "mongoose": "5.11.13",
         "nestjs-otel": "^3.0.4",
         "openid-client": "^4.3.0",
+        "opentelemetry-instrumentation-mongoose": "^0.28.0",
         "point-of-view": "^4.15.2",
         "randomstring": "^1.1.5",
         "reflect-metadata": "0.1.13",

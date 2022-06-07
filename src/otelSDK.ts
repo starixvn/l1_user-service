@@ -6,6 +6,7 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { MongooseInstrumentation } from 'opentelemetry-instrumentation-mongoose';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
@@ -33,7 +34,7 @@ const otelSDK = new NodeSDK({
             }),
         ],
     }),
-    instrumentations: [new ExpressInstrumentation() as any, new HttpInstrumentation()],
+    instrumentations: [new ExpressInstrumentation() as any, new HttpInstrumentation(), new MongooseInstrumentation()],
 });
 
 export default otelSDK;

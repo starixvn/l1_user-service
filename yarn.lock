@@ -7109,6 +7109,15 @@ openid-client@^4.3.0:
     oidc-token-hash "^5.0.1"
     p-any "^3.0.0"
 
+opentelemetry-instrumentation-mongoose@^0.28.0:
+  version "0.28.0"
+  resolved "http://npm.lumigame.com/opentelemetry-instrumentation-mongoose/-/opentelemetry-instrumentation-mongoose-0.28.0.tgz#3747be91185897b9d74d25db7840ffb52ca37dbb"
+  integrity sha512-tFI6cs47whGyBDFLS+knDYuIah9IeERVJhwHklU74z19RE32EbFmgCL1rGQJx4rbrU4GvAB5CGj47cbrq3ikvQ==
+  dependencies:
+    "@opentelemetry/core" "^1.0.0"
+    "@opentelemetry/instrumentation" "^0.28.0"
+    "@opentelemetry/semantic-conventions" "^1.0.0"
+
 opentelemetry-node-metrics@^1.1.0:
   version "1.1.0"
   resolved "http://npm.lumigame.com/opentelemetry-node-metrics/-/opentelemetry-node-metrics-1.1.0.tgz#9ffb42b644953304278400e5cc0d0d8e4a9db2a6"
