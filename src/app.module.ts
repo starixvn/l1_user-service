@@ -17,7 +17,7 @@ import { UMModule } from './um/um.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { GameResultModule } from './game-result/game-result.module';
-import { AdminMiddleware } from './admin/admin.middleware';
+import { AuthenticateMiddleware } from './middlewares/authenticate.middleware';
 import { AdminController } from './admin/admin.controller';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -53,6 +53,7 @@ import { JwtModule } from '@nestjs/jwt';
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AdminMiddleware).forRoutes(AdminController);
+        consumer.apply(AuthenticateMiddleware).forRoutes(AdminController);
+        consumer.apply(AuthenticateMiddleware).forRoutes('users/signInGame');
     }
 }
