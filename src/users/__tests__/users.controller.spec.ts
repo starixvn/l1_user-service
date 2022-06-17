@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { UsersController } from '../users.controller';
 import { UserInfosService, UserSessionsService } from '../providers';
-import { VerifySessionRequest, VerifySessionResult, SignInGameResult } from '../models';
+import { VerifySessionRequest, VerifySessionResult } from '../models';
 import { UpdateSettingsRequest } from '../models/update-settings-request';
 import { invalidSession } from '../constants/errors';
 import { UserSession } from '../schemas';
@@ -61,19 +61,6 @@ describe('UserController test', () => {
             await userController.updateUserSignInSMStatus(request);
 
             expect(UserInfosService.prototype.updateUserSignInSMStatus).toHaveBeenCalled();
-        });
-    });
-
-    describe('signInGame test', () => {
-        const request = new VerifySessionRequest('', '', '');
-        it('should return invalid session when session is invalid', async () => {
-            const verifyResult = new VerifySessionResult(true, {} as UserSession);
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce(verifyResult);
-            const expectedValue = new SignInGameResult(true, verifyResult.session);
-
-            const actualResult = await userController.signInGame(request);
-
-            expect(actualResult).toStrictEqual(expectedValue);
         });
     });
 });

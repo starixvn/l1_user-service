@@ -17,9 +17,11 @@ import { UMModule } from './um/um.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { GameResultModule } from './game-result/game-result.module';
-import { AuthenticateMiddleware } from './middlewares/authenticate.middleware';
+import { BackendAuthenticateMiddleware } from './middlewares/backend-authenticate.middleware';
 import { AdminController } from './admin/admin.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { GameBackendModule } from './game-backend/game-backend.module';
+import { GameBackendController } from './game-backend/game-backend.controller';
 
 @Module({
     imports: [
@@ -46,6 +48,7 @@ import { JwtModule } from '@nestjs/jwt';
         CurrencyGroupModule,
         AdminModule,
         GameResultModule,
+        GameBackendModule,
         JwtModule.register({}),
     ],
     controllers: [AppController],
@@ -53,7 +56,7 @@ import { JwtModule } from '@nestjs/jwt';
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthenticateMiddleware).forRoutes(AdminController);
-        consumer.apply(AuthenticateMiddleware).forRoutes('users/signInGame');
+        consumer.apply(BackendAuthenticateMiddleware).forRoutes(AdminController);
+        consumer.apply(BackendAuthenticateMiddleware).forRoutes(GameBackendController);
     }
 }

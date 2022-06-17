@@ -1,8 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
-
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';
-import { VerifySessionRequest, SignInGameResult } from './models';
+import { VerifySessionRequest } from './models';
 import { UpdateSettingsRequest } from './models/update-settings-request';
 import { UserInfosService, UserSessionsService } from './providers';
 
@@ -33,12 +32,5 @@ export class UsersController {
         await this.userInfosService.updateUserSignInSMStatus(session.userId);
 
         return new Result();
-    }
-
-    @Post('signInGame')
-    async signInGame(@Body() request: VerifySessionRequest): Promise<SignInGameResult> {
-        const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-
-        return new SignInGameResult(isAuthenticated, session);
     }
 }

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SentryLogger } from '../../common/providers';
-import { AuthenticateMiddleware } from '../authenticate.middleware';
+import { BackendAuthenticateMiddleware } from '../backend-authenticate.middleware';
 import { generate as generateString } from 'randomstring';
 import { Request, Response } from 'express';
 import { when } from 'jest-when';
@@ -26,19 +26,19 @@ jest.mock('jwks-rsa', () => {
 describe('AuthenticateMiddleware', () => {
     const UnauthorizedCode = 401;
     let logger: SentryLogger;
-    let service: AuthenticateMiddleware;
+    let service: BackendAuthenticateMiddleware;
     let config: ConfigService;
     let jwtService: JwtService;
 
     beforeEach(async () => {
         jest.clearAllMocks();
         const module = await Test.createTestingModule({
-            providers: [AuthenticateMiddleware, ConfigService, SentryLogger],
+            providers: [BackendAuthenticateMiddleware, ConfigService, SentryLogger],
             imports: [JwtModule.register({})],
         }).compile();
 
         logger = module.get<SentryLogger>(SentryLogger);
-        service = await module.resolve(AuthenticateMiddleware);
+        service = await module.resolve(BackendAuthenticateMiddleware);
         config = module.get<ConfigService>(ConfigService);
         jwtService = module.get<JwtService>(JwtService);
     });
