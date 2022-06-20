@@ -13,6 +13,7 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import * as process from 'process';
+import { IncomingMessage } from 'http';
 
 const otelSDK = new NodeSDK({
     resource: new Resource({
@@ -38,8 +39,8 @@ const otelSDK = new NodeSDK({
     }),
     instrumentations: [
         new HttpInstrumentation({
-            ignoreIncomingRequestHook: (req) => {
-                return req.url?.includes('health') || req.url === 'http://localhost/';
+            ignoreIncomingRequestHook: (req: IncomingMessage) => {
+                return req.url?.includes('health');
             },
         }),
         new FastifyInstrumentation(),
