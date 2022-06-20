@@ -11,6 +11,7 @@ import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core'
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
+import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import * as process from 'process';
 
 const otelSDK = new NodeSDK({
@@ -37,10 +38,11 @@ const otelSDK = new NodeSDK({
     }),
     instrumentations: [
         new HttpInstrumentation({
-            ignoreOutgoingRequestHook: (req) => {
-                return req.hostname.includes('health');
+            ignoreIncomingRequestHook: (req) => {
+                return req.url?.includes('health') || req.url === 'http://localhost/';
             },
         }),
+        new FastifyInstrumentation(),
         new NestInstrumentation() as any,
         new MongooseInstrumentation(),
         new MongoDBInstrumentation(),
