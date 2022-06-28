@@ -30,10 +30,10 @@ jest.mock('../../currency-groups/currency-group.service');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
-        memberId: 1,
-        memberName: 'user1',
+        playerId: 1,
+        playerName: 'user1',
         siteId: '77',
-        partnerId: 'id',
+        operatorId: 'id',
         domain: 'localhost',
         language: 'en',
         currencyCode: 'UUS',
@@ -48,6 +48,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         isSuccessful,
         appType: 1,
         siteName: 'lumi',
+        operatorToken: 'operator-token',
     };
 };
 

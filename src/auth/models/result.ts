@@ -1,5 +1,5 @@
-import { Result } from "../../shared/models/result";
-import { UMResult } from "../../shared/models/um-result";
+import { Result } from '../../shared/models/result';
+import { UMResult } from '../../shared/models/um-result';
 
 export class AuthorizeResult {
     readonly isUM: boolean;

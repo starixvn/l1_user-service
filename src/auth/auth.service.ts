@@ -43,7 +43,7 @@ export class AuthService {
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
-        const umSettings = await this.umService.getUMResult(data?.partnerId);
+        const umSettings = await this.umService.getUMResult(data?.operatorId);
 
         const isValidToken = data && data.isSuccessful && data.appType === system;
         if (!isValidToken) {
@@ -60,7 +60,7 @@ export class AuthService {
             return new AuthenticateResult(false, umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null);
         }
 
-        const user = umSettings.isUM ? await this.usersService.getByMemberName(data.memberName) : await this.createUserIfNotExist(data);
+        const user = umSettings.isUM ? await this.usersService.getByMemberName(data.playerName) : await this.createUserIfNotExist(data);
         const isSuperPlayer = user
             ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
             : false;
@@ -78,7 +78,7 @@ export class AuthService {
             userSession.language,
             userSession.sessionId,
             userSession.system,
-            userSession.memberName,
+            userSession.playerName,
         );
     }
 
@@ -105,10 +105,10 @@ export class AuthService {
 
     async verifySession(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
             return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
@@ -117,10 +117,10 @@ export class AuthService {
 
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        const umSettings = await this.umService.getUMResult(session?.partnerId);
+        const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.memberName, session?.partnerId);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
             if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, umInfo);
             }
@@ -220,9 +220,10 @@ export class AuthService {
         const getBalanceRequest = new GetBalanceRequest(
             userSession.owSeq,
             userSession.siteId,
-            userSession.memberId,
+            userSession.playerId,
             userSession.language,
-            userSession.partnerId,
+            userSession.operatorId,
+            userSession.operatorToken,
         );
         const response = await this.apiClient.getBalance(
             getBalanceRequest,
@@ -267,7 +268,7 @@ export class AuthService {
     }
 
     private async createUserIfNotExist(verifyTokenResult: VerifyTokenResponse) {
-        const { memberKey, memberId, memberName, partnerId, currencyName } = verifyTokenResult;
+        const { memberKey, playerId, playerName, operatorId, currencyName } = verifyTokenResult;
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
@@ -276,9 +277,9 @@ export class AuthService {
                     memberKey,
                     `${memberKey}@#QWE`,
                     new Date(),
-                    partnerId,
-                    memberId,
-                    memberName,
+                    operatorId,
+                    playerId,
+                    playerName,
                     this.formatCurrency(currencyName),
                 ),
             )
@@ -295,7 +296,7 @@ export class AuthService {
         const {
             memberKey,
             seq,
-            memberId,
+            playerId,
             siteId,
             language,
             currencyCode,
@@ -303,9 +304,10 @@ export class AuthService {
             currencyGroupId,
             isTestCurrency,
             multiplier,
-            partnerId,
-            memberName,
+            operatorId,
+            playerName,
             siteName,
+            operatorToken,
         } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
@@ -318,7 +320,7 @@ export class AuthService {
                     sessionId: `${generate()}_${memberKey}`,
                     owSeq: seq,
                     username: memberKey,
-                    memberId,
+                    memberId: playerId,
                     ssoTime: new Date(),
                     recheckInTime: new Date(),
                     ip,
@@ -331,10 +333,14 @@ export class AuthService {
                     currencyGroupId,
                     isTestCurrency,
                     multiplier,
-                    partnerId,
-                    memberName,
+                    partnerId: operatorId,
+                    memberName: playerName,
                     siteName,
                     system,
+                    operatorId,
+                    playerId,
+                    playerName,
+                    operatorToken,
                 }),
             );
         }
@@ -344,11 +350,12 @@ export class AuthService {
         const request = new NotifyLoginRequest(
             session.owSeq,
             session.siteId,
-            session.memberId,
+            session.playerId,
             session.language,
             characterName,
             isFirstLogin,
-            session.partnerId,
+            session.operatorId,
+            session.operatorToken,
         );
 
         return this.apiClient.notifyLogin(request, this.composeBeforeCallMessage(session, characterName, request));
@@ -362,14 +369,14 @@ export class AuthService {
 
     private async getOfferGames(session: UserSession) {
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
-        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session.partnerId);
+        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session.operatorId);
 
         if (!currency?.enabled || !currencyGroup?.enabled) {
             return [];
         }
 
         const groupOfferGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
-        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.partnerId);
+        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.operatorId);
 
         const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
             const exclusionSites = gameSiteExclusions[gameId]?.map((site) => site?.toLocaleLowerCase());

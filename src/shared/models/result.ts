@@ -1,4 +1,4 @@
-import { UMResult } from "./um-result";
+import { UMResult } from './um-result';
 
 export class Result {
     isSuccessful: boolean;

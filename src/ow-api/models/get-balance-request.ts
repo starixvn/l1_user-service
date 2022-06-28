@@ -2,8 +2,9 @@ export class GetBalanceRequest {
     constructor(
         readonly Seq: string,
         readonly SiteId: string,
-        readonly ObCustId: number,
+        readonly PlayerId: number,
         readonly Language: string,
-        readonly PartnerId: string,
+        readonly OperatorId: string,
+        readonly OperatorToken: string,
     ) {}
 }

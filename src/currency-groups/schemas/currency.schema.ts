@@ -25,6 +25,9 @@ export class Currency {
 
     @Prop()
     groupId: mongoose.Types.ObjectId;
+
+    @Prop()
+    operatorId: string;
 }
 
 export const CurrencySchema = SchemaFactory.createForClass(Currency);

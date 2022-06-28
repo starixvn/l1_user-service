@@ -28,6 +28,15 @@ class Local {
 
     @Prop()
     currency: string;
+
+    @Prop()
+    operatorId: string;
+
+    @Prop()
+    playerId: number;
+
+    @Prop()
+    playerName: string;
 }
 const localSchema = SchemaFactory.createForClass(Local);
 

@@ -68,7 +68,7 @@ export class SentryLogger implements LoggerService {
 
     logAfterSendToApi(action, params, result, beforeMessage: string, logLevel) {
         const messages = [
-            `Account ${params.SiteId}_${params.ObCustId} performs ${action} at ${new Date()}`,
+            `Account ${params.SiteId}_${params.OperatorId} performs ${action} at ${new Date()}`,
             '',
             beforeMessage,
             `\nAction Result: ${JSON.stringify(result)}`,

@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as jwksClient from 'jwks-rsa';
 
 @Injectable()
-export class AdminMiddleware implements NestMiddleware {
+export class BackendAuthenticateMiddleware implements NestMiddleware {
     @Inject(ConfigService) private readonly config: ConfigService;
     @Inject(SentryLogger) private readonly logger: SentryLogger;
     @Inject(JwtService) private readonly jwtService: JwtService;

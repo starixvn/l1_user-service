@@ -23,7 +23,7 @@ function createUserSession(session) {
     };
 }
 
-describe('UserInfosService test', () => {
+describe('UserSessionService test', () => {
     const sessionTimeoutInMinutes = 19.8;
     let service: UserSessionsService;
     let userInfosService: UserInfosService;
@@ -104,6 +104,13 @@ describe('UserInfosService test', () => {
             memberName: '',
             siteName: '',
             system: 1,
+            operatorId: '',
+            playerId: 123,
+            playerName: '',
+        });
+
+        afterAll(async () => {
+            await userSessionModel.deleteMany();
         });
 
         it('should call create user session', async () => {
