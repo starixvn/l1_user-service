@@ -6,12 +6,12 @@ import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { MongooseInstrumentation } from 'opentelemetry-instrumentation-mongoose';
-import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
-import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
+import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
+import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 import * as process from 'process';
 import { IncomingMessage } from 'http';
 
@@ -44,7 +44,9 @@ const trace = new NodeSDK({
             },
         }),
         new FastifyInstrumentation(),
-        new MongooseInstrumentation() as any,
+        new NestInstrumentation() as any,
+        new MongooseInstrumentation(),
+        new MongoDBInstrumentation(),
     ],
 });
 
