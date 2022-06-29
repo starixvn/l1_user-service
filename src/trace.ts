@@ -44,18 +44,16 @@ const trace = new NodeSDK({
             },
         }),
         new FastifyInstrumentation(),
-        new NestInstrumentation() as any,
-        new MongooseInstrumentation(),
-        new MongoDBInstrumentation(),
+        new MongooseInstrumentation() as any,
     ],
 });
 
-export default otelSDK;
+export default trace;
 
 // You can also use the shutdown method to gracefully shut down the SDK before process shutdown
 // or on some operating system signal.
 process.on('SIGTERM', () => {
-    otelSDK
+    trace
         .shutdown()
         .then(
             () => console.log('SDK shut down successfully'),

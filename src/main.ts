@@ -1,3 +1,4 @@
+import trace from './trace';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,7 +7,6 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { SentryLogger } from './common/providers/logger.service';
-import trace from './trace';
 
 async function bootstrap() {
     await trace.start();
