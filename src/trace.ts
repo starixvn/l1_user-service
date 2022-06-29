@@ -15,7 +15,7 @@ import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import * as process from 'process';
 import { IncomingMessage } from 'http';
 
-const otelSDK = new NodeSDK({
+const trace = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
         [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: 'LOCAL',
@@ -40,7 +40,7 @@ const otelSDK = new NodeSDK({
     instrumentations: [
         new HttpInstrumentation({
             ignoreIncomingRequestHook: (req: IncomingMessage) => {
-                return req.url?.includes('health');
+                return req.method === 'GET';
             },
         }),
         new FastifyInstrumentation(),
