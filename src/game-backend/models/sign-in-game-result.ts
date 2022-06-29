@@ -16,6 +16,7 @@ export class SignInGameResult {
     multiplier: number;
     isTestCurrency: boolean;
     sessionId: string;
+    userId: string;
 
     constructor(session: UserSession) {
         this.id = session.userId;
@@ -33,5 +34,6 @@ export class SignInGameResult {
         this.multiplier = session.multiplier;
         this.isTestCurrency = session.isTestCurrency;
         this.sessionId = session.sessionId;
+        this.userId = session.userId;
     }
 }
