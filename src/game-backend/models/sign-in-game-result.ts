@@ -15,6 +15,7 @@ export class SignInGameResult {
     ip: string;
     multiplier: number;
     isTestCurrency: boolean;
+    sessionId: string;
 
     constructor(session: UserSession) {
         this.id = session.userId;
@@ -31,5 +32,6 @@ export class SignInGameResult {
         this.ip = session.ip;
         this.multiplier = session.multiplier;
         this.isTestCurrency = session.isTestCurrency;
+        this.sessionId = session.sessionId;
     }
 }
