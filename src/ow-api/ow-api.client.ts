@@ -47,7 +47,7 @@ class Errors {
 export class OWApiClient {
     private readonly instance: AxiosInstance;
     private readonly defaultRequestTimeout: 2500;
-    private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002];
+    private readonly warningErrorCodes = [3003, 3004, 3006, 3007, 3008, 3009, 3014, 2002, 2005, 3010, 3013, 3002, 1001, 1002];
     private readonly openIdClient: OpenIdClientHelper;
 
     constructor(private readonly configService: ConfigService, private readonly logger: SentryLogger) {
