@@ -2,7 +2,7 @@ import { Body, Controller, Get, Headers, Post, Query } from '@nestjs/common';
 
 import { AuthService, CreateNicknameRequest } from '.';
 import { VerifySessionRequest } from '../users/models';
-import { AuthPipe } from './auth.pipe';
+import { AuthPipe } from '../pipes/auth.pipe';
 
 @Controller('auth')
 export class AuthController {

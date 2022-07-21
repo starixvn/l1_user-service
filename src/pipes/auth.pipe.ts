@@ -5,7 +5,7 @@ import { plainToClass } from 'class-transformer';
 @Injectable()
 export class AuthPipe implements PipeTransform<any> {
     async transform(value: any, { metatype }: ArgumentMetadata) {
-        if (!metatype || !this.toValidate(metatype)) {
+        if (!metatype || this.toValidate(metatype)) {
             return value;
         }
         const object = plainToClass(metatype, value);
@@ -16,8 +16,8 @@ export class AuthPipe implements PipeTransform<any> {
         return value;
     }
 
-    private toValidate(metatype: Function): boolean {
+    toValidate(metatype: Function): any {
         const types: Function[] = [String, Boolean, Number, Array, Object];
-        return !types.includes(metatype);
+        return types.includes(metatype);
     }
 }
