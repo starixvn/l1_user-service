@@ -3,6 +3,7 @@ import { UserSession } from '../../users/schemas';
 export class SignInGameResult {
     id: string;
     playerId: number;
+    memberName: string;
     operatorId: string;
     currencyName: string;
     currencyCode: string;
@@ -35,5 +36,6 @@ export class SignInGameResult {
         this.isTestCurrency = session.isTestCurrency;
         this.sessionId = session.sessionId;
         this.userId = session.userId;
+        this.memberName = session.memberName;
     }
 }
