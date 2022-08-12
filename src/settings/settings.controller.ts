@@ -1,16 +1,17 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post } from '@nestjs/common';
+import { AuthPipe } from 'src/pipes/auth.pipe';
 
-import { invalidSession } from "../users/constants/errors";
-import { VerifySessionRequest } from "../users/models";
-import { UserSessionsService } from "../users/providers";
-import { SettingsService } from "./settings.service";
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { UserSessionsService } from '../users/providers';
+import { SettingsService } from './settings.service';
 
 @Controller('settings')
 export class SettingsController {
     constructor(private readonly settingsService: SettingsService, private readonly userSessionsService: UserSessionsService) {}
 
     @Post()
-    async getSettings(@Body() body: VerifySessionRequest) {
+    async getSettings(@Body(new AuthPipe()) body: VerifySessionRequest) {
         const { isAuthenticated } = await this.userSessionsService.verifySession(body);
 
         if (isAuthenticated) {

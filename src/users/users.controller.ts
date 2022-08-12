@@ -1,4 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { AuthPipe } from 'src/pipes/auth.pipe';
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';
 import { VerifySessionRequest } from './models';
@@ -10,7 +11,7 @@ export class UsersController {
     constructor(private readonly userInfosService: UserInfosService, private readonly userSessionsService: UserSessionsService) {}
 
     @Post('settings/update')
-    async updateSettings(@Body() request: UpdateSettingsRequest) {
+    async updateSettings(@Body(new AuthPipe()) request: UpdateSettingsRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         if (!isAuthenticated) {
             return invalidSession;
@@ -22,7 +23,7 @@ export class UsersController {
     }
 
     @Post('firstSignInSM')
-    async updateUserSignInSMStatus(@Body() request: VerifySessionRequest) {
+    async updateUserSignInSMStatus(@Body(new AuthPipe()) request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
 
         if (!isAuthenticated) {
