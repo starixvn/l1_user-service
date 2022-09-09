@@ -43,11 +43,13 @@ async function bootstrap() {
         .setVersion('1.0')
         .addTag('user-service')
         .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+
+    if (process.env.NODE_ENV !== 'PRO') {
+        const document = SwaggerModule.createDocument(app, config);
+        SwaggerModule.setup('api', app, document);
+    }
 
     await app.listen(process.env.PORT || 300, '0.0.0.0');
-
     console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

@@ -2,6 +2,7 @@ import { Body, Controller, Get, Headers, Post, Query } from '@nestjs/common';
 
 import { AuthService, CreateNicknameRequest } from '.';
 import { VerifySessionRequest } from '../users/models';
+import { AuthPipe } from '../pipes/auth.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -18,27 +19,27 @@ export class AuthController {
     }
 
     @Post('reCheckIn')
-    reCheckIn(@Body() body: VerifySessionRequest) {
+    reCheckIn(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.authService.reCheckIn(body);
     }
 
     @Post('authorize')
-    authorize(@Body() body: VerifySessionRequest) {
+    authorize(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.authService.authorize(body);
     }
 
     @Post('signName')
-    signName(@Body() body: CreateNicknameRequest) {
+    signName(@Body(new AuthPipe()) body: CreateNicknameRequest) {
         return this.authService.createCharacterName(body);
     }
 
     @Post('session/verify')
-    verifySession(@Body() body: VerifySessionRequest) {
+    verifySession(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.authService.verifySession(body);
     }
 
     @Post('balance')
-    getBalance(@Body() body: VerifySessionRequest) {
+    getBalance(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.authService.getBalance(body);
     }
 }

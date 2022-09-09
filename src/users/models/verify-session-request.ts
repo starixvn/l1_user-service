@@ -1,3 +1,12 @@
+import { IsString } from 'class-validator';
+
 export class VerifySessionRequest {
-    constructor(readonly session: string, readonly username: string, readonly browserUserAgent: string) {}
+    @IsString()
+    readonly session: string;
+
+    @IsString()
+    readonly username: string;
+
+    @IsString()
+    readonly browserUserAgent: string;
 }
