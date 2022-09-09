@@ -44,62 +44,6 @@ html, * {
   font-size: 1rem;
 }
 
-/* #### Mobile Phones Portrait #### */
-@media screen and (max-device-width: 480px) and (orientation: portrait){
-  * {
-    font-size: 3rem;
-  }
-}
-
-/* #### Mobile Phones Landscape #### */
-@media screen and (max-device-width: 640px) and (orientation: landscape){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### Mobile Phones Portrait or Landscape #### */
-@media screen and (max-device-width: 640px){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### iPhone 4+ Portrait or Landscape #### */
-@media screen and (min-device-width: 320px) and (-webkit-min-device-pixel-ratio: 2){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### iPhone 5 Portrait or Landscape #### */
-@media (device-height: 568px) and (device-width: 320px) and (-webkit-min-device-pixel-ratio: 2){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### iPhone 6 and 6 plus Portrait or Landscape #### */
-@media (min-device-height: 667px) and (min-device-width: 375px) and (-webkit-min-device-pixel-ratio: 3){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### Tablets Portrait or Landscape #### */
-@media screen and (min-device-width: 768px) and (max-device-width: 1024px){
-  * {
-    font-size: 2rem;
-  }
-}
-
-/* #### Desktops #### */
-@media screen and (min-width: 1024px){
-  * {
-    font-size: 1rem;
-  }
-}
-
 body {
   margin: 0;
   color: var(--fore-color);
