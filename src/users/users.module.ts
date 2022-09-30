@@ -1,11 +1,11 @@
-import { Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
-import * as providers from "./providers";
-import { UserSession, UserSessionSchema } from "./schemas";
-import { UserInfo, UserInfoSchema } from "./schemas/user-info.schema";
-import { User, UserSchema } from "./schemas/user.schema";
-import { UsersController } from "./users.controller";
+import * as providers from './providers';
+import { UserSession, UserSessionSchema } from './schemas';
+import { UserInfo, UserInfoSchema } from './schemas/user-info.schema';
+import { User, UserSchema } from './schemas/user.schema';
+import { UsersController } from './users.controller';
 
 @Module({
     imports: [

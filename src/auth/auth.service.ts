@@ -22,6 +22,10 @@ import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWit
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import * as Chance from 'chance';
+import { InjectModel } from '@nestjs/mongoose';
+import { MiddleSiteApiClient } from '../middle-site-api/middle-site-api.client';
+import { Spin } from './schemas/spins';
+import { isSC1System, isVG2System } from '../shared/system-type';
 
 @Injectable()
 export class AuthService {
@@ -34,11 +38,14 @@ export class AuthService {
     @Inject(UserInfosService) private readonly userInfosService: UserInfosService;
     @Inject(UtilsService) private readonly utilsService: UtilsService;
     @Inject(ConfigService) private readonly configService: ConfigService;
+    @Inject(MiddleSiteApiClient) private readonly middleSiteApiClient: MiddleSiteApiClient;
+    @InjectModel(Spin.name) private readonly spinModel;
     @Inject(PartnerConfigService) private readonly partnerConfigService: PartnerConfigService;
     @Inject(UMService) private readonly umService: UMService;
     @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
     @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
     private readonly chance = new Chance();
+    private readonly systemType = process.env.SYSTEM_TYPE;
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
@@ -97,10 +104,18 @@ export class AuthService {
         }
 
         const getBalanceResponse = await this.getBalanceBySession(session, userInfo.name, false);
-        return new ReCheckInResponse(
-            getBalanceResponse.balance,
-            getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
-        );
+
+        return isSC1System(this.systemType)
+            ? new ReCheckInResponse(
+                  getBalanceResponse.balance,
+                  getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
+              )
+            : new ReCheckInResponse(
+                  getBalanceResponse.balance,
+                  getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
+                  await this.getAvailableSpins(session.memberId),
+                  userInfo.scoins,
+              );
     }
 
     async verifySession(request: VerifySessionRequest) {
@@ -149,6 +164,11 @@ export class AuthService {
         const offerGames = await this.getOfferGames(session);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
+  
+        if (isVG2System(this.systemType)) {
+            const availSpins = await this.getAvailableSpins(session.memberId);
+            return new AuthorizeResult(true, { ...userInfo, offerGames, availSpins });
+        }
 
         return new AuthorizeResult(true, { ...userInfo, offerGames });
     }
@@ -171,12 +191,13 @@ export class AuthService {
         }
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
+        const availSpins = isVG2System(this.systemType) && (await this.getAvailableSpins(session.memberId));
         if (userInfo) {
-            return new AuthorizeResult(true, userInfo);
+            return isSC1System(this.systemType) ? new AuthorizeResult(true, userInfo) : new AuthorizeResult(true, { ...userInfo, availSpins });
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
-        if (await this.userInfosService.isExistingCharacterName(characterName)) {
+        if (await this.checkExistingCharacterName(characterName)) {
             return duplicateNickname;
         }
 
@@ -199,7 +220,15 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const offerGames = await this.getOfferGames(session);
 
-        return new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames });
+        return isSC1System(this.systemType)
+            ? new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames })
+            : new AuthorizeResult(true, {
+                  ...param,
+                  red: getBalanceResult.balance,
+                  offerGames,
+                  availSpins,
+                  scoins: userInfo?.scoins ?? 0,
+              });
     }
 
     async getBalance(request: VerifySessionRequest) {
@@ -232,6 +261,18 @@ export class AuthService {
 
         if (captureBalance) {
             this.userInfosService.updateBalance(userSession.userId, response.balance);
+        }
+
+        if (isVG2System(this.systemType)) {
+            const userInfo = await this.userInfosService.getUserInfo(userSession.userId);
+            const availableSpins = await this.getAvailableSpins(userSession.memberId);
+            return new GetBalanceResult(
+                response.errorCode.toString(),
+                response.errorMessage,
+                response.balance,
+                userInfo.scoins,
+                availableSpins,
+            );
         }
 
         return new GetBalanceResult(response.errorCode.toString(), response.errorMessage, response.balance);
@@ -307,6 +348,7 @@ export class AuthService {
             operatorId,
             playerName,
             siteName,
+            disableJackpotGames,
             operatorToken,
         } = verifyTokenResult;
 
@@ -340,6 +382,7 @@ export class AuthService {
                     operatorId,
                     playerId,
                     playerName,
+                    disableJackpotGames,
                     operatorToken,
                 }),
             );
@@ -369,14 +412,14 @@ export class AuthService {
 
     private async getOfferGames(session: UserSession) {
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
-        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session.operatorId);
+        const currency = await this.currencyGroupService.getCurrency(session.currencyName, session?.operatorId);
 
         if (!currency?.enabled || !currencyGroup?.enabled) {
             return [];
         }
 
         const groupOfferGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
-        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session.operatorId);
+        const gameSiteExclusions = await this.partnerConfigService.getExclusionSites(session?.operatorId);
 
         const siteExclusionGames = Object.keys(gameSiteExclusions ?? {}).reduce((result, gameId) => {
             const exclusionSites = gameSiteExclusions[gameId]?.map((site) => site?.toLocaleLowerCase());
@@ -388,7 +431,43 @@ export class AuthService {
             return result;
         }, []);
 
-        return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
+        if (isSC1System(this.systemType)) {
+            return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
+        }
+
+        if (!groupOfferGames) {
+            return [];
+        }
+
+        if (!session.disableJackpotGames) {
+            return groupOfferGames.filter((game) => !siteExclusionGames.includes(game.gameId));
+        }
+
+        const jackpotGames = await this.getDisableJackpotGames();
+        return groupOfferGames.filter(
+            (game) => !jackpotGames.some((id) => id === game.gameId) && !siteExclusionGames.includes(game.gameId),
+        );
+    }
+
+    private async checkExistingCharacterName(characterName: string) {
+        return isSC1System(this.systemType)
+            ? await this.userInfosService.isExistingCharacterName(characterName)
+            : await this.isExistingCharacterName(characterName);
+    }
+
+    private async isExistingCharacterName(characterName: string) {
+        return this.middleSiteApiClient.IsNicknameExisted(characterName);
+    }
+
+    private async getAvailableSpins(memberId: number) {
+        const spins = await this.spinModel.findOne({ memberId: memberId, enabled: true }).lean().exec();
+        return spins?.availSpins ?? 0;
+    }
+
+    private async getDisableJackpotGames() {
+        const fourguardiansGameId = 29;
+
+        return [fourguardiansGameId];
     }
 
     async getSettingGames(request: VerifySessionRequest) {

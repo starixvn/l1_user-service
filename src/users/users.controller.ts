@@ -1,5 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { AuthPipe } from 'src/pipes/auth.pipe';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { AuthPipe } from '../pipes/auth.pipe';
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';
 import { VerifySessionRequest } from './models';
@@ -33,5 +33,21 @@ export class UsersController {
         await this.userInfosService.updateUserSignInSMStatus(session.userId);
 
         return new Result();
+    }
+
+    @Get('settings/stake-level')
+    async getStakeLevel(
+        @Query('session') sessionId: string,
+        @Query('username') username: string,
+        @Query('browserUserAgent') browserUserAgent: string,
+    ) {
+        const params = { session: sessionId, username, browserUserAgent };
+        const { isAuthenticated, session } = await this.userSessionsService.verifySession(params);
+
+        if (!isAuthenticated) {
+            return invalidSession;
+        }
+
+        return { userStakeLevel: await this.userInfosService.getMemberStakeLevel(session.userId) };
     }
 }

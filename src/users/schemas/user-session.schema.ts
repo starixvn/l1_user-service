@@ -78,6 +78,9 @@ export class UserSession {
     playerName: string;
 
     @Prop()
+    disableJackpotGames: boolean;
+
+    @Prop()
     operatorToken: string;
 }
 

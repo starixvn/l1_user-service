@@ -17,5 +17,6 @@ export interface VerifyTokenResponse {
     isSuccessful: boolean;
     siteName: string;
     appType: number;
+    disableJackpotGames?: boolean;
     operatorToken: string;
 }

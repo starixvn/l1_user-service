@@ -24,7 +24,13 @@ export class AuthenticateResult {
 }
 
 export class GetBalanceResult extends Result {
-    constructor(readonly errorCode: string, readonly message: string, readonly balance = 0) {
+    constructor(
+        readonly errorCode: string,
+        readonly message: string,
+        readonly balance = 0,
+        readonly scoins = 0,
+        readonly availableSpins = 0,
+    ) {
         super(errorCode, message);
     }
 }
@@ -32,7 +38,7 @@ export class GetBalanceResult extends Result {
 export class ReCheckInResponse extends GetBalanceResult {
     isDisableAccount: boolean;
 
-    constructor(readonly balance = 0, readonly apiError: Result = null) {
+    constructor(readonly balance = 0, readonly apiError: Result = null, readonly availSpins = 0, readonly scoins = 0) {
         super('0', '', balance);
 
         this.isDisableAccount = apiError && apiError.errorCode === '2002';

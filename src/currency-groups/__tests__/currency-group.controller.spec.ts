@@ -8,6 +8,7 @@ describe('CurrencyGroupController', () => {
         getAllCurrencyGroups: jest.fn(),
         updateMemberAuth: jest.fn(),
         getCurrencyGroupsByPartner: jest.fn(),
+        getHrefCurrencyGroup: jest.fn(),
     };
 
     beforeAll(async () => {
@@ -32,9 +33,11 @@ describe('CurrencyGroupController', () => {
 
                 return [];
             });
+
             const token = 'token';
             const language = 'language';
             const gameId = '1';
+
             const expected = { token, language, gameId, groups: [] };
             const partnerId = 'partnerId';
 

@@ -7,9 +7,21 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { CurrencyGroupModule } from '../currency-groups/currency-group.module';
+import { MiddleSiteApiModule } from '../middle-site-api/middle-site-api.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Spin, SpinSchema } from './schemas/spins';
 
 @Module({
-    imports: [UsersModule, OWApiModule, PartnerConfigModule, CurrencyGroupGamesModule, UMModule, CurrencyGroupModule],
+    imports: [
+        UsersModule,
+        OWApiModule,
+        PartnerConfigModule,
+        CurrencyGroupGamesModule,
+        UMModule,
+        CurrencyGroupModule,
+        MiddleSiteApiModule,
+        MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema, collection: 'spins' }]),
+    ],
     providers: [AuthService],
     controllers: [AuthController],
     exports: [AuthService],

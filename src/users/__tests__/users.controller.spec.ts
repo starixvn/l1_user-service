@@ -21,7 +21,7 @@ describe('UserController test', () => {
     });
 
     describe('updateSettings test', () => {
-        const request = new UpdateSettingsRequest('', '', '');
+        const request = new UpdateSettingsRequest();
         it('should return invalid session when session is invalid', async () => {
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce(new VerifySessionResult(false, null));
 
@@ -43,7 +43,7 @@ describe('UserController test', () => {
     });
 
     describe('firstSignInSM test', () => {
-        const request = new VerifySessionRequest('', '', '');
+        const request = new VerifySessionRequest();
         it('should return invalid session when session is invalid', async () => {
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce(new VerifySessionResult(false, null));
 

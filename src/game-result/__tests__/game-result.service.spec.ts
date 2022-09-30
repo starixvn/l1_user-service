@@ -53,7 +53,7 @@ describe('GameResultService', () => {
         describe('when have error', () => {
             it('should call logger.error', async () => {
                 // Arrange
-                const request = new GetAccessURLRequest(null, null, null, null, null);
+                const request = new GetAccessURLRequest();
                 const error = new Error('Error happens!');
                 jest.spyOn(userSessionsService, 'verifySession').mockImplementationOnce(() => {
                     throw error;
@@ -71,7 +71,7 @@ describe('GameResultService', () => {
             describe('when not have session', () => {
                 it('should return null', async () => {
                     // Arrange
-                    const request = new GetAccessURLRequest(null, null, null, null, null);
+                    const request = new GetAccessURLRequest();
                     jest.spyOn(userSessionsService, 'verifySession').mockResolvedValueOnce(new VerifySessionResult(false, null));
 
                     // Act
@@ -86,7 +86,7 @@ describe('GameResultService', () => {
                 describe('when language is vi-VN', () => {
                     it('should return VN redirect url', async () => {
                         // Arrange
-                        const request = new GetAccessURLRequest(null, null, null, null, null);
+                        const request = new GetAccessURLRequest();
                         const session = new UserSession();
 
                         jest.spyOn(userSessionsService, 'verifySession').mockResolvedValueOnce(new VerifySessionResult(true, session));
@@ -104,7 +104,7 @@ describe('GameResultService', () => {
                 describe('when language is en-US', () => {
                     it('should return EN redirect url', async () => {
                         // Arrange
-                        const request = new GetAccessURLRequest(null, null, null, 'en-US', null);
+                        const request = new GetAccessURLRequest();
                         const session = new UserSession();
 
                         jest.spyOn(userSessionsService, 'verifySession').mockResolvedValueOnce(new VerifySessionResult(true, session));

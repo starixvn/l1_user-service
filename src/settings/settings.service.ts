@@ -1,9 +1,9 @@
-import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Cache } from "cache-manager";
-import { Model } from "mongoose";
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Cache } from 'cache-manager';
+import { Model } from 'mongoose';
 
-import { Chip, ChipDocument } from "./schemas/chip.schema";
+import { Chip, ChipDocument } from './schemas/chip.schema';
 
 @Injectable()
 export class SettingsService {

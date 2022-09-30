@@ -75,6 +75,9 @@ class UserInfo {
 
     @Prop({ default: false })
     isSignedInSM: boolean;
+
+    @Prop({ default: 0 })
+    scoins: number;
 }
 
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);

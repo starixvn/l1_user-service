@@ -14,7 +14,6 @@ export class CurrencyGroupController {
         @Query('partnerId') partnerId: string,
     ) {
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
-
         return { groups, token, language, gameId };
     }
 

@@ -58,4 +58,8 @@ export class UserInfosService {
     async updateUserSignInSMStatus(userId: string) {
         return this.userInfoModel.updateOne({ id: userId }, { $set: { isSignedInSM: true } }).exec();
     }
+
+    async getMemberStakeLevel(userId: string) {
+        return this.userInfoModel.findOne({ id: userId }, { _id: false, minBet: true, maxBet: true }).lean().exec();
+    }
 }

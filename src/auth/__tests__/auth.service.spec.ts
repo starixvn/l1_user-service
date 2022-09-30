@@ -19,6 +19,10 @@ import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
 import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
+import { MiddleSiteApiClient } from '../../middle-site-api/middle-site-api.client';
+import { Spin, SpinSchema } from '../schemas/spins';
+import { MongooseModule } from '@nestjs/mongoose';
+import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -27,6 +31,7 @@ jest.mock('../../partner-config/partner-config.service');
 jest.mock('../../um/um.service');
 jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
+jest.mock('../../middle-site-api/middle-site-api.client');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -48,15 +53,23 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         isSuccessful,
         appType: 1,
         siteName: 'lumi',
+        disableJackpotGames: false,
         operatorToken: 'operator-token',
     };
 };
 
 const stubUsersService = stub(UsersService);
 const stubUserInfoService = stub(UserInfosService);
+const stubPartnerConfigService = stub(PartnerConfigService);
+const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
+const stubCurrencyGroupService = stub(CurrencyGroupService);
 
 describe('AuthService test', () => {
     let authService: AuthService;
+    let currencyGroupService: CurrencyGroupService;
+    let currencyGroupGameService: CurrencyGroupGameService;
+    let partnerConfigService: PartnerConfigService;
+    let config: ConfigService;
 
     beforeEach(async () => {
         jest.clearAllMocks();
@@ -68,7 +81,10 @@ describe('AuthService test', () => {
                 UserSessionsService,
                 UtilsService,
                 ConfigService,
-                PartnerConfigService,
+                {
+                    provide: PartnerConfigService,
+                    useValue: stubPartnerConfigService,
+                },
                 {
                     provide: UsersService,
                     useValue: stubUsersService,
@@ -77,13 +93,25 @@ describe('AuthService test', () => {
                     provide: UserInfosService,
                     useValue: stubUserInfoService,
                 },
+                MiddleSiteApiClient,
                 UMService,
-                CurrencyGroupGameService,
-                CurrencyGroupService,
+                {
+                    provide: CurrencyGroupGameService,
+                    useValue: stubCurrencyGroupGameService,
+                },
+                {
+                    provide: CurrencyGroupService,
+                    useValue: stubCurrencyGroupService,
+                },
             ],
+            imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema }])],
         }).compile();
 
         authService = await module.resolve(AuthService);
+        currencyGroupService = await module.resolve(CurrencyGroupService);
+        currencyGroupGameService = await module.resolve(CurrencyGroupGameService);
+        partnerConfigService = await module.resolve(PartnerConfigService);
+        config = module.get<ConfigService>(ConfigService);
     });
 
     describe('signIn test', () => {
@@ -129,7 +157,7 @@ describe('AuthService test', () => {
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(false);
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(false);
             stubUsersService.getByMemberName.mockResolvedValueOnce({ local: {} });
 
             // act
@@ -144,7 +172,7 @@ describe('AuthService test', () => {
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
             stubUsersService.getByMemberName.mockResolvedValueOnce(null);
 
             // act
@@ -159,7 +187,7 @@ describe('AuthService test', () => {
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {
                     username: 'user',
@@ -337,13 +365,55 @@ describe('AuthService test', () => {
                 umInfo: new UMInfo(),
             });
 
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
 
             // act
             const actualResult = await authService.verifySession(verifySessionRequest);
 
             // assert
             expect(actualResult.isSuccessful).toBe(true);
+        });
+
+        it('should always return unsuccessful when UM and member is NOT super player', async () => {
+            // arrange
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
+                isAuthenticated: false,
+                session: new UserSession(),
+            });
+
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
+                isUM: true,
+                umInfo: new UMInfo(),
+            });
+
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(false);
+
+            // act
+            const actualResult = await authService.verifySession(verifySessionRequest);
+
+            // assert
+            expect(actualResult.isSuccessful).toBe(false);
+        });
+
+        it('should return unsuccessful when UM and member is super player but not authenticated', async () => {
+            // arrange
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
+                isAuthenticated: false,
+                session: new UserSession(),
+            });
+
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
+                isUM: true,
+                umInfo: new UMInfo(),
+            });
+
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
+
+            // act
+            const actualResult = await authService.verifySession(verifySessionRequest);
+
+            // assert
+            expect(actualResult.isSuccessful).toBe(false);
         });
     });
 
