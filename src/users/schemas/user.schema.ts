@@ -44,6 +44,12 @@ const localSchema = SchemaFactory.createForClass(Local);
 export class User {
     @Prop({ type: localSchema })
     local: Local;
+
+    @Prop()
+    playerId: number;
+
+    @Prop()
+    operatorId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

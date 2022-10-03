@@ -35,8 +35,8 @@ export class UsersService {
         return this.userModel.findById(id).lean().exec();
     }
 
-    async createUser(createUserParam: CreateUserParam): Promise<UserDocument> {
-        const createdUser = new this.userModel({ local: createUserParam });
+    async createUser(createUserParam: CreateUserParam, playerId: number, operatorId: string): Promise<UserDocument> {
+        const createdUser = new this.userModel({ local: createUserParam, playerId: playerId, operatorId: operatorId });
 
         return createdUser.save();
     }

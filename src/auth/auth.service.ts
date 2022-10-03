@@ -164,7 +164,7 @@ export class AuthService {
         const offerGames = await this.getOfferGames(session);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
-  
+
         if (isVG2System(this.systemType)) {
             const availSpins = await this.getAvailableSpins(session.memberId);
             return new AuthorizeResult(true, { ...userInfo, offerGames, availSpins });
@@ -193,7 +193,9 @@ export class AuthService {
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         const availSpins = isVG2System(this.systemType) && (await this.getAvailableSpins(session.memberId));
         if (userInfo) {
-            return isSC1System(this.systemType) ? new AuthorizeResult(true, userInfo) : new AuthorizeResult(true, { ...userInfo, availSpins });
+            return isSC1System(this.systemType)
+                ? new AuthorizeResult(true, userInfo)
+                : new AuthorizeResult(true, { ...userInfo, availSpins });
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -323,6 +325,8 @@ export class AuthService {
                     playerName,
                     this.formatCurrency(currencyName),
                 ),
+                playerId,
+                operatorId,
             )
         );
     }
