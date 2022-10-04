@@ -19,7 +19,7 @@ import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '..
 import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
 import { UserDocument, UserSession } from '../users/schemas';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
-import { AuthenticateResult, AuthorizeResult, GetBalanceResult, ReCheckInResponse } from './models/result';
+import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import * as Chance from 'chance';
 
@@ -389,5 +389,15 @@ export class AuthService {
         }, []);
 
         return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
+    }
+
+    async getSettingGames(request: VerifySessionRequest) {
+        const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        if (!isAuthenticated) {
+            return invalidSession;
+        }
+
+        const settingGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
+        return new GetSettingGamesResult(true, settingGames);
     }
 }

@@ -38,3 +38,10 @@ export class ReCheckInResponse extends GetBalanceResult {
         this.isDisableAccount = apiError && apiError.errorCode === '2002';
     }
 }
+
+export class GetSettingGamesResult {
+    readonly isUM: boolean;
+    constructor(readonly isAuthenticated: boolean, readonly settingGames: any = null, readonly umInfo: UMResult = null) {
+        this.isUM = umInfo !== null;
+    }
+}

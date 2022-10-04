@@ -42,4 +42,9 @@ export class AuthController {
     getBalance(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.authService.getBalance(body);
     }
+
+    @Post('getSettingGames')
+    getSettingGames(@Body(new AuthPipe()) body: VerifySessionRequest) {
+        return this.authService.getSettingGames(body);
+    }
 }
