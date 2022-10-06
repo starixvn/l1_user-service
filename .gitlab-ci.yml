@@ -1,6 +1,6 @@
 include:
     - project: 'ci/repos-ci/pentagon_l1_user_service'
-      ref: update_gitlab_ci
+      ref: master
       file: 'gitlab-ci.yml'
     - project: 'ci/repos-ci/pentagon_l2_user_service'
       ref: master
