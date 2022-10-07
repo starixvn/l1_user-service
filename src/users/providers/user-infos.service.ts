@@ -10,7 +10,7 @@ export class UserInfosService {
     constructor(@InjectModel(UserInfo.name) private readonly userInfoModel: Model<UserInfoDocument>) {}
 
     async getUserInfo(UID: string): Promise<UserInfo> {
-        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency settings isSignedInSM').lean();
+        return this.userInfoModel.findOne({ id: UID }, '-_id name red UID avatarId currency settings isSignedInSM scoins').lean();
     }
 
     async isExistingCharacterName(characterName: string): Promise<boolean> {
