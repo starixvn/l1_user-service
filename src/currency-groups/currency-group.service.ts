@@ -53,4 +53,9 @@ export class CurrencyGroupService {
 
         return result && !result.code ? result.redirectUri : `error?message=${message}`;
     }
+
+    async isFractionalOddsFormat(currencyGroupId: string) {
+        const currencyGroup = await this.getCurrencyGroup(currencyGroupId);
+        return currencyGroup?.fractionalOddsFormat;
+    }
 }

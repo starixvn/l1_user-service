@@ -16,6 +16,9 @@ export class CurrencyGroup {
 
     @Prop()
     operatorId: string;
+
+    @Prop()
+    fractionalOddsFormat: boolean;
 }
 
 export const CurrencyGroupSchema = SchemaFactory.createForClass(CurrencyGroup);

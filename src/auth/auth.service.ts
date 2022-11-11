@@ -164,13 +164,14 @@ export class AuthService {
         const offerGames = await this.getOfferGames(session);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
+        const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
 
         if (isVG2System(this.systemType)) {
             const availSpins = await this.getAvailableSpins(session.memberId);
-            return new AuthorizeResult(true, { ...userInfo, offerGames, availSpins });
+            return new AuthorizeResult(true, { ...userInfo, offerGames, availSpins, fractionalOddsFormat });
         }
 
-        return new AuthorizeResult(true, { ...userInfo, offerGames });
+        return new AuthorizeResult(true, { ...userInfo, offerGames, fractionalOddsFormat });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -221,15 +222,17 @@ export class AuthService {
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const offerGames = await this.getOfferGames(session);
+        const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
 
         return isSC1System(this.systemType)
-            ? new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames })
+            ? new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames, fractionalOddsFormat })
             : new AuthorizeResult(true, {
                   ...param,
                   red: getBalanceResult.balance,
                   offerGames,
                   availSpins,
                   scoins: userInfo?.scoins ?? 0,
+                  fractionalOddsFormat,
               });
     }
 

@@ -173,4 +173,24 @@ describe('CurrencyGroupService', () => {
             expect(owClient.updateMemberAuth).toBeCalled();
         });
     });
+
+    describe('isFractionalOddsFormat', () => {
+        it('should return fractionalOddsFormat from model', async () => {
+            const entity = new CurrencyGroup();
+            entity.fractionalOddsFormat = true;
+            jest.spyOn(currencyGroupModel, 'findById').mockReturnValue({
+                lean: function (): any {
+                    return {
+                        exec: async function () {
+                            return entity;
+                        },
+                    };
+                },
+            } as any);
+
+            const actual = await service.isFractionalOddsFormat('617660d8d2b6510001f18bdc');
+
+            expect(actual).toBe(true);
+        });
+    });
 });
