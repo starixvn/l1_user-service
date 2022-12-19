@@ -26,6 +26,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { MiddleSiteApiClient } from '../middle-site-api/middle-site-api.client';
 import { Spin } from './schemas/spins';
 import { isSC1System, isVG2System } from '../shared/system-type';
+import { PartnerService } from '../partner/partner.service';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +45,7 @@ export class AuthService {
     @Inject(UMService) private readonly umService: UMService;
     @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
     @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
+    @Inject(PartnerService) private readonly partnerService: PartnerService;
     private readonly chance = new Chance();
     private readonly systemType = process.env.SYSTEM_TYPE;
 
@@ -165,13 +167,25 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
         const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
+        const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
 
         if (isVG2System(this.systemType)) {
             const availSpins = await this.getAvailableSpins(session.memberId);
-            return new AuthorizeResult(true, { ...userInfo, offerGames, availSpins, fractionalOddsFormat });
+            return new AuthorizeResult(true, {
+                ...userInfo,
+                offerGames,
+                availSpins,
+                fractionalOddsFormat,
+                isDisplayPlayerCurrency,
+            });
         }
 
-        return new AuthorizeResult(true, { ...userInfo, offerGames, fractionalOddsFormat });
+        return new AuthorizeResult(true, {
+            ...userInfo,
+            offerGames,
+            fractionalOddsFormat,
+            isDisplayPlayerCurrency,
+        });
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -223,9 +237,16 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const offerGames = await this.getOfferGames(session);
         const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
+        const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
 
         return isSC1System(this.systemType)
-            ? new AuthorizeResult(true, { ...param, red: getBalanceResult.balance, offerGames, fractionalOddsFormat })
+            ? new AuthorizeResult(true, {
+                  ...param,
+                  red: getBalanceResult.balance,
+                  offerGames,
+                  fractionalOddsFormat,
+                  isDisplayPlayerCurrency,
+              })
             : new AuthorizeResult(true, {
                   ...param,
                   red: getBalanceResult.balance,
@@ -233,6 +254,7 @@ export class AuthService {
                   availSpins,
                   scoins: userInfo?.scoins ?? 0,
                   fractionalOddsFormat,
+                  isDisplayPlayerCurrency,
               });
     }
 

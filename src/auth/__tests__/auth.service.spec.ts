@@ -23,6 +23,7 @@ import { MiddleSiteApiClient } from '../../middle-site-api/middle-site-api.clien
 import { Spin, SpinSchema } from '../schemas/spins';
 import { MongooseModule } from '@nestjs/mongoose';
 import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { PartnerService } from '../../partner/partner.service';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -63,6 +64,7 @@ const stubUserInfoService = stub(UserInfosService);
 const stubPartnerConfigService = stub(PartnerConfigService);
 const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
 const stubCurrencyGroupService = stub(CurrencyGroupService);
+const stubPartnerService = stub(PartnerService);
 
 describe('AuthService test', () => {
     let authService: AuthService;
@@ -102,6 +104,10 @@ describe('AuthService test', () => {
                 {
                     provide: CurrencyGroupService,
                     useValue: stubCurrencyGroupService,
+                },
+                {
+                    provide: PartnerService,
+                    useValue: stubPartnerService,
                 },
             ],
             imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema }])],
