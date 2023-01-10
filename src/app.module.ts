@@ -23,6 +23,7 @@ import { AdminController } from './admin/admin.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { GameBackendModule } from './game-backend/game-backend.module';
 import { GameBackendController } from './game-backend/game-backend.controller';
+import { LobbyModule } from './lobby/lobby.module';
 
 @Module({
     imports: [
@@ -51,6 +52,7 @@ import { GameBackendController } from './game-backend/game-backend.controller';
         AdminModule,
         GameResultModule,
         GameBackendModule,
+        LobbyModule,
         JwtModule.register({}),
     ],
     controllers: [AppController],
