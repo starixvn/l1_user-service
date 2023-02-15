@@ -6,6 +6,7 @@ import { join } from 'path';
 
 import { AppModule } from './app.module';
 import { SentryLogger } from './common/providers/logger.service';
+import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
@@ -22,12 +23,12 @@ async function bootstrap() {
         templates: join(__dirname, '..', 'views'),
     });
 
-    const isLocal = process.env.ENV.toLocaleLowerCase().indexOf('local') !== -1;
+    const domain = app.get(DomainService);
     console.log(process.env.ENV.toLocaleLowerCase());
-    const corsWhiteList = process.env.CORS_WHITELIST.split(',');
+
     app.enableCors({
         origin: (origin, callback) => {
-            if (corsWhiteList.indexOf(origin) !== -1 || !origin || isLocal) {
+            if (domain.isAllowAccess(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error(`Not allowed by CORS ${origin}`));

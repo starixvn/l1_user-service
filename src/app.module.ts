@@ -24,6 +24,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { GameBackendModule } from './game-backend/game-backend.module';
 import { GameBackendController } from './game-backend/game-backend.controller';
 import { LobbyModule } from './lobby/lobby.module';
+import { DomainModule } from './domain/domain.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -53,7 +55,9 @@ import { LobbyModule } from './lobby/lobby.module';
         GameResultModule,
         GameBackendModule,
         LobbyModule,
+        DomainModule,
         JwtModule.register({}),
+        ScheduleModule.forRoot(),
     ],
     controllers: [AppController],
     providers: [AppService],
