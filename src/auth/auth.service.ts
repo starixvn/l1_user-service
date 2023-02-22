@@ -26,6 +26,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Spin } from './schemas/spins';
 import { isSC1System, isVG2System } from '../shared/system-type';
 import { PartnerService } from '../partner/partner.service';
+import { AppTypes } from './constants/app-types';
 
 @Injectable()
 export class AuthService {
@@ -54,7 +55,7 @@ export class AuthService {
         const data = await this.apiClient.verifyToken(request);
         const umSettings = await this.umService.getUMResult(data?.operatorId);
 
-        const isValidToken = data && data.isSuccessful && data.appType === system;
+        const isValidToken = data && data.isSuccessful && this.checkValidAppType(data.appType, system);
         if (!isValidToken) {
             this.logger.log(
                 [
@@ -89,6 +90,10 @@ export class AuthService {
             userSession.system,
             userSession.playerName,
         );
+    }
+
+    checkValidAppType(appType, system) {
+        return (appType === AppTypes.SabaClub && system === AppTypes.SabaApp) || appType === system;
     }
 
     async reCheckIn(request: VerifySessionRequest) {
