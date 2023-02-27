@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
 type UMInfoDocument = UMInfo & Document;
 
@@ -16,6 +16,9 @@ class UMInfo {
 
     @Prop()
     finish: boolean;
+
+    @Prop()
+    partnerId: string;
 }
 
 const UMInfoSchema = SchemaFactory.createForClass(UMInfo);

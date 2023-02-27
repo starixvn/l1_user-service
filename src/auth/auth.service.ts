@@ -67,7 +67,10 @@ export class AuthService {
                 ].join('\n'),
             );
 
-            return new AuthenticateResult(false, umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null);
+            return new AuthenticateResult(
+                false,
+                umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null,
+            );
         }
 
         const user = umSettings.isUM ? await this.usersService.getByMemberName(data.playerName) : await this.createUserIfNotExist(data);
@@ -76,14 +79,16 @@ export class AuthService {
             : false;
 
         if (umSettings.isUM && !isSuperPlayer) {
-            return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end));
+            return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId));
         }
 
         const userSession = await this.addSessionIfNotExist(user, request, data, system);
 
         return new AuthenticateResult(
             true,
-            !isSuperPlayer && umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null,
+            !isSuperPlayer && umSettings.umInfo
+                ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId)
+                : null,
             userSession.username,
             userSession.language,
             userSession.sessionId,
@@ -128,7 +133,7 @@ export class AuthService {
     async verifySession(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
-        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
             const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
             return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
@@ -140,7 +145,7 @@ export class AuthService {
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
-        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end) : null;
+        const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
             const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
             if (!isSuperPlayer) {
