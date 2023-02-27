@@ -5,3 +5,7 @@ include:
     - project: 'ci/repos-ci/pentagon_l2_user_service'
       ref: master
       file: 'gitlab-ci-mixing.yml'
+
+unit-test-js:
+  image: hub.lumigame.com/base/node:18.13
+  
