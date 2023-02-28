@@ -5,7 +5,6 @@ import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { MongooseInstrumentation } from 'opentelemetry-instrumentation-mongoose';
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
@@ -45,7 +44,6 @@ const trace = new NodeSDK({
         }),
         new FastifyInstrumentation(),
         new NestInstrumentation() as any,
-        new MongooseInstrumentation(),
         new MongoDBInstrumentation(),
     ],
 });
