@@ -1,3 +1,4 @@
+import trace from './trace';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -9,6 +10,7 @@ import { SentryLogger } from './common/providers/logger.service';
 import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
+    await trace.start();
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));
