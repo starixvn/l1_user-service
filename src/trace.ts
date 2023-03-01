@@ -10,7 +10,6 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
-import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 import * as process from 'process';
 import { IncomingMessage } from 'http';
 
@@ -43,7 +42,6 @@ const trace = new NodeSDK({
             },
         }),
         new FastifyInstrumentation(),
-        new NestInstrumentation() as any,
         new MongoDBInstrumentation(),
     ],
 });
