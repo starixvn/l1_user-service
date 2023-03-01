@@ -10,18 +10,19 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
-import * as process from 'process';
 import { IncomingMessage } from 'http';
+
+import * as process from 'process';
 
 const trace = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: 'LOCAL',
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.ENV,
     }),
     spanProcessor: new BatchSpanProcessor(
         new JaegerExporter({
             tags: [],
-            endpoint: 'http://10.10.50.69:14268/api/traces',
+            endpoint: process.env.OTEL_EXPORTER,
         }),
     ),
     contextManager: new AsyncLocalStorageContextManager(),
