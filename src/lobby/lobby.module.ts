@@ -1,9 +1,9 @@
-import { CacheModule, Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { UsersModule } from "../users/users.module";
-import { LobbyController } from "./lobby.controller";
-import { LobbyService } from "./lobby.service";
-import { Lobby, LobbySchema } from "./schemas/lobby.schema";
+import { CacheModule, Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UsersModule } from '../users/users.module';
+import { LobbyController } from './lobby.controller';
+import { LobbyService } from './lobby.service';
+import { Lobby, LobbySchema } from './schemas/lobby.schema';
 
 @Module({
     imports: [
