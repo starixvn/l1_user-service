@@ -11,52 +11,64 @@ import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
 import { IncomingMessage } from 'http';
+import { BeforeApplicationShutdown } from '@nestjs/common';
 
-import * as process from 'process';
+export class Tracer implements BeforeApplicationShutdown {
+    serviceName: string;
+    env: string;
+    exporter: string;
+    trace: NodeSDK;
 
-const trace = new NodeSDK({
-    resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.ENV,
-    }),
-    spanProcessor: new BatchSpanProcessor(
-        new JaegerExporter({
-            tags: [],
-            endpoint: process.env.OTEL_EXPORTER,
-        }),
-    ),
-    contextManager: new AsyncLocalStorageContextManager(),
-    textMapPropagator: new CompositePropagator({
-        propagators: [
-            new JaegerPropagator(),
-            new W3CTraceContextPropagator(),
-            new W3CBaggagePropagator(),
-            new B3Propagator({
-                injectEncoding: B3InjectEncoding.MULTI_HEADER,
+    constructor(serviceName: string, env: string, exporter: string) {
+        this.serviceName = serviceName;
+        this.env = env;
+        this.exporter = exporter;
+    }
+
+    init(): NodeSDK {
+        this.trace = new NodeSDK({
+            resource: new Resource({
+                [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
+                [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.ENV,
             }),
-        ],
-    }),
-    instrumentations: [
-        new HttpInstrumentation({
-            ignoreIncomingRequestHook: (req: IncomingMessage) => {
-                return req.method === 'GET';
-            },
-        }),
-        new FastifyInstrumentation(),
-        new MongoDBInstrumentation(),
-    ],
-});
+            spanProcessor: new BatchSpanProcessor(
+                new JaegerExporter({
+                    tags: [],
+                    endpoint: process.env.OTEL_EXPORTER,
+                }),
+            ),
+            contextManager: new AsyncLocalStorageContextManager(),
+            textMapPropagator: new CompositePropagator({
+                propagators: [
+                    new JaegerPropagator(),
+                    new W3CTraceContextPropagator(),
+                    new W3CBaggagePropagator(),
+                    new B3Propagator({
+                        injectEncoding: B3InjectEncoding.MULTI_HEADER,
+                    }),
+                ],
+            }),
+            instrumentations: [
+                new HttpInstrumentation({
+                    ignoreIncomingRequestHook: (req: IncomingMessage) => {
+                        return req.method === 'GET';
+                    },
+                }),
+                new FastifyInstrumentation(),
+                new MongoDBInstrumentation(),
+            ],
+        });
 
-export default trace;
+        return this.trace;
+    }
 
-// You can also use the shutdown method to gracefully shut down the SDK before process shutdown
-// or on some operating system signal.
-process.on('SIGTERM', () => {
-    trace
-        .shutdown()
-        .then(
-            () => console.log('SDK shut down successfully'),
-            (err) => console.log('Error shutting down SDK', err),
-        )
-        .finally(() => process.exit(0));
-});
+    getTracer(): NodeSDK {
+        return this.trace;
+    }
+
+    beforeApplicationShutdown(signal?: string) {
+        console.log(`User Service beforeApplicationShutdown`);
+        console.log(signal);
+        this.trace.shutdown();
+    }
+}
