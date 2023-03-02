@@ -12,6 +12,7 @@ import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import { MongoDBInstrumentation } from '@opentelemetry/instrumentation-mongodb';
 import { IncomingMessage } from 'http';
 import { BeforeApplicationShutdown } from '@nestjs/common';
+import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 
 export class Tracer implements BeforeApplicationShutdown {
     serviceName: string;
@@ -55,6 +56,7 @@ export class Tracer implements BeforeApplicationShutdown {
                     },
                 }),
                 new FastifyInstrumentation(),
+                new NestInstrumentation() as any,
                 new MongoDBInstrumentation(),
             ],
         });
