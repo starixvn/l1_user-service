@@ -16,12 +16,12 @@ import { BeforeApplicationShutdown } from '@nestjs/common';
 const trace = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'User Service',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.ENV,
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: 'LOCAL_1',
     }),
     spanProcessor: new BatchSpanProcessor(
         new JaegerExporter({
             tags: [],
-            endpoint: process.env.OTEL_EXPORTER,
+            endpoint: 'http://10.10.50.69:14268/api/traces',
         }),
     ),
     contextManager: new AsyncLocalStorageContextManager(),
