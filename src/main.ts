@@ -1,17 +1,18 @@
-import trace, { Tracer } from './trace';
+import { AppModule, tracer } from './app.module';
+import { TraceShutdownHandler } from './trace';
 import { NestFactory } from '@nestjs/core';
+
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'fastify-helmet';
 import { join } from 'path';
 
-import { AppModule } from './app.module';
 import { SentryLogger } from './common/providers/logger.service';
 import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
-    await trace.start();
-    const tracer = new Tracer(trace);
+    await tracer.start();
+    const traceHandler = new TraceShutdownHandler(tracer);
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));
