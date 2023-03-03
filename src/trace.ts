@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { CompositePropagator, W3CTraceContextPropagator, W3CBaggagePropagator } from '@opentelemetry/core';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { JaegerExporter } from '@opentelemetry/exporter-jaeger';

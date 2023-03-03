@@ -1,5 +1,4 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import trace from './trace';
 
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -28,8 +27,6 @@ import { LobbyModule } from './lobby/lobby.module';
 import { DomainModule } from './domain/domain.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ExchangeRateModule } from './exchange_rates/exchange-rate.module';
-
-export const tracer = trace;
 
 @Module({
     imports: [
