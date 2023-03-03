@@ -1720,14 +1720,6 @@
     "@opentelemetry/semantic-conventions" "^1.0.0"
     "@types/mongodb" "3.6.20"
 
-"@opentelemetry/instrumentation-nestjs-core@^0.30.0":
-  version "0.30.0"
-  resolved "http://npm.lumigame.com/@opentelemetry%2finstrumentation-nestjs-core/-/instrumentation-nestjs-core-0.30.0.tgz#bd8bd45c3fec64c2071967f21f4598163d05812d"
-  integrity sha512-z9HSjL4Udx2tteqyjvzrmNk6mxhip4BkWSWWZKN0z7t+waIHKfTTgJiTn5/YxwGYLUIKVigmNlAoo987rmK+xA==
-  dependencies:
-    "@opentelemetry/instrumentation" "^0.29.2"
-    "@opentelemetry/semantic-conventions" "^1.0.0"
-
 "@opentelemetry/instrumentation@0.29.2", "@opentelemetry/instrumentation@^0.29.2":
   version "0.29.2"
   resolved "http://npm.lumigame.com/@opentelemetry%2finstrumentation/-/instrumentation-0.29.2.tgz#70e6d4e1a84508f5e9d8c7c426adcd7b0dba6c95"
