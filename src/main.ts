@@ -10,6 +10,7 @@ import { SentryLogger } from './common/providers/logger.service';
 import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
+    await trace.start();
     const tracer = new Tracer(trace);
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
