@@ -12,7 +12,7 @@ import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
     await trace.start();
-    const traceHandler = new TraceShutdownHandler(trace);
+    new TraceShutdownHandler(trace);
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));

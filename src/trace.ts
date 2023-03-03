@@ -41,7 +41,7 @@ const trace = new NodeSDK({
     instrumentations: [
         new HttpInstrumentation({
             ignoreIncomingRequestHook: (req: IncomingMessage) => {
-                return req.method === 'GET';
+                return req.method === 'GET' || req.statusCode === 204;
             },
         }),
         new FastifyInstrumentation(),
