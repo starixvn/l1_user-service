@@ -1,18 +1,12 @@
-import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Cache } from 'cache-manager';
 import { UMResult } from './models';
 import { UMInfo, UMInfoDocument } from './schemas';
 
 @Injectable()
 export class UMService {
-    private readonly umCacheKey = 'UM_';
-
-    constructor(
-        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-        @InjectModel(UMInfo.name) private readonly umInfoModel: Model<UMInfoDocument>,
-    ) {}
+    constructor(@InjectModel(UMInfo.name) private readonly umInfoModel: Model<UMInfoDocument>) {}
 
     async getSCUM() {
         const umInfo = await this.umInfoModel
@@ -33,14 +27,8 @@ export class UMService {
     }
 
     async getUMResult(partnerId) {
-        const cachedUM = await this.cacheManager.get<UMResult>(`${this.umCacheKey}${partnerId}`);
-        if (cachedUM) {
-            return cachedUM;
-        }
         const scUMResult = await this.getSCUM();
 
-        const umResult = scUMResult.isUM || !partnerId ? scUMResult : await this.getPartnerUM(partnerId);
-        await this.cacheManager.set<UMResult>(`${this.umCacheKey}${partnerId}`, umResult, { ttl: 30 });
-        return umResult;
+        return scUMResult.isUM || !partnerId ? scUMResult : this.getPartnerUM(partnerId);
     }
 }
