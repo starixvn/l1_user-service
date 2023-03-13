@@ -1,6 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { AuthPipe } from 'src/pipes/auth.pipe';
-
+import { AuthPipe } from '../pipes/auth.pipe';
 import { invalidSession } from '../users/constants/errors';
 import { VerifySessionRequest } from '../users/models';
 import { UserSessionsService } from '../users/providers';

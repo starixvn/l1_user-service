@@ -32,6 +32,8 @@ import { PartnerService } from '../partner/partner.service';
 export class AuthService {
     private readonly UUSCurrency = 'UUS';
 
+    private readonly maximumAvatarId = 87;
+
     @Inject(SentryLogger) private readonly logger: SentryLogger;
     @Inject(OWApiClient) private readonly apiClient: OWApiClient;
     @Inject(UsersService) private readonly usersService: UsersService;
@@ -214,7 +216,11 @@ export class AuthService {
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
-        if (await this.checkExistingCharacterName(characterName)) {
+        const isCharacterNameExisted = isSC1System(this.systemType)
+            ? await this.userInfosService.isExistingCharacterName(characterName)
+            : await this.isExistingCharacterName(characterName);
+
+        if (isCharacterNameExisted) {
             return duplicateNickname;
         }
 
@@ -224,7 +230,7 @@ export class AuthService {
             characterName,
             session.currencyName,
             latestUID,
-            request.avatar || this.chance.integer({ min: 1, max: 41 }),
+            request.avatar || this.chance.integer({ min: 1, max: this.maximumAvatarId }),
         );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
@@ -476,12 +482,6 @@ export class AuthService {
         return groupOfferGames.filter(
             (game) => !jackpotGames.some((id) => id === game.gameId) && !siteExclusionGames.includes(game.gameId),
         );
-    }
-
-    private async checkExistingCharacterName(characterName: string) {
-        return isSC1System(this.systemType)
-            ? await this.userInfosService.isExistingCharacterName(characterName)
-            : await this.isExistingCharacterName(characterName);
     }
 
     private async isExistingCharacterName(characterName: string) {
