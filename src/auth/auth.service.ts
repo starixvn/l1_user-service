@@ -23,7 +23,6 @@ import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesR
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import * as Chance from 'chance';
 import { InjectModel } from '@nestjs/mongoose';
-import { MiddleSiteApiClient } from '../middle-site-api/middle-site-api.client';
 import { Spin } from './schemas/spins';
 import { isSC1System, isVG2System } from '../shared/system-type';
 import { PartnerService } from '../partner/partner.service';
@@ -41,7 +40,6 @@ export class AuthService {
     @Inject(UserInfosService) private readonly userInfosService: UserInfosService;
     @Inject(UtilsService) private readonly utilsService: UtilsService;
     @Inject(ConfigService) private readonly configService: ConfigService;
-    @Inject(MiddleSiteApiClient) private readonly middleSiteApiClient: MiddleSiteApiClient;
     @InjectModel(Spin.name) private readonly spinModel;
     @Inject(PartnerConfigService) private readonly partnerConfigService: PartnerConfigService;
     @Inject(UMService) private readonly umService: UMService;
@@ -216,9 +214,7 @@ export class AuthService {
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
-        const isCharacterNameExisted = isSC1System(this.systemType)
-            ? await this.userInfosService.isExistingCharacterName(characterName)
-            : await this.isExistingCharacterName(characterName);
+        const isCharacterNameExisted = await this.userInfosService.isExistingCharacterName(characterName);
 
         if (isCharacterNameExisted) {
             return duplicateNickname;
@@ -482,10 +478,6 @@ export class AuthService {
         return groupOfferGames.filter(
             (game) => !jackpotGames.some((id) => id === game.gameId) && !siteExclusionGames.includes(game.gameId),
         );
-    }
-
-    private async isExistingCharacterName(characterName: string) {
-        return this.middleSiteApiClient.IsNicknameExisted(characterName);
     }
 
     private async getAvailableSpins(memberId: number) {

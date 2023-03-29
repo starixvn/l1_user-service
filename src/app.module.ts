@@ -14,7 +14,6 @@ import { HealthModule } from './health';
 import { OWApiModule } from './ow-api/ow-api.module';
 import { SettingsModule } from './settings/settings.module';
 import { UMModule } from './um/um.module';
-import { MiddleSiteApiModule } from './middle-site-api/middle-site-api.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { GameResultModule } from './game-result/game-result.module';
@@ -47,7 +46,6 @@ import { ScheduleModule } from '@nestjs/schedule';
         HealthModule,
         GlobalConfigModule,
         SettingsModule,
-        MiddleSiteApiModule,
         CurrencyGroupGamesModule,
         UMModule,
         CurrencyGroupModule,

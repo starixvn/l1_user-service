@@ -27,14 +27,6 @@ export default () => ({
         logIdentifier: 'user-service',
     },
     prefixCharacterName: process.env.PREFIX_CHARACTER_NAME,
-    middleSite: {
-        auth: {
-            uri: process.env.MIDDLE_SITE_AUTH_URI,
-            clientId: 'game-server',
-            clientSecret: 'gameserver@20luminet&',
-        },
-        apiUrl: process.env.MIDDLE_SITE_URI,
-    },
     adminSecretKey: process.env.ADMIN_SECRET_KEY,
     gameResult: {
         url: process.env.GAME_RESULT_URL,

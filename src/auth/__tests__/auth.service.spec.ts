@@ -19,7 +19,6 @@ import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
 import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
-import { MiddleSiteApiClient } from '../../middle-site-api/middle-site-api.client';
 import { Spin, SpinSchema } from '../schemas/spins';
 import { MongooseModule } from '@nestjs/mongoose';
 import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
@@ -32,7 +31,6 @@ jest.mock('../../partner-config/partner-config.service');
 jest.mock('../../um/um.service');
 jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
-jest.mock('../../middle-site-api/middle-site-api.client');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -95,7 +93,6 @@ describe('AuthService test', () => {
                     provide: UserInfosService,
                     useValue: stubUserInfoService,
                 },
-                MiddleSiteApiClient,
                 UMService,
                 {
                     provide: CurrencyGroupGameService,
