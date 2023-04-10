@@ -37,11 +37,12 @@ describe('CurrencyGroupController', () => {
             const token = 'token';
             const language = 'language';
             const gameId = '1';
-
-            const expected = { token, language, gameId, groups: [] };
+            const ref = "ref";
+            const returnUrl = "returnUrl"
+            const expected = { token, language, gameId, groups: [], ref, returnUrl };
             const partnerId = 'partnerId';
 
-            const actual = await controller.index(token, language, gameId, partnerId);
+            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl);
 
             expect(actual).toStrictEqual(expected);
             expect(service.getCurrencyGroupsByPartner.mock.calls.length).toBe(1);
@@ -54,9 +55,11 @@ describe('CurrencyGroupController', () => {
             const language = 'language';
             const gameId = '1';
             const groupId = 'groupId';
+            const ref = "ref";
+            const returnUrl = "returnUrl"
             const expected = { url: 'error' };
 
-            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId);
+            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId, ref, returnUrl);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(0);
@@ -68,9 +71,11 @@ describe('CurrencyGroupController', () => {
             const language = 'language';
             const gameId = '1';
             const groupId = 'groupId';
-            const expected = { url: 'apiUrl' };
+            const ref = "ref";
+            const returnUrl = "returnUrl"
+            const expected = { url: 'apiUrl&ref=ref&rurl=returnUrl' };
 
-            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId);
+            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId, ref, returnUrl);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(1);

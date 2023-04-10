@@ -12,9 +12,11 @@ export class CurrencyGroupController {
         @Query('lang') language: string,
         @Query('gameId') gameId: string,
         @Query('partnerId') partnerId: string,
+        @Query('ref') ref: string,
+        @Query('rurl') returnUrl: string,
     ) {
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
-        return { groups, token, language, gameId };
+        return { groups, token, language, gameId, ref, returnUrl };
     }
 
     @Get('group')
@@ -24,9 +26,17 @@ export class CurrencyGroupController {
         @Query('token') token: string,
         @Query('language') language: string,
         @Query('gameId') gameId: string,
+        @Query('ref') ref: string,
+        @Query('rurl') returnUrl: string,
     ) {
         if (token) {
-            const url = await this.currencyGroupService.updateMemberAuth(groupId, token, parseInt(gameId), language);
+            let url = await this.currencyGroupService.updateMemberAuth(groupId, token, parseInt(gameId), language);
+            if (ref) {
+                url = `${url}&ref=${ref}`;
+            }
+            if (returnUrl) {
+                url = `${url}&rurl=${returnUrl}`;
+            }
 
             return { url };
         } else {
