@@ -9,6 +9,7 @@ describe('CurrencyGroupController', () => {
         updateMemberAuth: jest.fn(),
         getCurrencyGroupsByPartner: jest.fn(),
         getHrefCurrencyGroup: jest.fn(),
+        getCurrencyGroupIdByGroupType: jest.fn()
     };
 
     beforeAll(async () => {
@@ -39,7 +40,7 @@ describe('CurrencyGroupController', () => {
             const gameId = '1';
             const ref = "ref";
             const returnUrl = "returnUrl"
-            const expected = { token, language, gameId, groups: [], ref, returnUrl };
+            const expected = { token, language, gameId, groups: [], ref, returnUrl, "isONEworksVGCash": false,  "partnerId": "partnerId"};
             const partnerId = 'partnerId';
 
             const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl);
@@ -58,8 +59,10 @@ describe('CurrencyGroupController', () => {
             const ref = "ref";
             const returnUrl = "returnUrl"
             const expected = { url: 'error' };
+            const groupType = 'default';
+            const partnerId = 'OneWorks1';
 
-            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId, ref, returnUrl);
+            const actual = await controller.chooseCurrencyGroup(groupType, groupId, token, language, gameId, ref, returnUrl, partnerId);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(0);
@@ -73,9 +76,11 @@ describe('CurrencyGroupController', () => {
             const groupId = 'groupId';
             const ref = "ref";
             const returnUrl = "returnUrl"
-            const expected = { url: 'apiUrl&ref=ref&rurl=returnUrl' };
+            const groupType = 'default';
+            const partnerId = 'OneWorks1';
+            const expected = { url: 'apiUrl&ref=ref&rurl=returnUrl' };            
 
-            const actual = await controller.chooseCurrencyGroup(groupId, token, language, gameId, ref, returnUrl);
+            const actual = await controller.chooseCurrencyGroup(groupType, groupId, token, language, gameId, ref, returnUrl, partnerId);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(1);

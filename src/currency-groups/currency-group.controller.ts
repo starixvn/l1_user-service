@@ -16,21 +16,26 @@ export class CurrencyGroupController {
         @Query('rurl') returnUrl: string,
     ) {
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
-        return { groups, token, language, gameId, ref, returnUrl };
+        const isONEworksVGCash = partnerId === process.env.ONEworksVGCash;
+
+        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash };
     }
 
     @Get('group')
     @Redirect()
     async chooseCurrencyGroup(
+        @Query('groupType') groupType: string,
         @Query('group') groupId: string,
         @Query('token') token: string,
         @Query('language') language: string,
         @Query('gameId') gameId: string,
         @Query('ref') ref: string,
         @Query('rurl') returnUrl: string,
+        @Query('partnerId') partnerId: string,
     ) {
         if (token) {
-            let url = await this.currencyGroupService.updateMemberAuth(groupId, token, parseInt(gameId), language);
+            const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
+            let url = await this.currencyGroupService.updateMemberAuth(groupIdByGroupType, token, parseInt(gameId), language);
             if (ref) {
                 url = `${url}&ref=${ref}`;
             }

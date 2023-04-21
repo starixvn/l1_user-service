@@ -6,6 +6,7 @@ import { SentryLogger } from '../../common/providers';
 import { OWApiClient } from '../../ow-api/ow-api.client';
 import { CurrencyGroupService } from '../currency-group.service';
 import { CurrencyGroup, Currency, CurrencyGroupDocument, CurrencyDocument } from '../schemas';
+import { ConfigService } from '@nestjs/config';
 
 describe('CurrencyGroupService', () => {
     let service: CurrencyGroupService;
@@ -15,6 +16,9 @@ describe('CurrencyGroupService', () => {
     const logger = {
         error: jest.fn(),
     };
+    const configService = {
+        get: jest.fn()
+    }
 
     beforeAll(async () => {
         const module = await Test.createTestingModule({
@@ -24,6 +28,7 @@ describe('CurrencyGroupService', () => {
                 { provide: getModelToken(CurrencyGroup.name), useValue: Model },
                 { provide: SentryLogger, useValue: logger },
                 { provide: getModelToken(Currency.name), useValue: Model },
+                { provide: ConfigService, useValue: configService },
             ],
         }).compile();
 

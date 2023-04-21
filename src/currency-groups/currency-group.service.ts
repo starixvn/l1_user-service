@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { LeanDocument, Model, Types } from 'mongoose';
 
 import { CurrencyDocument, Currency, CurrencyGroup, CurrencyGroupDocument } from './schemas';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { UpdateMemberAuthRequest } from '../ow-api/models';
 import { SentryLogger } from '../common/providers';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CurrencyGroupService {
@@ -14,6 +15,7 @@ export class CurrencyGroupService {
         @InjectModel(Currency.name) private readonly currencyModel: Model<CurrencyDocument>,
         private readonly owApi: OWApiClient,
         private readonly logger: SentryLogger,
+        private readonly configService: ConfigService
     ) {}
 
     async getAllCurrencyGroups() {
@@ -52,10 +54,39 @@ export class CurrencyGroupService {
         const message = result ? encodeURI(`${result.message} [Code: ${result.code}]`) : '';
 
         return result && !result.code ? result.redirectUri : `error?message=${message}`;
-    }
+    }  
 
     async isFractionalOddsFormat(currencyGroupId: string) {
         const currencyGroup = await this.getCurrencyGroup(currencyGroupId);
         return currencyGroup?.fractionalOddsFormat;
+    }
+
+    async getCurrencyGroupIdByGroupType(groupType: string, selectedGroupId: string, partnerId: string){
+        const groups = await this.getCurrencyGroupsByPartner(partnerId);
+        let groupId = (() => {
+            switch(groupType){
+                case "Specific": return selectedGroupId;
+                case "Default": return groups[0]._id.toString();
+                default: return this.getCurrencyGroupFromConfig(groups, groupType);
+            }
+        })();          
+
+        return groupId;
+    }
+
+    getCurrencyGroupFromConfig(groups: LeanDocument<CurrencyGroupDocument>[], groupType: string): string{
+        let groupId = groups[0]._id.toString(); // default: get first group if not having config
+        try{
+            if(process.env.DEFAULT_CURRENCY_GROUPS){
+                const defaultCurrencyGroups = JSON.parse(this.configService.get<string>('defaultCurrencyGroups'));
+                const currencyGroupName = defaultCurrencyGroups[groupType];
+                groupId = groups.find(g => g.name === currencyGroupName)._id.toString();
+            }   
+        }     
+        catch(error){
+            this.logger.error(error);
+        }
+
+        return groupId;
     }
 }

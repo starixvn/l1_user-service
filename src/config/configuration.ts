@@ -42,4 +42,5 @@ export default () => ({
         clientKey: process.env.GAME_RESULT_CLIENT_KEY,
     },
     systemName: process.env.SYSTEM_TYPE,
+    defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS
 });
