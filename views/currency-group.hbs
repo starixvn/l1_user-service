@@ -3,46 +3,85 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
   <title>Currency Group Selection</title>
   <link rel="stylesheet" href="mini.css/mini-default.min.css?v=1a4c94f2400d4a4aa2be758f7c55fec9" />
+  <style>
+      .table {
+        display: table;
+      }
+
+      .table-row {
+        display: table-row;
+      }
+
+      .table-cell {
+        display: table-cell;
+      }
+
+      label {
+        padding: 0;
+      }
+
+      *{
+        line-height: normal;
+      }
+
+   .padding-bottom-7 {
+        padding-bottom: 7px;
+      }
+
+    @media screen and (max-width: 300px) {
+      .padding-top-4 {
+        padding-top: 4px;
+      }
+    }    
+  </style>
 </head>
 
 <body>
-  <fieldset>
-    <legend>Currency Group Selection</legend>   
+  <fieldset >
+    <legend >Currency Group Selection</legend>   
 
-    <form id="currency" action="CurrencyGroup/group" method="get">  
-      <div style="margin-bottom: 15px;">
-        <label for="group">Currency Group</label>            
-      </div>  
-
+    <form id="currency" action="CurrencyGroup/group" method="get"  style="margin: 0px; margin-top: -5px;padding: 0px; border: none; background: var(--back-color);">        
       {{#if isONEworksVGCash}}        
-        <div class="input-group vertical">
-            <div style="height: 40px;">
-              <input type="radio" id="groupTypeVN" name="groupType" checked="checked" value="VN" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
-              <label for="groupTypeVN">VN</label>            
+        <div class="input-group table">
+            <div class="table-row">
+              <div class="table-cell padding-bottom-7">
+                <input type="radio" id="groupTypeVN" name="groupType" checked="checked" value="VN" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
+                <label for="groupTypeVN">VN</label>            
+              </div>              
             </div>
-            <div>
-              <input type="radio" id="groupTypeOthers" name="groupType" value="Others" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
-              <label for="groupTypeOthers">Others</label>            
-            </div>
-            <div>
-              <input type="radio" name="groupType" id="groupTypeSpecific" value="Specific" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
-              <label for="groupTypeSpecific">Specific</label>            
-              <select name="group" type="string" id="currencyGroupSelect" form="currency" disabled>
-                {{#each groups}}
-                <option value={{this._id}}>{{this.name}}</option>
-                {{/each}}
-              </select>
+
+            <div class="table-row">
+              <div class="table-cell">
+                <input type="radio" id="groupTypeOthers" name="groupType" value="Others" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
+                <label for="groupTypeOthers">Others</label>            
+              </div>              
+            </div>   
+
+            <div class="table-row" style="margin-top: -5px;">
+              <div class="table-cell padding-top-4">
+                <input type="radio" name="groupType" id="groupTypeSpecific" value="Specific" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
+                <label for="groupTypeSpecific">Specific</label>            
+                <select name="group" type="string" id="currencyGroupSelect" form="currency" disabled style="padding: 2px;">
+                  {{#each groups}}
+                  <option value={{this._id}}>{{this.name}}</option>
+                  {{/each}}
+                </select>
+              </div>              
             </div> 
         </div>
       {{else}}
-        <div class="input-group vertical">
-            <div>
+        <div class="input-group table">
+          <div class="table-row">
+            <div class="table-cell">
               <input type="radio" id="groupTypeOthers" name="groupType" checked="checked" value="Default" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
-              <label for="groupTypeOthers">Default</label>            
+              <label for="groupTypeOthers">Default</label>
             </div>
-            <div>
+          </div>
+          <div class="table-row">
+            <div class="table-cell">
               <input type="radio" id="groupTypeSpecific" name="groupType" value="Specific" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
               <label for="groupTypeSpecific">Specific</label>            
               <select name="group" type="string" id="currencyGroupSelect" form="currency" disabled>
@@ -50,7 +89,8 @@
                 <option value={{this._id}}>{{this.name}}</option>
                 {{/each}}
               </select>
-            </div> 
+            </div>
+          </div>            
         </div>
       {{/if}}      
 
@@ -60,7 +100,7 @@
       <input name="ref" type="text" value="{{ref}}" hidden="true" />
       <input name="rurl" type="text" value="{{returnUrl}}" hidden="true" />
       <input name="partnerId" type="string" value="{{partnerId}}" hidden="true" />
-      <input type="submit" value="Submit" class="primary" />
+      <input type="submit" value="Submit" class="primary" style="padding: 5px 12px;"/>
     </form>
   </fieldset>
 
