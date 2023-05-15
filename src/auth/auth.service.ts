@@ -50,6 +50,7 @@ export class AuthService {
     private readonly systemType = process.env.SYSTEM_TYPE;
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
+        console.log("this.utilsService.normalizeIP", this.utilsService.normalizeIP(ip));
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
         const umSettings = await this.umService.getUMResult(data?.operatorId);

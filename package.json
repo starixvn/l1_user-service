@@ -48,6 +48,7 @@
         "jsonwebtoken": "^8.5.1",
         "jwks-rsa": "^1.7.0",
         "mongoose": "5.11.13",
+        "nestjs-real-ip": "^2.2.0",
         "openid-client": "^4.3.0",
         "point-of-view": "^4.15.2",
         "randomstring": "^1.1.5",
