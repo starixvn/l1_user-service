@@ -1,17 +1,22 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LeanDocument } from 'mongoose';
 import { generate } from 'randomstring';
 import validator from 'validator';
 
+import { InjectModel } from '@nestjs/mongoose';
+import * as Chance from 'chance';
 import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
 import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
-import { PartnerConfigService } from '../partner-config/partner-config.service';
+import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
+import { PartnerConfigService } from '../partner-config/partner-config.service';
+import { PartnerService } from '../partner/partner.service';
 import { Result } from '../shared/models/result';
 import { UMResult } from '../shared/models/um-result';
+import { isSC1System, isVG2System } from '../shared/system-type';
 import { UMService } from '../um/um.service';
 import { invalidSession } from '../users/constants/errors';
 import { VerifySessionRequest } from '../users/models';
@@ -20,12 +25,7 @@ import { UserInfosService, UserSessionsService, UsersService } from '../users/pr
 import { UserDocument, UserSession } from '../users/schemas';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
-import { CurrencyGroupService } from '../currency-groups/currency-group.service';
-import * as Chance from 'chance';
-import { InjectModel } from '@nestjs/mongoose';
 import { Spin } from './schemas/spins';
-import { isSC1System, isVG2System } from '../shared/system-type';
-import { PartnerService } from '../partner/partner.service';
 import { AppTypes } from './constants/app-types';
 
 @Injectable()
@@ -187,6 +187,7 @@ export class AuthService {
                 availSpins,
                 fractionalOddsFormat,
                 isDisplayPlayerCurrency,
+                disableJackpotGames: session.disableJackpotGames,
             });
         }
 
@@ -195,6 +196,7 @@ export class AuthService {
             offerGames,
             fractionalOddsFormat,
             isDisplayPlayerCurrency,
+            disableJackpotGames: session.disableJackpotGames,
         });
     }
 
