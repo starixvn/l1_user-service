@@ -18,6 +18,7 @@ export class SignInGameResult {
     isTestCurrency: boolean;
     sessionId: string;
     userId: string;
+    disableJackpotGames: boolean;
 
     constructor(session: UserSession) {
         this.id = session.userId;
@@ -37,5 +38,6 @@ export class SignInGameResult {
         this.sessionId = session.sessionId;
         this.userId = session.userId;
         this.memberName = session.memberName;
+        this.disableJackpotGames = session.disableJackpotGames;
     }
 }
