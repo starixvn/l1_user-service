@@ -1,4 +1,4 @@
-import { Controller, Get, Render, Query, Redirect } from '@nestjs/common';
+import { Controller, Get, Query, Redirect, Render } from '@nestjs/common';
 import { CurrencyGroupService } from './currency-group.service';
 
 @Controller('CurrencyGroup')
@@ -14,11 +14,12 @@ export class CurrencyGroupController {
         @Query('partnerId') partnerId: string,
         @Query('ref') ref: string,
         @Query('rurl') returnUrl: string,
+        @Query('appType') appType: string,
     ) {
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
         const isONEworksVGCash = partnerId === process.env.ONEworksVGCash;
 
-        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash };
+        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash, appType };
     }
 
     @Get('group')
@@ -32,6 +33,7 @@ export class CurrencyGroupController {
         @Query('ref') ref: string,
         @Query('rurl') returnUrl: string,
         @Query('partnerId') partnerId: string,
+        @Query('appType') appType: string,
     ) {
         if (token) {
             const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
@@ -39,6 +41,11 @@ export class CurrencyGroupController {
             if (ref) {
                 url = `${url}&ref=${ref}`;
             }
+
+            if (appType) {
+                url = `${url}&appType=${appType}`;
+            }
+
             if (returnUrl) {
                 url = `${url}&rurl=${returnUrl}`;
             }
