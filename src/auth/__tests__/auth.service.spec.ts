@@ -23,6 +23,8 @@ import { Spin, SpinSchema } from '../schemas/spins';
 import { MongooseModule } from '@nestjs/mongoose';
 import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { PartnerService } from '../../partner/partner.service';
+import { ExchangeRateService } from '../../exchange_rates/exchange-rate.services';
+import { CurrencyGroupGame } from '../../currency-group-games/schemas';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -31,6 +33,7 @@ jest.mock('../../partner-config/partner-config.service');
 jest.mock('../../um/um.service');
 jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
+jest.mock('../../exchange_rates/exchange-rate.services');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -63,6 +66,7 @@ const stubPartnerConfigService = stub(PartnerConfigService);
 const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
 const stubCurrencyGroupService = stub(CurrencyGroupService);
 const stubPartnerService = stub(PartnerService);
+const stubExchangeRatesService = stub(ExchangeRateService);
 
 describe('AuthService test', () => {
     let authService: AuthService;
@@ -105,6 +109,10 @@ describe('AuthService test', () => {
                 {
                     provide: PartnerService,
                     useValue: stubPartnerService,
+                },
+                {
+                    provide: ExchangeRateService,
+                    useValue: stubExchangeRatesService,
                 },
             ],
             imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema }])],
@@ -475,16 +483,38 @@ describe('AuthService test', () => {
 
         it('should call notify login and return authorized when user info is available', async () => {
             // arrange
+            const user = {
+                memberName: 'memberName2',
+                memberId: 2,
+                currencyName: 'currency2',
+                partnerId: 'partnerId2',
+                isTestCurrency: false,
+                recheckInTime: new Date(),
+                sessionId: '2',
+                disableJackpotGames: true,
+            };
+            const userExpected = {
+                name: 'user1',
+                red: 100,
+                rate: 1000,
+                disableJackpotGames: true,
+                fractionalOddsFormat: false,
+                isDisplayPlayerCurrency: true,
+                offerGames: [],
+            };
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
-                session: new UserSession(),
+                session: { ...new UserSession(), ...user },
             });
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
             jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
 
+            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
             stubUsersService.getByUsername.mockReturnValueOnce({});
             stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
+            stubCurrencyGroupService.isFractionalOddsFormat.mockReturnValueOnce(false);
+            stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
@@ -492,6 +522,7 @@ describe('AuthService test', () => {
             // assert
             expect(notifyLoginFunc).toHaveBeenCalled();
             expect(actualResult.authorized).toBe(true);
+            expect(actualResult.user).toStrictEqual(userExpected);
         });
 
         it('should return unauthorized when UM and user is NOT super player', async () => {
@@ -571,18 +602,20 @@ describe('AuthService test', () => {
 
         it('should return successful when user info was created', async () => {
             // arrange
+            const userExpected = { rate: 1000, availSpins: false };
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: new UserSession(),
             });
-
+            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
             // act
             const actualResult = (await authService.createCharacterName(createNicknameRequest)) as AuthorizeResult;
 
             // assert
             expect(actualResult.authorized).toBe(true);
+            expect(actualResult.user).toStrictEqual(userExpected);
         });
 
         it('should return unsuccessful when nick name is existed', async () => {
@@ -623,10 +656,18 @@ describe('AuthService test', () => {
 
         it('should notify login and return successful', async () => {
             // arrange
+            const currencyGroupGame1 = new CurrencyGroupGame();
+            currencyGroupGame1.gameId = 1;
+            const offerGames = [currencyGroupGame1];
+
+            //stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user2' });
             stubUserInfoService.isExistingCharacterName.mockResolvedValueOnce(false);
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getLatestUserInfoUID.mockResolvedValueOnce(1);
             stubUserInfoService.upSertUserInfo.mockResolvedValueOnce({ upsetResult: { upserted: [1] } });
+            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
+            stubCurrencyGroupService.isFractionalOddsFormat.mockReturnValueOnce(false);
+            stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
             jest.spyOn<any, any>(AuthService.prototype, 'generateCharacterName').mockResolvedValueOnce('UUSUser');
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(() => {});
             jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
@@ -634,6 +675,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
+            jest.spyOn<any, any>(AuthService.prototype, 'getOfferGames').mockResolvedValueOnce(offerGames);
 
             // act
             const actualResult = (await authService.createCharacterName(createNicknameRequest)) as AuthorizeResult;
@@ -641,6 +683,8 @@ describe('AuthService test', () => {
             // assert
             expect(notifyLoginFunc).toHaveBeenCalled();
             expect(actualResult.authorized).toEqual(true);
+            expect(actualResult.user.offerGames).toStrictEqual(offerGames);
+            expect(actualResult.user.rate).toStrictEqual(1000);
         });
     });
 

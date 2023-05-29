@@ -27,6 +27,7 @@ import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWit
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
 import { AppTypes } from './constants/app-types';
+import { ExchangeRateService as ExchangeRateService } from '../exchange_rates/exchange-rate.services';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +48,8 @@ export class AuthService {
     @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
     @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
     @Inject(PartnerService) private readonly partnerService: PartnerService;
+
+    @Inject(ExchangeRateService) private readonly exchangeRateService: ExchangeRateService;
     private readonly chance = new Chance();
     private readonly systemType = process.env.SYSTEM_TYPE;
 
@@ -54,7 +57,6 @@ export class AuthService {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
         const data = await this.apiClient.verifyToken(request);
         const umSettings = await this.umService.getUMResult(data?.operatorId);
-
         const isValidToken = data && data.isSuccessful && this.checkValidAppType(data.appType, system);
         if (!isValidToken) {
             this.logger.log(
@@ -83,7 +85,7 @@ export class AuthService {
         }
 
         const userSession = await this.addSessionIfNotExist(user, request, data, system);
-
+        const rate = await this.exchangeRateService.getRateByUser(userSession.currencyCode, userSession.multiplier);
         return new AuthenticateResult(
             true,
             !isSuperPlayer && umSettings.umInfo
@@ -94,6 +96,7 @@ export class AuthService {
             userSession.sessionId,
             userSession.system,
             userSession.playerName,
+            rate,
         );
     }
 
@@ -178,6 +181,7 @@ export class AuthService {
         userInfo.red = getBalanceResult.balance;
         const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
+        const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
         if (isVG2System(this.systemType)) {
             const availSpins = await this.getAvailableSpins(session.memberId);
@@ -188,6 +192,7 @@ export class AuthService {
                 fractionalOddsFormat,
                 isDisplayPlayerCurrency,
                 disableJackpotGames: session.disableJackpotGames,
+                rate,
             });
         }
 
@@ -197,6 +202,7 @@ export class AuthService {
             fractionalOddsFormat,
             isDisplayPlayerCurrency,
             disableJackpotGames: session.disableJackpotGames,
+            rate,
         });
     }
 
@@ -219,10 +225,11 @@ export class AuthService {
 
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         const availSpins = isVG2System(this.systemType) && (await this.getAvailableSpins(session.memberId));
+        const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
         if (userInfo) {
             return isSC1System(this.systemType)
-                ? new AuthorizeResult(true, userInfo)
-                : new AuthorizeResult(true, { ...userInfo, availSpins });
+                ? new AuthorizeResult(true, { ...userInfo, rate })
+                : new AuthorizeResult(true, { ...userInfo, rate, availSpins });
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -260,6 +267,7 @@ export class AuthService {
                   offerGames,
                   fractionalOddsFormat,
                   isDisplayPlayerCurrency,
+                  rate,
               })
             : new AuthorizeResult(true, {
                   ...param,
@@ -269,6 +277,7 @@ export class AuthService {
                   scoins: userInfo?.scoins ?? 0,
                   fractionalOddsFormat,
                   isDisplayPlayerCurrency,
+                  rate,
               });
     }
 

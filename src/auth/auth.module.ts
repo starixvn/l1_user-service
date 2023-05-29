@@ -10,6 +10,7 @@ import { CurrencyGroupModule } from '../currency-groups/currency-group.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Spin, SpinSchema } from './schemas/spins';
 import { PartnerModule } from '../partner/partner.module';
+import { ExchangeRateModule } from '../exchange_rates/exchange-rate.module';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { PartnerModule } from '../partner/partner.module';
         CurrencyGroupModule,
         PartnerModule,
         MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema, collection: 'spins' }]),
+        ExchangeRateModule
     ],
     providers: [AuthService],
     controllers: [AuthController],

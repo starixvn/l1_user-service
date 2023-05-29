@@ -25,6 +25,7 @@ import { GameBackendController } from './game-backend/game-backend.controller';
 import { LobbyModule } from './lobby/lobby.module';
 import { DomainModule } from './domain/domain.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ExchangeRateModule } from './exchange_rates/exchange-rate.module';
 
 @Module({
     imports: [
@@ -56,6 +57,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         DomainModule,
         JwtModule.register({}),
         ScheduleModule.forRoot(),
+        ExchangeRateModule
     ],
     controllers: [AppController],
     providers: [AppService],

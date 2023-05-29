@@ -18,6 +18,7 @@ export class AuthenticateResult {
         readonly ss: string = null,
         readonly system: number = 0,
         readonly memberName: string = null,
+        readonly rate: number = 1,
     ) {
         this.isUM = umInfo !== null;
     }
