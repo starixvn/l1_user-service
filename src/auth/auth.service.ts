@@ -10,6 +10,7 @@ import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
 import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
+import { ExchangeRateService } from '../exchange_rates/exchange-rate.services';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { PartnerConfigService } from '../partner-config/partner-config.service';
@@ -27,7 +28,6 @@ import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWit
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
 import { AppTypes } from './constants/app-types';
-import { ExchangeRateService as ExchangeRateService } from '../exchange_rates/exchange-rate.services';
 
 @Injectable()
 export class AuthService {
@@ -193,6 +193,8 @@ export class AuthService {
                 isDisplayPlayerCurrency,
                 disableJackpotGames: session.disableJackpotGames,
                 rate,
+                multiplier: session.multiplier,
+                currencyCode: session.currencyCode,
             });
         }
 
@@ -203,6 +205,8 @@ export class AuthService {
             isDisplayPlayerCurrency,
             disableJackpotGames: session.disableJackpotGames,
             rate,
+            multiplier: session.multiplier,
+            currencyCode: session.currencyCode,
         });
     }
 
