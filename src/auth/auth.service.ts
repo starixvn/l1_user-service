@@ -272,6 +272,9 @@ export class AuthService {
                   fractionalOddsFormat,
                   isDisplayPlayerCurrency,
                   rate,
+                  disableJackpotGames: session.disableJackpotGames,
+                  multiplier: session.multiplier,
+                  currencyCode: session.currencyCode,
               })
             : new AuthorizeResult(true, {
                   ...param,
@@ -282,6 +285,9 @@ export class AuthService {
                   fractionalOddsFormat,
                   isDisplayPlayerCurrency,
                   rate,
+                  disableJackpotGames: session.disableJackpotGames,
+                  multiplier: session.multiplier,
+                  currencyCode: session.currencyCode,
               });
     }
 
