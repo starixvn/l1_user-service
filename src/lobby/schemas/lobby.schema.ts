@@ -4,6 +4,16 @@ import * as mongoose from 'mongoose';
 export type LobbyDocument = Lobby & mongoose.Document;
 
 @Schema()
+class Game {
+    @Prop()
+    id: number;
+
+    @Prop()
+    name: string;
+}
+const GameSchema = SchemaFactory.createForClass(Game);
+
+@Schema()
 class GameSetting {
     @Prop()
     gameId: number;
@@ -26,6 +36,15 @@ class GameCategory {
 }
 const GameCategorySchema = SchemaFactory.createForClass(GameCategory);
 
+@Schema()
+class RoundTimerGame {
+    @Prop({ type: [GameSchema] })
+    games: Game[];
+
+    @Prop()
+    main: number;
+}
+const RoundTimerGameSchema = SchemaFactory.createForClass(RoundTimerGame);
 
 @Schema()
 class Banner {
@@ -53,6 +72,9 @@ export class Lobby {
 
     @Prop({ type: [BannerSchema] })
     banners: Banner[];
+
+    @Prop({ type: Object })
+    roundTimerGame: RoundTimerGame;
 }
 
 export const LobbySchema = SchemaFactory.createForClass(Lobby);
