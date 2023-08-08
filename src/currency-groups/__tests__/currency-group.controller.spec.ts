@@ -9,7 +9,7 @@ describe('CurrencyGroupController', () => {
         updateMemberAuth: jest.fn(),
         getCurrencyGroupsByPartner: jest.fn(),
         getHrefCurrencyGroup: jest.fn(),
-        getCurrencyGroupIdByGroupType: jest.fn()
+        getCurrencyGroupIdByGroupType: jest.fn(),
     };
 
     beforeAll(async () => {
@@ -38,12 +38,13 @@ describe('CurrencyGroupController', () => {
             const token = 'token';
             const language = 'language';
             const gameId = '1';
-            const ref = "ref";
-            const returnUrl = "returnUrl"
-            const expected = { token, language, gameId, groups: [], ref, returnUrl, "isONEworksVGCash": false,  "partnerId": "partnerId"};
+            const ref = 'ref';
+            const returnUrl = 'returnUrl';
+            const appType = '1';
+            const expected = { token, language, gameId, groups: [], ref, returnUrl, isONEworksVGCash: false, partnerId: 'partnerId', appType };
             const partnerId = 'partnerId';
 
-            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl);
+            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl, appType);
 
             expect(actual).toStrictEqual(expected);
             expect(service.getCurrencyGroupsByPartner.mock.calls.length).toBe(1);
@@ -56,13 +57,24 @@ describe('CurrencyGroupController', () => {
             const language = 'language';
             const gameId = '1';
             const groupId = 'groupId';
-            const ref = "ref";
-            const returnUrl = "returnUrl"
+            const ref = 'ref';
+            const returnUrl = 'returnUrl';
             const expected = { url: 'error' };
             const groupType = 'default';
             const partnerId = 'OneWorks1';
+            const appType = '1';
 
-            const actual = await controller.chooseCurrencyGroup(groupType, groupId, token, language, gameId, ref, returnUrl, partnerId);
+            const actual = await controller.chooseCurrencyGroup(
+                groupType,
+                groupId,
+                token,
+                language,
+                gameId,
+                ref,
+                returnUrl,
+                partnerId,
+                appType,
+            );
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(0);
@@ -74,13 +86,24 @@ describe('CurrencyGroupController', () => {
             const language = 'language';
             const gameId = '1';
             const groupId = 'groupId';
-            const ref = "ref";
-            const returnUrl = "returnUrl"
+            const ref = 'ref';
+            const returnUrl = 'returnUrl';
             const groupType = 'default';
             const partnerId = 'OneWorks1';
-            const expected = { url: 'apiUrl&ref=ref&rurl=returnUrl' };            
+            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl' };
+            const appType = '1';
 
-            const actual = await controller.chooseCurrencyGroup(groupType, groupId, token, language, gameId, ref, returnUrl, partnerId);
+            const actual = await controller.chooseCurrencyGroup(
+                groupType,
+                groupId,
+                token,
+                language,
+                gameId,
+                ref,
+                returnUrl,
+                partnerId,
+                appType,
+            );
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(1);

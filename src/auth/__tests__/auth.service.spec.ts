@@ -2,13 +2,19 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
 
+import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsService } from '../../common/providers';
 import { SentryLogger } from '../../common/providers/logger.service';
 import { CurrencyGroupGameService } from '../../currency-group-games/currency-group-games.service';
-import { PartnerConfigService } from '../../partner-config/partner-config.service';
+import { CurrencyGroupGame } from '../../currency-group-games/schemas';
+import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
+import { ExchangeRateService } from '../../exchange_rates/exchange-rate.services';
 import { VerifyTokenResponse } from '../../ow-api/models';
 import { OWApiClient } from '../../ow-api/ow-api.client';
+import { PartnerConfigService } from '../../partner-config/partner-config.service';
+import { PartnerService } from '../../partner/partner.service';
 import { Result } from '../../shared/models/result';
+import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { UMInfo } from '../../um/schemas';
 import { UMService } from '../../um/um.service';
 import { invalidSession } from '../../users/constants/errors';
@@ -18,13 +24,7 @@ import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
-import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
 import { Spin, SpinSchema } from '../schemas/spins';
-import { MongooseModule } from '@nestjs/mongoose';
-import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
-import { PartnerService } from '../../partner/partner.service';
-import { ExchangeRateService } from '../../exchange_rates/exchange-rate.services';
-import { CurrencyGroupGame } from '../../currency-group-games/schemas';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -492,6 +492,8 @@ describe('AuthService test', () => {
                 recheckInTime: new Date(),
                 sessionId: '2',
                 disableJackpotGames: true,
+                multiplier: 1,
+                currencyCode: 'currencycode2,',
             };
             const userExpected = {
                 name: 'user1',
@@ -501,7 +503,9 @@ describe('AuthService test', () => {
                 fractionalOddsFormat: false,
                 isDisplayPlayerCurrency: true,
                 offerGames: [],
-            };
+                multiplier: 1,
+                currencyCode: 'currencycode2,',
+              };
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: { ...new UserSession(), ...user },
