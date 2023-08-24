@@ -1,4 +1,7 @@
-import trace, { TraceShutdownHandler } from './trace';
+import { Trace } from 'sc-instrument';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -11,8 +14,12 @@ import { SentryLogger } from './common/providers/logger.service';
 import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
-    await trace.start();
-    new TraceShutdownHandler(trace);
+    if (process.env.ENABLE_OTEL) {
+        Trace.initSpanProcessor(process.env.OTEL_EXPORTER);
+        Trace.addIdentifiers(`${process.env.SYSTEM_TYPE} - User Service`, process.env.ENV);
+        Trace.default.start();
+    }
+
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
     app.useLogger(app.get(SentryLogger));
