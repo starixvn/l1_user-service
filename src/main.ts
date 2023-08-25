@@ -1,4 +1,4 @@
-import { Trace } from 'sc-instrument';
+import { initializer, initSpanProcessor, addIdentifiers } from 'sc-instrument';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,9 +15,9 @@ import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
     if (process.env.ENABLE_OTEL) {
-        Trace.initSpanProcessor(process.env.OTEL_EXPORTER);
-        Trace.addIdentifiers(`${process.env.SYSTEM_TYPE} - User Service`, process.env.ENV);
-        Trace.default.start();
+        initSpanProcessor(process.env.OTEL_EXPORTER, initializer);
+        addIdentifiers(`${process.env.SYSTEM_TYPE} - User Service`, process.env.ENV, initializer);
+        initializer.start();
     }
 
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
