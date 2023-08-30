@@ -8,9 +8,9 @@ export class TraceShutdownHandler implements BeforeApplicationShutdown {
         this.trace = trace;
     }
 
-    beforeApplicationShutdown(signal?: string) {
+    async beforeApplicationShutdown(signal?: string) {
         console.log(`User Service beforeApplicationShutdown`);
         console.log(signal);
-        this.trace.shutdown();
+        await this.trace.shutdown();
     }
 }
