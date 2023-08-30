@@ -56,7 +56,7 @@
         "rxjs": "6.6.3",
         "simpl-schema": "^1.7.3",
         "validator": "^13.5.2",
-        "sc-instrument": "0.0.1-beta.16"
+        "sc-instrument": "0.0.1-beta.19"
     },
     "devDependencies": {
         "@commitlint/cli": "^13.1.0",

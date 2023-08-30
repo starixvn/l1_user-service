@@ -15,8 +15,8 @@ import { DomainService } from './domain/domain.service';
 
 async function bootstrap() {
     if (process.env.ENABLE_OTEL) {
-        initSpanProcessor(process.env.OTEL_EXPORTER, initializer);
-        addIdentifiers(`${process.env.SYSTEM_TYPE} - User Service`, process.env.ENV, initializer);
+        initSpanProcessor(process.env.OTEL_EXPORTER ?? '', initializer);
+        addIdentifiers(`${process.env.SYSTEM_TYPE} - User Service`, process.env.ENV ?? '', initializer);
         initializer.start();
     }
 
