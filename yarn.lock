@@ -8484,10 +8484,10 @@ saxes@^5.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-sc-instrument@0.0.1-beta.19:
-  version "0.0.1-beta.19"
-  resolved "http://npm.lumigame.com/sc-instrument/-/sc-instrument-0.0.1-beta.19.tgz#d9beb7af4319627fa0ab7f100e650900e4d9c519"
-  integrity sha512-11LCVMFcm/Po7q8CdHJzGUe2QH8PVVGT205nDW1ZbBuwe5wDSYoTGNEnBfZXc9k+wRgJr3cTxLK68TGUergvnQ==
+sc-instrument@1.0.0:
+  version "1.0.0"
+  resolved "http://npm.lumigame.com/sc-instrument/-/sc-instrument-1.0.0.tgz#e9b1606e6069c97b939f0466f6f06ac5f2695fcc"
+  integrity sha512-RRnQgBDls/PDs27GVAEFk/fE+BdBRRRtdSXZ0TFAlTKC8g6tW6iRnYIAJp/WCdM4q/LE/lzmkIALaTLRWVwfcw==
   dependencies:
     "@opentelemetry/context-async-hooks" "1.15.2"
     "@opentelemetry/core" "1.15.2"
