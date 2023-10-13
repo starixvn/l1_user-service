@@ -86,7 +86,7 @@ describe('UserInfosService test', () => {
     describe('updateMemberStakeLevel test', () => {
         it('should call update member stake level of user', async () => {
             const mockDate = new Date();
-            jest.spyOn(global, 'Date').mockImplementation(() => (mockDate as unknown) as string);
+            jest.spyOn(global, 'Date').mockImplementation(() => (mockDate as unknown) as Date);
             jest.spyOn(userModel, 'updateOne');
             await service.updateMemberStakeLevel(user.id, 1, 1000);
 

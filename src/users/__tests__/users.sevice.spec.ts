@@ -38,10 +38,9 @@ describe('UserService test', () => {
         await userModel.insertMany(user);
     });
 
-    afterAll(async (done) => {
+    afterAll(async () => {
         jest.clearAllMocks();
         await closeInMongodConnection();
-        done();
     });
 
     describe('getByUsername test', () => {

@@ -114,7 +114,7 @@ describe('UserSessionService test', () => {
         });
 
         it('should call create user session', async () => {
-            spyOn(userSessionModel.prototype, 'save');
+            jest.spyOn(userSessionModel.prototype, 'save');
 
             await service.createUserSession(createSessionRequest);
 

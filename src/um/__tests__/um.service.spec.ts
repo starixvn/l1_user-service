@@ -22,10 +22,9 @@ describe('UserInfosService test', () => {
         model = module.get<Model<UMInfoDocument>>(`${UMInfo.name}Model`);
     });
 
-    afterAll(async (done) => {
+    afterAll(async () => {
         jest.clearAllMocks();
         await closeInMongodConnection();
-        done();
     });
 
     describe('getSettings test', () => {
