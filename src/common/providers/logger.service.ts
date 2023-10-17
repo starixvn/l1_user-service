@@ -26,9 +26,7 @@ export class SentryLogger implements LoggerService {
     }
 
     log(message: string, context = Sentry.Severity.Info) {
-        const level = Sentry.Severity.fromString(context);
-
-        Sentry.captureMessage(message, level);
+        Sentry.captureMessage(message, context);
     }
 
     error(exception: any) {

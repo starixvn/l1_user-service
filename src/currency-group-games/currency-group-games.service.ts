@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 
-import { CurrencyGroupGame, CurrencyGroupGameDocument } from "./schemas";
+import { CurrencyGroupGame, CurrencyGroupGameDocument } from './schemas';
 
 @Injectable()
 export class CurrencyGroupGameService {
@@ -10,7 +10,7 @@ export class CurrencyGroupGameService {
 
     async getOfferedGames(groupId: string) {
         return this.gameOfCurrencyGroupModel
-            .find({ groupId: new Types.ObjectId(groupId), enabled: true }, 'gameId minBet maxBet maxBetPerChoices')
+            .find({ groupId: Types.ObjectId(groupId), enabled: true }, 'gameId minBet maxBet maxBetPerChoices')
             .lean()
             .exec();
     }
