@@ -15,7 +15,7 @@ export class CurrencyGroupService {
         @InjectModel(Currency.name) private readonly currencyModel: Model<CurrencyDocument>,
         private readonly owApi: OWApiClient,
         private readonly logger: SentryLogger,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
     ) {}
 
     async getAllCurrencyGroups() {
@@ -29,7 +29,7 @@ export class CurrencyGroupService {
     }
 
     async getCurrencyGroup(groupId: string) {
-        return this.currencyGroupModel.findById(new Types.ObjectId(groupId)).lean().exec();
+        return this.currencyGroupModel.findById(Types.ObjectId(groupId)).lean().exec();
     }
 
     async getCurrency(currencyName: string, partnerId: string) {
@@ -54,36 +54,38 @@ export class CurrencyGroupService {
         const message = result ? encodeURI(`${result.message} [Code: ${result.code}]`) : '';
 
         return result && !result.code ? result.redirectUri : `error?message=${message}`;
-    }  
+    }
 
     async isFractionalOddsFormat(currencyGroupId: string) {
         const currencyGroup = await this.getCurrencyGroup(currencyGroupId);
         return currencyGroup?.fractionalOddsFormat;
     }
 
-    async getCurrencyGroupIdByGroupType(groupType: string, selectedGroupId: string, partnerId: string){
+    async getCurrencyGroupIdByGroupType(groupType: string, selectedGroupId: string, partnerId: string) {
         const groups = await this.getCurrencyGroupsByPartner(partnerId);
         let groupId = (() => {
-            switch(groupType){
-                case "Specific": return selectedGroupId;
-                case "Default": return groups[0]._id.toString();
-                default: return this.getCurrencyGroupFromConfig(groups, groupType);
+            switch (groupType) {
+                case 'Specific':
+                    return selectedGroupId;
+                case 'Default':
+                    return groups[0]._id.toString();
+                default:
+                    return this.getCurrencyGroupFromConfig(groups, groupType);
             }
-        })();          
+        })();
 
         return groupId;
     }
 
-    getCurrencyGroupFromConfig(groups: LeanDocument<CurrencyGroupDocument>[], groupType: string): string{
+    getCurrencyGroupFromConfig(groups: LeanDocument<CurrencyGroupDocument>[], groupType: string): string {
         let groupId = groups[0]._id.toString(); // default: get first group if not having config
-        try{
-            if(process.env.DEFAULT_CURRENCY_GROUPS){
+        try {
+            if (process.env.DEFAULT_CURRENCY_GROUPS) {
                 const defaultCurrencyGroups = JSON.parse(this.configService.get<string>('defaultCurrencyGroups'));
                 const currencyGroupName = defaultCurrencyGroups[groupType];
-                groupId = groups.find(g => g.name === currencyGroupName)._id.toString();
-            }   
-        }     
-        catch(error){
+                groupId = groups.find((g) => g.name === currencyGroupName)._id.toString();
+            }
+        } catch (error) {
             this.logger.error(error);
         }
 

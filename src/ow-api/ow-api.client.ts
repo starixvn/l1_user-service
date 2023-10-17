@@ -144,7 +144,7 @@ export class OWApiClient {
         this.logger.log(joinedMessages, logLevel);
     }
 
-    private getLogLevel(response: BaseResponse) {
+    private getLogLevel(response: BaseResponse): Severity {
         if (this.isErrorResult(response.result)) {
             return this.warningErrorCodes.includes(+response.result.errorCode) ? Severity.Warning : Severity.Error;
         }
