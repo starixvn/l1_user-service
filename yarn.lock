@@ -1913,6 +1913,13 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@mongodb-js/saslprep@^1.1.0":
+  version "1.1.0"
+  resolved "http://npm.lumigame.com/@mongodb-js/saslprep/-/saslprep-1.1.0.tgz#022fa36620a7287d17acd05c4aae1e5f390d250d"
+  integrity sha512-Xfijy7HvfzzqiOAhAepF4SGN5e9leLkMvg/OPOF97XemjfVCYN/oWa75wnkc6mltMSTwY+XlbhWgUOJmkFspSw==
+  dependencies:
+    sparse-bitfield "^3.0.3"
+
 "@nestjs/axios@^0.0.7":
   version "0.0.7"
   resolved "http://npm.lumigame.com/@nestjs%2faxios/-/axios-0.0.7.tgz#7f134636db13c2c1e8299365c7eceb73cd782b67"
@@ -2914,11 +2921,6 @@
   resolved "http://npm.lumigame.com/@types%2ftapable/-/tapable-1.0.6.tgz"
   integrity sha512-W+bw9ds02rAQaMvaLYxAbJ6cvguW/iJXNT6lTssS1ps6QdrMKttqEAMEG/b5CR8TZl3/L7/lH0ZV5nNR1LXikA==
 
-"@types/tmp@^0.2.3":
-  version "0.2.3"
-  resolved "http://npm.lumigame.com/@types%2ftmp/-/tmp-0.2.3.tgz#908bfb113419fd6a42273674c00994d40902c165"
-  integrity sha512-dDZH/tXzwjutnuk4UacGgFRwV+JSLaXL1ikvidfJprkb7L9Nx1njcRHHmi3Dsvt7pgqqTEeucQuOrWHPFgzVHA==
-
 "@types/uglify-js@*":
   version "3.12.0"
   resolved "http://npm.lumigame.com/@types%2fuglify-js/-/uglify-js-3.12.0.tgz"
@@ -3855,7 +3857,7 @@ bson@^1.1.4:
   resolved "http://npm.lumigame.com/bson/-/bson-1.1.5.tgz"
   integrity sha512-kDuEzldR21lHciPQAIulLs1LZlCXdLziXI6Mb/TDkwXhb//UORJNPXgcRs2CuO4H0DcMkpfT3/ySsP3unoZjBg==
 
-bson@^4.7.0:
+bson@^4.7.2:
   version "4.7.2"
   resolved "http://npm.lumigame.com/bson/-/bson-4.7.2.tgz#320f4ad0eaf5312dd9b45dc369cc48945e2a5f2e"
   integrity sha512-Ry9wCtIZ5kGqkJoi6aD8KjxFZEx78guTQDnpXWiNthsxzrxAK/i8E6pCHAIZTbaEFWcOCvbecMukfK7XUvyLpQ==
@@ -5577,6 +5579,11 @@ follow-redirects@^1.14.8:
   version "1.15.0"
   resolved "http://npm.lumigame.com/follow-redirects/-/follow-redirects-1.15.0.tgz#06441868281c86d0dda4ad8bdaead2d02dca89d4"
   integrity sha512-aExlJShTV4qOUOL7yF1U5tvLCB0xQuudbf6toyYA0E/acBNw71mvjFTnLaRp50aQaYocMR0a/RMMBIHeZnGyjQ==
+
+follow-redirects@^1.15.2:
+  version "1.15.3"
+  resolved "http://npm.lumigame.com/follow-redirects/-/follow-redirects-1.15.3.tgz#fe2f3ef2690afce7e82ed0b44db08165b207123a"
+  integrity sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q==
 
 for-in@^1.0.2:
   version "1.0.2"
@@ -8185,7 +8192,7 @@ mongo-object@^0.1.4:
   resolved "http://npm.lumigame.com/mongo-object/-/mongo-object-0.1.4.tgz#950d1d856b85af5f2321b82bb08b67b9c27f9766"
   integrity sha512-QtYk0gupWEn2+iB+DDRt1L+WbcNYvJRaHdih/dcqthOa1DbnREUGSs2WGcW478GNYpElflo/yybZXu0sTiRXHg==
 
-mongodb-connection-string-url@^2.5.4:
+mongodb-connection-string-url@^2.6.0:
   version "2.6.0"
   resolved "http://npm.lumigame.com/mongodb-connection-string-url/-/mongodb-connection-string-url-2.6.0.tgz#57901bf352372abdde812c81be47b75c6b2ec5cf"
   integrity sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==
@@ -8193,35 +8200,26 @@ mongodb-connection-string-url@^2.5.4:
     "@types/whatwg-url" "^8.2.1"
     whatwg-url "^11.0.0"
 
-mongodb-memory-server-core@8.11.5:
-  version "8.11.5"
-  resolved "http://npm.lumigame.com/mongodb-memory-server-core/-/mongodb-memory-server-core-8.11.5.tgz#7cb76022ca6520042b7996bb33101682fe3adbe9"
-  integrity sha512-bhptlOruCEYrLofCbjACMoClgP1rFkhSNDzI/bbG/pUAg41UB00eaDPerYVvRf2jvOJqKF4+U9xqXiSvkbMvXw==
+mongodb-memory-server-core@^8.11.5:
+  version "8.16.0"
+  resolved "http://npm.lumigame.com/mongodb-memory-server-core/-/mongodb-memory-server-core-8.16.0.tgz#276b778e022cdd13f435f6e4f82294c993eb4b3d"
+  integrity sha512-wyNo8yj6se7KH49hQmRtiwide7DnGINUGa1m84RyX1NU9DkCrTwbOV2VbPgd3+55DZfRup/DebU1M1zEv+3Rng==
   dependencies:
-    "@types/tmp" "^0.2.3"
     async-mutex "^0.3.2"
     camelcase "^6.3.0"
     debug "^4.3.4"
     find-cache-dir "^3.3.2"
+    follow-redirects "^1.15.2"
     get-port "^5.1.1"
     https-proxy-agent "^5.0.1"
     md5-file "^5.0.0"
-    mongodb "^4.13.0"
+    mongodb "^4.16.0"
     new-find-package-json "^2.0.0"
-    semver "^7.3.8"
+    semver "^7.5.4"
     tar-stream "^2.1.4"
-    tmp "^0.2.1"
-    tslib "^2.4.1"
+    tslib "^2.6.1"
     uuid "^9.0.0"
     yauzl "^2.10.0"
-
-mongodb-memory-server@^8.11.5:
-  version "8.11.5"
-  resolved "http://npm.lumigame.com/mongodb-memory-server/-/mongodb-memory-server-8.11.5.tgz#148b2cc390fad308d6532d69bbd1054a9750ccb0"
-  integrity sha512-/yiw3L2TIMpi9I6GXg379k6d+RG3k+9V9o24kK5h+NBTtYLNuWa5iEvtce/O3jqhg6yo31T5XG2e/Hm4UwBM1A==
-  dependencies:
-    mongodb-memory-server-core "8.11.5"
-    tslib "^2.4.1"
 
 mongodb@3.6.3:
   version "3.6.3"
@@ -8236,17 +8234,17 @@ mongodb@3.6.3:
   optionalDependencies:
     saslprep "^1.0.0"
 
-mongodb@^4.13.0:
-  version "4.14.0"
-  resolved "http://npm.lumigame.com/mongodb/-/mongodb-4.14.0.tgz#3a21ca602069b2494b7066a7709056c8cece6bf6"
-  integrity sha512-coGKkWXIBczZPr284tYKFLg+KbGPPLlSbdgfKAb6QqCFt5bo5VFZ50O3FFzsw4rnkqjwT6D8Qcoo9nshYKM7Mg==
+mongodb@^4.16.0:
+  version "4.17.1"
+  resolved "http://npm.lumigame.com/mongodb/-/mongodb-4.17.1.tgz#ccff6ddbda106d5e06c25b0e4df454fd36c5f819"
+  integrity sha512-MBuyYiPUPRTqfH2dV0ya4dcr2E5N52ocBuZ8Sgg/M030nGF78v855B3Z27mZJnp8PxjnUquEnAtjOsphgMZOlQ==
   dependencies:
-    bson "^4.7.0"
-    mongodb-connection-string-url "^2.5.4"
+    bson "^4.7.2"
+    mongodb-connection-string-url "^2.6.0"
     socks "^2.7.1"
   optionalDependencies:
     "@aws-sdk/credential-providers" "^3.186.0"
-    saslprep "^1.0.3"
+    "@mongodb-js/saslprep" "^1.1.0"
 
 mongoose-legacy-pluralize@1.0.2:
   version "1.0.2"
@@ -9549,7 +9547,7 @@ sane@^4.0.3:
     minimist "^1.1.1"
     walker "~1.0.5"
 
-saslprep@^1.0.0, saslprep@^1.0.3:
+saslprep@^1.0.0:
   version "1.0.3"
   resolved "http://npm.lumigame.com/saslprep/-/saslprep-1.0.3.tgz"
   integrity sha512-/MY/PEMbk2SuY5sScONwhUDsV2p77Znkb/q3nSVstq/yQzYJOH/Azh29p9oJLsl3LnQwSvZDKagDGBsBwSooag==
@@ -9637,13 +9635,6 @@ semver@^6.3.1:
   version "6.3.1"
   resolved "http://npm.lumigame.com/semver/-/semver-6.3.1.tgz#556d2ef8689146e46dcea4bfdd095f3434dffcb4"
   integrity sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==
-
-semver@^7.3.8:
-  version "7.3.8"
-  resolved "http://npm.lumigame.com/semver/-/semver-7.3.8.tgz#07a78feafb3f7b32347d725e33de7e2a2df67798"
-  integrity sha512-NB1ctGL5rlHrPJtFDVIVzTyQylMLu9N9VICA6HSFJo8MCGVTMW6gfpicwKmmK/dAjTOrqu5l63JJOpDSrAis3A==
-  dependencies:
-    lru-cache "^6.0.0"
 
 semver@^7.5.1, semver@^7.5.3, semver@^7.5.4:
   version "7.5.4"
@@ -10392,13 +10383,6 @@ tmp@^0.0.33:
   dependencies:
     os-tmpdir "~1.0.2"
 
-tmp@^0.2.1:
-  version "0.2.1"
-  resolved "http://npm.lumigame.com/tmp/-/tmp-0.2.1.tgz"
-  integrity sha512-76SUhtfqR2Ijn+xllcI5P1oyannHNHByD80W1q447gU3mp9G9PSpGdWmjUOHRDPiHYacIk66W7ubDTuPF3BEtQ==
-  dependencies:
-    rimraf "^3.0.0"
-
 tmpl@1.0.5:
   version "1.0.5"
   resolved "http://npm.lumigame.com/tmpl/-/tmpl-1.0.5.tgz#8683e0b902bb9c20c4f726e3c0b69f36518c07cc"
@@ -10573,10 +10557,15 @@ tslib@^1.11.1, tslib@^1.8.1, tslib@^1.9.0, tslib@^1.9.3:
   resolved "http://npm.lumigame.com/tslib/-/tslib-1.14.1.tgz"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@^2.3.1, tslib@^2.4.1:
+tslib@^2.3.1:
   version "2.5.0"
   resolved "http://npm.lumigame.com/tslib/-/tslib-2.5.0.tgz#42bfed86f5787aeb41d031866c8f402429e0fddf"
   integrity sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==
+
+tslib@^2.6.1:
+  version "2.6.2"
+  resolved "http://npm.lumigame.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tsutils@^3.17.1:
   version "3.20.0"

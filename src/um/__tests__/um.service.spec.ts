@@ -11,8 +11,9 @@ describe('UserInfosService test', () => {
     let service: UMService;
     let model: Model<UMInfoDocument>;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         jest.clearAllMocks();
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [UMService],
             imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: UMInfo.name, schema: UMInfoSchema }])],

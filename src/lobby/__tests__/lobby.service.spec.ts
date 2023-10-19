@@ -4,7 +4,7 @@ import { UserInfosService, UserSessionsService } from '../../users/providers';
 import { LobbyService } from '../lobby.service';
 import { Lobby, LobbyDocument, LobbySchema } from '../schemas/lobby.schema';
 import { CacheModule, CACHE_MANAGER } from '@nestjs/common';
-import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { rootMongooseTestModule, closeInMongodConnection } from '../../shared/test-utils/mongoose-test-module';
 import { SentryLogger } from '../../common/providers';
 import { ConfigService } from '@nestjs/config';
 import { UserInfo, UserInfoSchema, UserSession, UserSessionSchema } from '../../users/schemas';
@@ -29,7 +29,7 @@ describe('Lobby Service', () => {
     let logger: SentryLogger;
     let cacheManager = new MockCacheManager();
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         jest.clearAllMocks();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -55,6 +55,11 @@ describe('Lobby Service', () => {
         service = module.get<LobbyService>(LobbyService);
         logger = module.get<SentryLogger>(SentryLogger);
         lobbyModel = module.get<Model<LobbyDocument>>(getModelToken(Lobby.name));
+    });
+
+    afterAll(async () => {
+        jest.clearAllMocks();
+        await closeInMongodConnection();
     });
 
     describe('constructor', () => {
