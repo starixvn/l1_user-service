@@ -6,7 +6,7 @@ import { disconnect } from 'mongoose';
 let mongod: MongoMemoryServer;
 
 process.env = Object.assign(process.env, {
-    MONGOMS_SYSTEM_BINARY: join('mongo', 'mongod.exe'),
+    MONGOMS_SYSTEM_BINARY: join('src', 'mongo', 'mongod.exe'),
     MONGOMS_RUNTIME_DOWNLOAD: false,
 });
 
