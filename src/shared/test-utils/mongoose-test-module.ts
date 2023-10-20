@@ -1,12 +1,10 @@
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
-import { join } from 'path';
 import { disconnect } from 'mongoose';
 
 let mongod: MongoMemoryServer;
 
 process.env = Object.assign(process.env, {
-    MONGOMS_SYSTEM_BINARY: join('src', 'mongo', 'mongod.exe'),
     MONGOMS_RUNTIME_DOWNLOAD: false,
 });
 
