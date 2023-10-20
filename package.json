@@ -13,9 +13,9 @@
         "start:debug": "nest start --debug --watch",
         "start:prod": "node dist/main.js",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-        "test": "jest",
+        "test": "jest --runInBand",
         "test:watch": "jest --watch",
-        "test-coverage": "jest --coverage",
+        "test-coverage": "jest --coverage --runInBand",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test:e2e": "jest --config ./__tests__/jest-e2e.json",
         "reg": "npm set registry http://npm.lumigame.com"

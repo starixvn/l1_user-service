@@ -1,20 +1,13 @@
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
-import path from 'path';
+import { join } from 'path';
+import { disconnect } from 'mongoose';
 
 let mongod: MongoMemoryServer;
 
 process.env = Object.assign(process.env, {
-    MONGOMS_SYSTEM_BINARY: path.join(
-        '..',
-        '..',
-        'node_modules',
-        '.cache',
-        'mongodb-memory-server-core',
-        'mongodb-binaries',
-        '*', // MongoDB version is expanded
-        'mongod.exe',
-    ),
+    MONGOMS_SYSTEM_BINARY: join('mongo', 'mongod.exe'),
+    MONGOMS_RUNTIME_DOWNLOAD: false,
 });
 
 export const rootMongooseTestModule = (options: MongooseModuleOptions = {}) =>
@@ -31,5 +24,6 @@ export const rootMongooseTestModule = (options: MongooseModuleOptions = {}) =>
     });
 
 export const closeInMongodConnection = async () => {
+    await disconnect();
     mongod && (await mongod.stop());
 };
