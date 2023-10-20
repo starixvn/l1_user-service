@@ -14,7 +14,7 @@ import { OWApiClient } from '../../ow-api/ow-api.client';
 import { PartnerConfigService } from '../../partner-config/partner-config.service';
 import { PartnerService } from '../../partner/partner.service';
 import { Result } from '../../shared/models/result';
-import { rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { UMInfo } from '../../um/schemas';
 import { UMService } from '../../um/um.service';
 import { invalidSession } from '../../users/constants/errors';
@@ -75,7 +75,7 @@ describe('AuthService test', () => {
     let partnerConfigService: PartnerConfigService;
     let config: ConfigService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         jest.clearAllMocks();
         const module = await Test.createTestingModule({
             providers: [
@@ -505,7 +505,7 @@ describe('AuthService test', () => {
                 offerGames: [],
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
-              };
+            };
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: { ...new UserSession(), ...user },
@@ -742,6 +742,7 @@ describe('AuthService test', () => {
     });
 });
 
-afterAll(() => {
+afterAll(async () => {
     jest.clearAllMocks();
+    await closeInMongodConnection();
 });
