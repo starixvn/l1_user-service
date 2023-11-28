@@ -157,6 +157,7 @@ export class AuthService {
         }
 
         if (!isAuthenticated) {
+            this.logger.log(`Failed authenticated for ${session.playerId}`);
             return new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
@@ -171,6 +172,7 @@ export class AuthService {
         const userInfo = await this.userInfosService.getUserInfo(user.id);
 
         if (!userInfo) {
+            this.logger.log(`Not found userInfo of ${session.playerId}`);
             return new AuthorizeResult(false);
         }
 
@@ -178,8 +180,9 @@ export class AuthService {
 
         const offerGames = await this.getOfferGames(session);
 
-        this.logger.log(`Authorize: ${userInfo.name}, CurrencyGroupId ${session.currencyGroupId}`);
-        this.logger.log(`OfferGames: ${JSON.stringify(offerGames)}`);
+        this.logger.log(
+            `Authorize: ${userInfo.name}, CurrencyGroupId ${session.currencyGroupId}, Total offered games ${offerGames?.length}`,
+        );
 
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
