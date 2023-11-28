@@ -86,6 +86,9 @@ export class AuthService {
 
         const userSession = await this.addSessionIfNotExist(user, request, data, system);
         const rate = await this.exchangeRateService.getRateByUser(userSession.currencyCode, userSession.multiplier);
+
+        this.logger.log(`Account ${userSession.playerId} Signed In at ${new Date()}`);
+
         return new AuthenticateResult(
             true,
             !isSuperPlayer && umSettings.umInfo
