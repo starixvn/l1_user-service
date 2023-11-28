@@ -177,6 +177,10 @@ export class AuthService {
         await this.notifyLogin(session, userInfo.name);
 
         const offerGames = await this.getOfferGames(session);
+
+        this.logger.log(`Authorize: ${userInfo.name}, CurrencyGroupId ${session.currencyGroupId}`);
+        this.logger.log(`OfferGames: ${JSON.stringify(offerGames)}`);
+
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
         const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
