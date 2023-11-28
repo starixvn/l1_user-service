@@ -152,6 +152,7 @@ export class AuthService {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
+        this.logger.log(`Authorizing ${session.playerId} at ${new Date()}`);
         if (umSettings.isUM) {
             const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
             if (!isSuperPlayer) {

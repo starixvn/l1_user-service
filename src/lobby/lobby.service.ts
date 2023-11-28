@@ -38,13 +38,18 @@ export class LobbyService {
 
     async getLobbyConfigs(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+
         if (!isAuthenticated) {
+            this.logger.log(`Get Lobby for ${session.playerId} at ${new Date()}. Invalid session`);
             return invalidSession;
         }
 
         const lobbies = await this.getLobbies();
 
         const lobbyByCurrencyGroup = lobbies?.find((lobby) => lobby?.currencyGroupIds?.includes(session.currencyGroupId));
+
+        this.logger.log(`Get Lobby for ${session.playerId} at ${new Date()}`);
+
         return new LobbyConfigsResult(true, lobbyByCurrencyGroup ?? {});
     }
 }
