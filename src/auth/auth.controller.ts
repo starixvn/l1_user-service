@@ -1,13 +1,12 @@
 import { Body, Controller, Get, Headers, Post, Query } from '@nestjs/common';
 
-import { SentryLogger } from 'src/common/providers';
 import { AuthService, CreateNicknameRequest } from '.';
-import { AuthPipe } from '../pipes/auth.pipe';
 import { VerifySessionRequest } from '../users/models';
+import { AuthPipe } from '../pipes/auth.pipe';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService, private readonly logger: SentryLogger) {}
+    constructor(private readonly authService: AuthService) {}
 
     @Get('sso')
     sso(
@@ -26,7 +25,6 @@ export class AuthController {
 
     @Post('authorize')
     authorize(@Body(new AuthPipe()) body: VerifySessionRequest) {
-        this.logger.log(`Authorizing`);
         return this.authService.authorize(body);
     }
 
