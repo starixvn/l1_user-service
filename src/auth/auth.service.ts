@@ -24,10 +24,10 @@ import { VerifySessionRequest } from '../users/models';
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
 import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
 import { UserDocument, UserSession } from '../users/schemas';
+import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
-import { AppTypes } from './constants/app-types';
 
 @Injectable()
 export class AuthService {
@@ -149,6 +149,7 @@ export class AuthService {
     }
 
     async authorize(request: VerifySessionRequest) {
+        this.logger.log(`start authorizing at ${new Date()}`);
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
