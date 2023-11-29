@@ -1,13 +1,13 @@
-import { Inject, Injectable, CACHE_MANAGER } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Lobby, LobbyDocument } from './schemas/lobby.schema';
-import { UserSessionsService } from '../users/providers';
-import { VerifySessionRequest } from '../users/models';
-import { invalidSession } from '../users/constants/errors';
+import { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { SentryLogger } from '../common/providers/logger.service';
-import { Cache } from 'cache-manager';
+import { invalidSession } from '../users/constants/errors';
+import { VerifySessionRequest } from '../users/models';
+import { UserSessionsService } from '../users/providers';
 import { LobbyConfigsResult } from './models/result';
+import { Lobby, LobbyDocument } from './schemas/lobby.schema';
 
 @Injectable()
 export class LobbyService {
@@ -48,7 +48,11 @@ export class LobbyService {
 
         const lobbyByCurrencyGroup = lobbies?.find((lobby) => lobby?.currencyGroupIds?.includes(session.currencyGroupId));
 
-        this.logger.log(`Get Lobby for ${session.playerId} at ${new Date()}`);
+        this.logger.log(
+            `Get Lobby for ${session.playerId}, currency group: ${session.currencyGroupId} at ${new Date()}, ${JSON.stringify(
+                lobbyByCurrencyGroup,
+            )}`,
+        );
 
         return new LobbyConfigsResult(true, lobbyByCurrencyGroup ?? {});
     }
