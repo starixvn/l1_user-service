@@ -19,6 +19,7 @@ export default () => ({
         clientId: 'game-server',
         clientSecret: 'gameserver@20luminet&',
         audiences: ['api', 'admin-api', 'game-services'],
+        validIssuers: process.env.VALID_ISSUERS.split(','),
     },
     sentry: {
         dns: process.env.SENTRY_DNS,
@@ -34,5 +35,5 @@ export default () => ({
         clientKey: process.env.GAME_RESULT_CLIENT_KEY,
     },
     systemName: process.env.SYSTEM_TYPE,
-    defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS
+    defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS,
 });
