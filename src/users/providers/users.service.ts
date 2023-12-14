@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, LeanDocument } from 'mongoose';
+import { LeanDocument, Model } from 'mongoose';
 
 import { CreateUserParam } from '../params';
 import { User, UserDocument } from '../schemas';
@@ -35,8 +35,13 @@ export class UsersService {
         return this.userModel.findById(id).lean().exec();
     }
 
-    async createUser(createUserParam: CreateUserParam, playerId: number, operatorId: string): Promise<UserDocument> {
-        const createdUser = new this.userModel({ local: createUserParam, playerId: playerId, operatorId: operatorId });
+    async createUser(
+        createUserParam: CreateUserParam,
+        playerId: number,
+        operatorId: string,
+        operatorPlayerId: string,
+    ): Promise<UserDocument> {
+        const createdUser = new this.userModel({ local: createUserParam, playerId: playerId, operatorId: operatorId, operatorPlayerId });
 
         return createdUser.save();
     }

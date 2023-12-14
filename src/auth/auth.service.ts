@@ -24,10 +24,10 @@ import { VerifySessionRequest } from '../users/models';
 import { CreateUserInfoParam, CreateUserParam, CreateUserSessionParam } from '../users/params';
 import { UserInfosService, UserSessionsService, UsersService } from '../users/providers';
 import { UserDocument, UserSession } from '../users/schemas';
+import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
-import { AppTypes } from './constants/app-types';
 
 @Injectable()
 export class AuthService {
@@ -369,7 +369,7 @@ export class AuthService {
     }
 
     private async createUserIfNotExist(verifyTokenResult: VerifyTokenResponse) {
-        const { memberKey, playerId, playerName, operatorId, currencyName } = verifyTokenResult;
+        const { memberKey, playerId, playerName, operatorId, currencyName, operatorPlayerId } = verifyTokenResult;
 
         return (
             (await this.usersService.getByUsername(verifyTokenResult.memberKey)) ??
@@ -385,7 +385,8 @@ export class AuthService {
                 ),
                 playerId,
                 operatorId,
-            )
+                operatorPlayerId
+            ) 
         );
     }
 

@@ -50,6 +50,9 @@ export class User {
 
     @Prop()
     operatorId: string;
+
+    @Prop()
+    operatorPlayerId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
