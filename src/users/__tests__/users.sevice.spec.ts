@@ -72,7 +72,7 @@ describe('UserService test', () => {
         const createUserRequest = new CreateUserParam('user1', 'pass', new Date(), 'clientId', 111, 'memberName', 'uus');
         it('should call create user', async () => {
             jest.spyOn(userModel.prototype, 'save');
-            await service.createUser(createUserRequest, 111, 'clientId');
+            await service.createUser(createUserRequest, 111, 'clientId', "111");
 
             expect(userModel.prototype.save).toHaveBeenCalled();
         });
