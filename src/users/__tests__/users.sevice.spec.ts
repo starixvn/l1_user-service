@@ -12,13 +12,13 @@ user.local = {
     username: 'userName',
     partnerId: 'id',
     currency: 'USS',
-    memberId: 123,
+    memberId: '123',
     memberName: 'memberName',
     password: 'pass',
     clientId: null,
     regDate: new Date(),
     operatorId: 'id',
-    playerId: 123,
+    playerId: '123',
     playerName: 'playerName',
 };
 
@@ -69,10 +69,10 @@ describe('UserService test', () => {
     });
 
     describe('createUser test', () => {
-        const createUserRequest = new CreateUserParam('user1', 'pass', new Date(), 'clientId', 111, 'memberName', 'uus');
+        const createUserRequest = new CreateUserParam('user1', 'pass', new Date(), 'clientId', '111', 'memberName', 'uus');
         it('should call create user', async () => {
             jest.spyOn(userModel.prototype, 'save');
-            await service.createUser(createUserRequest, 111, 'clientId', "111");
+            await service.createUser(createUserRequest, '111', 'clientId', '111');
 
             expect(userModel.prototype.save).toHaveBeenCalled();
         });

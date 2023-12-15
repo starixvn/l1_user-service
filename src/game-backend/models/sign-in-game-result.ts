@@ -2,7 +2,7 @@ import { UserSession } from '../../users/schemas';
 
 export class SignInGameResult {
     id: string;
-    playerId: number;
+    playerId: string;
     memberName: string;
     operatorId: string;
     currencyName: string;

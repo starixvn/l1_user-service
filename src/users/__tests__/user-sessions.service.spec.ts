@@ -87,7 +87,7 @@ describe('UserSessionService test', () => {
             sessionId: 'sessionId',
             owSeq: 'seq',
             username: 'userName',
-            memberId: 123,
+            memberId: '123',
             ssoTime: new Date(),
             recheckInTime: new Date(),
             ip: '1.1.1.1',
@@ -105,7 +105,7 @@ describe('UserSessionService test', () => {
             siteName: '',
             system: 1,
             operatorId: '',
-            playerId: 123,
+            playerId: '123',
             playerName: '',
         });
 
@@ -130,7 +130,7 @@ describe('UserSessionService test', () => {
             const users = [
                 {
                     memberName: 'memberName2',
-                    memberId: 2,
+                    memberId: '2',
                     currencyName: 'currency2',
                     partnerId: 'partnerId2',
                     isTestCurrency: false,
@@ -139,7 +139,7 @@ describe('UserSessionService test', () => {
                 },
                 {
                     memberName: 'memberName3',
-                    memberId: 3,
+                    memberId: '3',
                     currencyName: 'currency3',
                     partnerId: 'partnerId3',
                     isTestCurrency: false,
@@ -148,7 +148,7 @@ describe('UserSessionService test', () => {
                 },
                 {
                     memberName: 'memberName4',
-                    memberId: 4,
+                    memberId: '4',
                     currencyName: 'currency4',
                     partnerId: 'partnerId4',
                     isTestCurrency: true,
@@ -157,7 +157,7 @@ describe('UserSessionService test', () => {
                 },
                 {
                     memberName: 'memberName5',
-                    memberId: 5,
+                    memberId: '5',
                     currencyName: 'currency5',
                     partnerId: 'partnerId5',
                     isTestCurrency: true,
@@ -191,7 +191,7 @@ describe('UserSessionService test', () => {
                 realUsers: [
                     {
                         name: 'memberName2',
-                        id: 2,
+                        id: '2',
                         currency: 'currency2',
                         character: 'nickname1',
                         partnerId: 'partnerId2',
@@ -199,7 +199,7 @@ describe('UserSessionService test', () => {
                     },
                     {
                         name: 'memberName3',
-                        id: 3,
+                        id: '3',
                         currency: 'currency3',
                         character: 'nickname2',
                         partnerId: 'partnerId3',
@@ -210,7 +210,7 @@ describe('UserSessionService test', () => {
                 testUsers: [
                     {
                         name: 'memberName4',
-                        id: 4,
+                        id: '4',
                         currency: 'currency4',
                         character: 'nickname3',
                         partnerId: 'partnerId4',

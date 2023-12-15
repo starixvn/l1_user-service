@@ -24,7 +24,7 @@ export class UserSession {
     owSeq: string;
 
     @Prop()
-    memberId: number;
+    memberId: string;
 
     @Prop()
     ssoTime: Date;
@@ -72,7 +72,7 @@ export class UserSession {
     operatorId: string;
 
     @Prop()
-    playerId: number;
+    playerId: string;
 
     @Prop()
     playerName: string;

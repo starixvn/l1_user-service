@@ -6,7 +6,7 @@ type SpinDocument = Spin & Document;
 @Schema()
 class Spin {
     @Prop()
-    memberId: number;
+    memberId: string;
 
     @Prop()
     availSpins: number;

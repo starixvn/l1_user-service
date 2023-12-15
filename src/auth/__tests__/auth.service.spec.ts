@@ -37,7 +37,7 @@ jest.mock('../../exchange_rates/exchange-rate.services');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
-        playerId: 1,
+        playerId: '1',
         playerName: 'user1',
         siteId: '77',
         operatorId: 'id',
@@ -485,7 +485,7 @@ describe('AuthService test', () => {
             // arrange
             const user = {
                 memberName: 'memberName2',
-                memberId: 2,
+                memberId: '2',
                 currencyName: 'currency2',
                 partnerId: 'partnerId2',
                 isTestCurrency: false,

@@ -37,7 +37,7 @@ export class UsersService {
 
     async createUser(
         createUserParam: CreateUserParam,
-        playerId: number,
+        playerId: string,
         operatorId: string,
         operatorPlayerId: string,
     ): Promise<UserDocument> {

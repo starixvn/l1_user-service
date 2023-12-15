@@ -3,7 +3,7 @@ export class CreateUserSessionParam {
     readonly sessionId: string;
     readonly owSeq: string;
     readonly username: string;
-    readonly memberId: number;
+    readonly memberId: string;
     readonly ssoTime: Date;
     readonly recheckInTime: Date;
     readonly ip: string;
@@ -22,7 +22,7 @@ export class CreateUserSessionParam {
     readonly system: number;
 
     readonly operatorId: string;
-    readonly playerId: number;
+    readonly playerId: string;
     readonly playerName: string;
     readonly disableJackpotGames: boolean;
     readonly operatorToken: string;

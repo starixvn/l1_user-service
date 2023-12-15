@@ -2,7 +2,7 @@ export class NotifyLoginRequest {
     constructor( // NOSONAR
         readonly Seq: string,
         readonly SiteId: string,
-        readonly PlayerId: number,
+        readonly PlayerId: string,
         readonly Language: string,
         readonly CharacterName: string,
         readonly FirstLogin: boolean,

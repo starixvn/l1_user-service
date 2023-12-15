@@ -1,5 +1,5 @@
 export interface VerifyTokenResponse {
-    playerId: number;
+    playerId: string;
     playerName: string;
     siteId: string;
     operatorId: string;

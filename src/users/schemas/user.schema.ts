@@ -21,7 +21,7 @@ class Local {
     clientId: string;
 
     @Prop()
-    memberId: number;
+    memberId: string;
 
     @Prop()
     memberName: string;
@@ -33,7 +33,7 @@ class Local {
     operatorId: string;
 
     @Prop()
-    playerId: number;
+    playerId: string;
 
     @Prop()
     playerName: string;
@@ -46,7 +46,7 @@ export class User {
     local: Local;
 
     @Prop()
-    playerId: number;
+    playerId: string;
 
     @Prop()
     operatorId: string;

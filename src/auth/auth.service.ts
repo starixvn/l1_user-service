@@ -512,7 +512,7 @@ export class AuthService {
         );
     }
 
-    private async getAvailableSpins(memberId: number) {
+    private async getAvailableSpins(memberId: string) {
         const spins = await this.spinModel.findOne({ memberId: memberId, enabled: true }).lean().exec();
         return spins?.availSpins ?? 0;
     }
