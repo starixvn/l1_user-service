@@ -57,6 +57,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         siteName: 'lumi',
         disableJackpotGames: false,
         operatorToken: 'operator-token',
+        operatorPlayerid: '1',
     };
 };
 
