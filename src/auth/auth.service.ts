@@ -75,7 +75,8 @@ export class AuthService {
             );
         }
 
-        const user = umSettings.isUM ? await this.usersService.getByMemberName(data.playerName) : await this.createUserIfNotExist(data);
+        const username = `${data.operatorId}_${data.playerId}`;
+        const user = umSettings.isUM ? await this.usersService.getByUsername(username) : await this.createUserIfNotExist(data);
         const isSuperPlayer = user
             ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
             : false;
