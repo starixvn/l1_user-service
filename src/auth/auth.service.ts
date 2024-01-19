@@ -76,6 +76,7 @@ export class AuthService {
         }
 
         const username = `${data.operatorId}_${data.playerId}`;
+        console.log('username', username);
         const user = umSettings.isUM ? await this.usersService.getByUsername(username) : await this.createUserIfNotExist(data);
         const isSuperPlayer = user
             ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
@@ -386,8 +387,8 @@ export class AuthService {
                 ),
                 playerId,
                 operatorId,
-                operatorPlayerId
-            ) 
+                operatorPlayerId,
+            )
         );
     }
 
