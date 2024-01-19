@@ -28,6 +28,7 @@ import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
+import { StringFormatExtensions } from '../helpers';
 
 @Injectable()
 export class AuthService {
@@ -50,6 +51,8 @@ export class AuthService {
     @Inject(PartnerService) private readonly partnerService: PartnerService;
 
     @Inject(ExchangeRateService) private readonly exchangeRateService: ExchangeRateService;
+
+    @Inject(StringFormatExtensions) private readonly stringFormatExtensions: StringFormatExtensions;
     private readonly chance = new Chance();
     private readonly systemType = process.env.SYSTEM_TYPE;
 
@@ -75,8 +78,7 @@ export class AuthService {
             );
         }
 
-        const username = `${data.operatorId}_${data.playerId}`;
-        console.log('username', username);
+        const username = this.stringFormatExtensions.formatUserName(data.operatorId, data.playerId);
         const user = umSettings.isUM ? await this.usersService.getByUsername(username) : await this.createUserIfNotExist(data);
         const isSuperPlayer = user
             ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
@@ -140,7 +142,9 @@ export class AuthService {
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
+            const username = this.stringFormatExtensions.formatUserName(session.operatorId, session.playerId);
+            const user = await this.usersService.getByUsername(username);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(user?.local.memberName, user?.local.partnerId);
             return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
@@ -152,7 +156,9 @@ export class AuthService {
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(session?.playerName, session?.operatorId);
+            const username = this.stringFormatExtensions.formatUserName(session.operatorId, session.playerId);
+            const user = await this.usersService.getByUsername(username);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(user?.local.memberName, user?.local.partnerId);
             if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, umInfo);
             }
