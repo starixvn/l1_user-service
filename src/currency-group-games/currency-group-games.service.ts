@@ -10,7 +10,10 @@ export class CurrencyGroupGameService {
 
     async getOfferedGames(groupId: string) {
         return this.gameOfCurrencyGroupModel
-            .find({ groupId: Types.ObjectId(groupId), enabled: true }, 'gameId minBet maxBet maxBetPerChoices')
+            .find(
+                { groupId: Types.ObjectId(groupId), enabled: true },
+                { _id: false, gameId: true, minBet: true, maxBet: true, maxBetPerChoices: true },
+            )
             .lean()
             .exec();
     }
