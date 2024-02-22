@@ -19,7 +19,7 @@ import { UMInfo } from '../../um/schemas';
 import { UMService } from '../../um/um.service';
 import { invalidSession } from '../../users/constants/errors';
 import { VerifySessionRequest } from '../../users/models';
-import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
+import { StringFormatExtensions, UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
 import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
@@ -34,6 +34,7 @@ jest.mock('../../um/um.service');
 jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
 jest.mock('../../exchange_rates/exchange-rate.services');
+jest.mock('../../helpers/string-format-extensions');
 
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
@@ -85,6 +86,7 @@ describe('AuthService test', () => {
                 OWApiClient,
                 UserSessionsService,
                 UtilsService,
+                StringFormatExtensions,
                 ConfigService,
                 {
                     provide: PartnerConfigService,
@@ -127,6 +129,30 @@ describe('AuthService test', () => {
     });
 
     describe('signIn test', () => {
+        it('should return authentication successful when UM and user is super player', async () => {
+            // arrange
+            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
+            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
+            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
+            const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
+                return {
+                    username: 'user',
+                    language: 'en',
+                    sessionId: 'session',
+                    system: 1,
+                };
+            });
+            stubUsersService.getByUsername.mockResolvedValueOnce({ local: {} });
+
+            // act
+            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
+
+            // assert
+            expect(actualResult.isAuthenticated).toBeTruthy();
+            expect(addSessionIfNotExistFunc).toHaveBeenCalled();
+        });
+
         it('should return authentication successful and create user when request token is valid', async () => {
             // arrange
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
@@ -192,30 +218,6 @@ describe('AuthService test', () => {
 
             // assert
             expect(actualResult.isAuthenticated).toBe(false);
-        });
-
-        it('should return authentication successful when UM and user is super player', async () => {
-            // arrange
-            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
-            const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
-                return {
-                    username: 'user',
-                    language: 'en',
-                    sessionId: 'session',
-                    system: 1,
-                };
-            });
-            stubUsersService.getByMemberName.mockResolvedValueOnce({ local: {} });
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(addSessionIfNotExistFunc).toHaveBeenCalled();
-            expect(actualResult.isAuthenticated).toBe(true);
         });
     });
 
@@ -541,7 +543,7 @@ describe('AuthService test', () => {
                 umInfo: new UMInfo(),
             });
             jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
-            stubUsersService.getByUsername.mockResolvedValueOnce({});
+            stubUsersService.getByUsername.mockResolvedValueOnce({ local: {} });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
