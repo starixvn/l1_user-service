@@ -9,6 +9,7 @@ export class PartnerConfigService {
     constructor(@InjectModel(PartnerConfig.name) private readonly partnerConfigModel: Model<PartnerConfigDocument>) {}
 
     async isSuperPlayers(playerName: string, partnerId: string): Promise<boolean> {
+        console.log('isSuperPlayers', `${playerName}_${partnerId}`);
         if (!playerName || !partnerId) {
             return false;
         }
