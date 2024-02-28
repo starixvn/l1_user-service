@@ -83,8 +83,7 @@ export class AuthService {
         const isSuperPlayer = user
             ? await this.partnerConfigService.isSuperPlayers(user.local.memberName, user.local.partnerId ?? user.local.clientId)
             : false;
-        
-        console.log('UM nà', umSettings.isUM, isSuperPlayer);
+
         if (umSettings.isUM && !isSuperPlayer) {
             return new AuthenticateResult(false, new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId));
         }
@@ -140,7 +139,6 @@ export class AuthService {
 
     async verifySession(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        console.log('verifySession', isAuthenticated, session);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
@@ -155,7 +153,6 @@ export class AuthService {
 
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
-        console.log('authorize', isAuthenticated, session);
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
