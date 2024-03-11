@@ -34,6 +34,7 @@ export class CurrencyGroupController {
         @Query('rurl') returnUrl: string,
         @Query('partnerId') partnerId: string,
         @Query('appType') appType: string,
+        @Query('op') op: string,
     ) {
         if (token) {
             const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
@@ -48,6 +49,10 @@ export class CurrencyGroupController {
 
             if (returnUrl) {
                 url = `${url}&rurl=${returnUrl}`;
+            }
+
+            if (op) {
+                url = `${url}&op=${op}`;
             }
 
             return { url };
