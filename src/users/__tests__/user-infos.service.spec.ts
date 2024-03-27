@@ -1,14 +1,15 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Model } from 'mongoose';
+import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
+import { CreateUserInfoParam } from '../params';
 import { UserInfosService } from '../providers';
 import { UserInfo, UserInfoDocument, UserInfoSchema } from '../schemas';
-import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
-import { Model } from 'mongoose';
-import { CreateUserInfoParam } from '../params';
 
 const user = new UserInfo();
 user.id = '123';
 user.UID = 123;
+user.avatarId = 1;
 user.name = 'name';
 
 describe('UserInfosService test', () => {
@@ -85,7 +86,7 @@ describe('UserInfosService test', () => {
 
     describe('updateMemberStakeLevel test', () => {
         it('should call update member stake level of user', async () => {
-            const mockDate = new Date();
+            const mockDate = new Date(2024, 3, 27);
             jest.spyOn(global, 'Date').mockImplementation(() => (mockDate as unknown) as Date);
             jest.spyOn(userModel, 'updateOne');
             await service.updateMemberStakeLevel(user.id, 1, 1000);
@@ -113,6 +114,16 @@ describe('UserInfosService test', () => {
             await service.updateUserSignInSMStatus(user.id);
 
             expect(userModel.updateOne).toHaveBeenCalledWith({ id: user.id }, { $set: { isSignedInSM: true } });
+        });
+    });
+
+    describe('updateAvatar test', () => {
+        it('should call update avatar of user', async () => {
+            const avatarId = 2;
+            jest.spyOn(userModel, 'updateOne');
+            await service.updateAvatar(user.id, avatarId);
+
+            expect(userModel.updateOne).toHaveBeenCalledWith({ id: user.id }, { $set: { avatarId: avatarId } });
         });
     });
 });

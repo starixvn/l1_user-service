@@ -3,6 +3,7 @@ import { AuthPipe } from '../pipes/auth.pipe';
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';
 import { VerifySessionRequest } from './models';
+import { UpdateAvatarRequest } from './models/update-avatart-request';
 import { UpdateSettingsRequest } from './models/update-settings-request';
 import { UserInfosService, UserSessionsService } from './providers';
 
@@ -49,5 +50,15 @@ export class UsersController {
         }
 
         return { userStakeLevel: await this.userInfosService.getMemberStakeLevel(session.userId) };
+    }
+
+    @Post('updateAvatar')
+    async updateAvatar(@Body(new AuthPipe()) request: UpdateAvatarRequest) {
+        const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        if (!isAuthenticated) {
+            return invalidSession;
+        }
+
+        return this.userInfosService.updateAvatar(session.userId, request.avatarId);
     }
 }
