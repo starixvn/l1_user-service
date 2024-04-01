@@ -15,11 +15,12 @@ export class CurrencyGroupController {
         @Query('ref') ref: string,
         @Query('rurl') returnUrl: string,
         @Query('appType') appType: string,
+        @Query('op') op: string,
     ) {
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
         const isONEworksVGCash = partnerId === process.env.ONEworksVGCash;
 
-        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash, appType };
+        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash, appType, op };
     }
 
     @Get('group')

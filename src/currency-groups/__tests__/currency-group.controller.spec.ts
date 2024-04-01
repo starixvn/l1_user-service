@@ -41,10 +41,22 @@ describe('CurrencyGroupController', () => {
             const ref = 'ref';
             const returnUrl = 'returnUrl';
             const appType = '1';
-            const expected = { token, language, gameId, groups: [], ref, returnUrl, isONEworksVGCash: false, partnerId: 'partnerId', appType };
+            const expected = {
+                token,
+                language,
+                gameId,
+                groups: [],
+                ref,
+                returnUrl,
+                isONEworksVGCash: false,
+                partnerId: 'partnerId',
+                appType,
+                op: 'VG',
+            };
             const partnerId = 'partnerId';
+            const op = 'VG';
 
-            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl, appType);
+            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl, appType, op);
 
             expect(actual).toStrictEqual(expected);
             expect(service.getCurrencyGroupsByPartner.mock.calls.length).toBe(1);
@@ -63,6 +75,7 @@ describe('CurrencyGroupController', () => {
             const groupType = 'default';
             const partnerId = 'OneWorks1';
             const appType = '1';
+            const op = 'SG';
 
             const actual = await controller.chooseCurrencyGroup(
                 groupType,
@@ -74,6 +87,7 @@ describe('CurrencyGroupController', () => {
                 returnUrl,
                 partnerId,
                 appType,
+                op,
             );
 
             expect(actual).toStrictEqual(expected);
@@ -90,8 +104,9 @@ describe('CurrencyGroupController', () => {
             const returnUrl = 'returnUrl';
             const groupType = 'default';
             const partnerId = 'OneWorks1';
-            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl' };
+            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl&op=VG' };
             const appType = '1';
+            const op = 'VG';
 
             const actual = await controller.chooseCurrencyGroup(
                 groupType,
@@ -103,6 +118,7 @@ describe('CurrencyGroupController', () => {
                 returnUrl,
                 partnerId,
                 appType,
+                op,
             );
 
             expect(actual).toStrictEqual(expected);
