@@ -3,7 +3,7 @@ import { AuthPipe } from '../pipes/auth.pipe';
 import { Result } from '../shared/models/result';
 import { invalidSession } from './constants/errors';
 import { VerifySessionRequest } from './models';
-import { UpdateAvatarRequest } from './models/update-avatart-request';
+import { UpdateAvatarRequest } from './models/update-avatar-request';
 import { UpdateSettingsRequest } from './models/update-settings-request';
 import { UserInfosService, UserSessionsService } from './providers';
 

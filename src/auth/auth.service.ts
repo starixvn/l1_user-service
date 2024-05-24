@@ -11,6 +11,7 @@ import { SentryLogger, UtilsService } from '../common/providers';
 import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import { ExchangeRateService } from '../exchange_rates/exchange-rate.services';
+import { StringFormatExtensions } from '../helpers';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { PartnerConfigService } from '../partner-config/partner-config.service';
@@ -28,13 +29,12 @@ import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
 import { Spin } from './schemas/spins';
-import { StringFormatExtensions } from '../helpers';
 
 @Injectable()
 export class AuthService {
     private readonly UUSCurrency = 'UUS';
 
-    private readonly maximumAvatarId = 87;
+    private readonly maximumAvatarId = 171;
 
     @Inject(SentryLogger) private readonly logger: SentryLogger;
     @Inject(OWApiClient) private readonly apiClient: OWApiClient;
@@ -144,7 +144,10 @@ export class AuthService {
         if (umSettings.isUM) {
             const username = this.stringFormatExtensions.formatUserName(session.operatorId, session.playerId);
             const user = await this.usersService.getByUsername(username);
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(user?.local.memberName, user?.local.partnerId ?? user?.local.clientId);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(
+                user?.local.memberName,
+                user?.local.partnerId ?? user?.local.clientId,
+            );
             return isSuperPlayer && isAuthenticated ? new Result() : new Result(invalidSession.errorCode, invalidSession.message, umInfo);
         }
 
@@ -158,7 +161,10 @@ export class AuthService {
         if (umSettings.isUM) {
             const username = this.stringFormatExtensions.formatUserName(session.operatorId, session.playerId);
             const user = await this.usersService.getByUsername(username);
-            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(user?.local.memberName, user?.local.partnerId ?? user?.local.clientId);
+            const isSuperPlayer = await this.partnerConfigService.isSuperPlayers(
+                user?.local.memberName,
+                user?.local.partnerId ?? user?.local.clientId,
+            );
             if (!isSuperPlayer) {
                 return new AuthorizeResult(false, null, umInfo);
             }
