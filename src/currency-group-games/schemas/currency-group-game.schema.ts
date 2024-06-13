@@ -27,7 +27,7 @@ export class CurrencyGroupGame {
     maxBetPerChoices: object;
 
     @Prop({ type: [Number] })
-    chips: number[];
+    chips: string[];
 }
 
 export const CurrencyGroupGameSchema = SchemaFactory.createForClass(CurrencyGroupGame);
