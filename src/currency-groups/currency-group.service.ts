@@ -16,7 +16,7 @@ export class CurrencyGroupService {
         private readonly owApi: OWApiClient,
         private readonly logger: SentryLogger,
         private readonly configService: ConfigService,
-    ) {}
+    ) { }
 
     async getAllCurrencyGroups() {
         try {
@@ -63,12 +63,16 @@ export class CurrencyGroupService {
 
     async getCurrencyGroupIdByGroupType(groupType: string, selectedGroupId: string, partnerId: string) {
         const groups = await this.getCurrencyGroupsByPartner(partnerId);
+
         let groupId = (() => {
             switch (groupType) {
                 case 'Specific':
                     return selectedGroupId;
+
                 case 'Default':
-                    return groups[0]._id.toString();
+                    const creditUusGroup = groups.find(group => group.name === "Credit_UUS");
+                    return creditUusGroup ? creditUusGroup._id : groups[0]._id.toString();
+
                 default:
                     return this.getCurrencyGroupFromConfig(groups, groupType);
             }
