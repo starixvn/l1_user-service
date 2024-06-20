@@ -39,13 +39,31 @@ export class CurrencyGroupService {
     async getCurrencyGroupsByPartner(partnerId: string) {
         try {
             const queryObject = partnerId ? { enabled: true, partnerId } : { enabled: true };
+            let groups = await this.currencyGroupModel.find(queryObject).lean().exec();
 
-            return await this.currencyGroupModel.find(queryObject).lean().exec();
+            return this.sortPrioritizedGroups(groups);
         } catch (error) {
             this.logger.error(error);
 
             return [];
         }
+    }
+
+    sortPrioritizedGroups(groups: LeanDocument<CurrencyGroupDocument>[]) {
+        const prioritizedGroupNames = ['Credit_UUS'];
+        const prioritizedGroups = prioritizedGroupNames.reduce((accumulator, currentValue) => {
+            const group = groups.find((g) => g.name === currentValue);
+            if (group) {
+                accumulator.push(group);
+            }
+
+            return accumulator;
+        }, []);
+        if (prioritizedGroups.length > 0) {
+            groups = prioritizedGroups.concat(groups.filter((g) => !prioritizedGroups.map((g) => g.name).includes(g.name)));
+        }
+
+        return groups;
     }
 
     async updateMemberAuth(groupId: string, token: string, gameId: number, language: string) {
