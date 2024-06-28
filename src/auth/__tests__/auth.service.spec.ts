@@ -9,6 +9,7 @@ import { CurrencyGroupGameService } from '../../currency-group-games/currency-gr
 import { CurrencyGroupGame } from '../../currency-group-games/schemas';
 import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
 import { ExchangeRateService } from '../../exchange_rates/exchange-rate.services';
+import { GameConfigService } from '../../game-config/game-config.service';
 import { VerifyTokenResponse } from '../../ow-api/models';
 import { OWApiClient } from '../../ow-api/ow-api.client';
 import { PartnerConfigService } from '../../partner-config/partner-config.service';
@@ -30,6 +31,7 @@ jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
 jest.mock('../../common/providers/logger.service');
 jest.mock('../../partner-config/partner-config.service');
+jest.mock('../../game-config/game-config.service');
 jest.mock('../../um/um.service');
 jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
@@ -65,6 +67,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
 const stubUsersService = stub(UsersService);
 const stubUserInfoService = stub(UserInfosService);
 const stubPartnerConfigService = stub(PartnerConfigService);
+const stubGameConfigService = stub(GameConfigService);
 const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
 const stubCurrencyGroupService = stub(CurrencyGroupService);
 const stubPartnerService = stub(PartnerService);
@@ -75,6 +78,7 @@ describe('AuthService test', () => {
     let currencyGroupService: CurrencyGroupService;
     let currencyGroupGameService: CurrencyGroupGameService;
     let partnerConfigService: PartnerConfigService;
+    let gameConfigService: GameConfigService;
     let config: ConfigService;
 
     beforeAll(async () => {
@@ -91,6 +95,10 @@ describe('AuthService test', () => {
                 {
                     provide: PartnerConfigService,
                     useValue: stubPartnerConfigService,
+                },
+                {
+                    provide: GameConfigService,
+                    useValue: stubGameConfigService,
                 },
                 {
                     provide: UsersService,
@@ -125,6 +133,7 @@ describe('AuthService test', () => {
         currencyGroupService = await module.resolve(CurrencyGroupService);
         currencyGroupGameService = await module.resolve(CurrencyGroupGameService);
         partnerConfigService = await module.resolve(PartnerConfigService);
+        gameConfigService = await module.resolve(GameConfigService);
         config = module.get<ConfigService>(ConfigService);
     });
 
@@ -506,9 +515,11 @@ describe('AuthService test', () => {
                 fractionalOddsFormat: false,
                 isDisplayPlayerCurrency: true,
                 offerGames: [],
+                enabledGameIds: [],
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
             };
+
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: { ...new UserSession(), ...user },
@@ -522,6 +533,7 @@ describe('AuthService test', () => {
             stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
             stubCurrencyGroupService.isFractionalOddsFormat.mockReturnValueOnce(false);
             stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
+            stubGameConfigService.getEnabledGameIds.mockReturnValueOnce([]);
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
