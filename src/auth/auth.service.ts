@@ -12,6 +12,7 @@ import { CurrencyGroupGameService } from '../currency-group-games/currency-group
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
 import { CurrencyGroup } from '../currency-groups/schemas';
 import { ExchangeRateService } from '../exchange_rates/exchange-rate.services';
+import { GameConfigService } from '../game-config/game-config.service';
 import { StringFormatExtensions } from '../helpers';
 import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenResponse } from '../ow-api/models';
 import { OWApiClient } from '../ow-api/ow-api.client';
@@ -46,6 +47,7 @@ export class AuthService {
     @Inject(ConfigService) private readonly configService: ConfigService;
     @InjectModel(Spin.name) private readonly spinModel;
     @Inject(PartnerConfigService) private readonly partnerConfigService: PartnerConfigService;
+    @Inject(GameConfigService) private readonly gameConfigService: GameConfigService;
     @Inject(UMService) private readonly umService: UMService;
     @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
     @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
@@ -200,6 +202,7 @@ export class AuthService {
 
         await this.notifyLogin(session, userInfo.name);
 
+        const enabledGameIds = await this.gameConfigService.getEnabledGameIds();
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
 
@@ -211,6 +214,7 @@ export class AuthService {
             return new AuthorizeResult(true, {
                 ...userInfo,
                 offerGames,
+                enabledGameIds,
                 availSpins,
                 fractionalOddsFormat,
                 isDisplayPlayerCurrency,
@@ -226,6 +230,7 @@ export class AuthService {
         return new AuthorizeResult(true, {
             ...userInfo,
             offerGames,
+            enabledGameIds,
             fractionalOddsFormat,
             isDisplayPlayerCurrency,
             disableJackpotGames: session.disableJackpotGames,
@@ -290,6 +295,7 @@ export class AuthService {
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
 
+        const enabledGameIds = await this.gameConfigService.getEnabledGameIds();
         const offerGames = await this.getOfferGames(session, currencyGroup);
         const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
@@ -299,6 +305,7 @@ export class AuthService {
                   ...param,
                   red: getBalanceResult.balance,
                   offerGames,
+                  enabledGameIds,
                   fractionalOddsFormat,
                   isDisplayPlayerCurrency,
                   rate,
@@ -312,6 +319,7 @@ export class AuthService {
                   ...param,
                   red: getBalanceResult.balance,
                   offerGames,
+                  enabledGameIds,
                   availSpins,
                   scoins: userInfo?.scoins ?? 0,
                   fractionalOddsFormat,
