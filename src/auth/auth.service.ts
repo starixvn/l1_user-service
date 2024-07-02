@@ -10,6 +10,7 @@ import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
 import { CurrencyGroupGameService } from '../currency-group-games/currency-group-games.service';
 import { CurrencyGroupService } from '../currency-groups/currency-group.service';
+import { CurrencyGroup } from '../currency-groups/schemas';
 import { ExchangeRateService } from '../exchange_rates/exchange-rate.services';
 import { GameConfigService } from '../game-config/game-config.service';
 import { StringFormatExtensions } from '../helpers';
@@ -191,12 +192,13 @@ export class AuthService {
         }
 
         await this.notifyLogin(session, userInfo.name);
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
 
-        const offerGames = await this.getOfferGames(session);
+        const offerGames = await this.getOfferGames(session, currencyGroup);
         const enabledGameIds = await this.gameConfigService.getEnabledGameIds();
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
-        const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
+        const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
@@ -213,6 +215,7 @@ export class AuthService {
                 rate,
                 multiplier: session.multiplier,
                 currencyCode: session.currencyCode,
+                currencyGroup: currencyGroup.name,
             });
         }
 
@@ -226,6 +229,7 @@ export class AuthService {
             rate,
             multiplier: session.multiplier,
             currencyCode: session.currencyCode,
+            currencyGroup: currencyGroup.name,
         });
     }
 
@@ -279,9 +283,10 @@ export class AuthService {
         await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
-        const offerGames = await this.getOfferGames(session);
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
         const enabledGameIds = await this.gameConfigService.getEnabledGameIds();
-        const fractionalOddsFormat = await this.currencyGroupService.isFractionalOddsFormat(session.currencyGroupId);
+        const offerGames = await this.getOfferGames(session, currencyGroup);
+        const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
 
         return isSC1System(this.systemType)
@@ -296,6 +301,7 @@ export class AuthService {
                   disableJackpotGames: session.disableJackpotGames,
                   multiplier: session.multiplier,
                   currencyCode: session.currencyCode,
+                  currencyGroup: currencyGroup.name,
               })
             : new AuthorizeResult(true, {
                   ...param,
@@ -310,6 +316,7 @@ export class AuthService {
                   disableJackpotGames: session.disableJackpotGames,
                   multiplier: session.multiplier,
                   currencyCode: session.currencyCode,
+                  currencyGroup: currencyGroup.name,
               });
     }
 
@@ -495,8 +502,7 @@ export class AuthService {
         return `Before Action at ${new Date()}: \n\tSession: ${JSON.stringify(session)} ${nameDisplay}\n\tParams:${JSON.stringify(params)}`;
     }
 
-    private async getOfferGames(session: UserSession) {
-        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
+    private async getOfferGames(session: UserSession, currencyGroup: CurrencyGroup) {
         const currency = await this.currencyGroupService.getCurrency(session.currencyName, session?.operatorId);
 
         if (!currency?.enabled || !currencyGroup?.enabled) {
