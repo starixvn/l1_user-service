@@ -20,4 +20,5 @@ export interface VerifyTokenResponse {
     disableJackpotGames?: boolean;
     operatorToken: string;
     operatorPlayerId: string;
+    disableAward?: boolean;
 }

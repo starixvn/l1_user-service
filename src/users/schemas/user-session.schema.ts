@@ -82,6 +82,9 @@ export class UserSession {
 
     @Prop()
     operatorToken: string;
+
+    @Prop()
+    disableAward: boolean;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);

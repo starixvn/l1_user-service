@@ -26,6 +26,7 @@ export class CreateUserSessionParam {
     readonly playerName: string;
     readonly disableJackpotGames: boolean;
     readonly operatorToken: string;
+    readonly disableAward: boolean;
 
     constructor({
         ssoToken,
@@ -54,6 +55,7 @@ export class CreateUserSessionParam {
         playerName,
         disableJackpotGames,
         operatorToken,
+        disableAward
     }: any) {
         this.ssoToken = ssoToken;
         this.sessionId = sessionId;
@@ -81,5 +83,6 @@ export class CreateUserSessionParam {
         this.playerName = playerName;
         this.disableJackpotGames = disableJackpotGames;
         this.operatorToken = operatorToken;
+        this.disableAward = disableAward;
     }
 }

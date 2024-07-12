@@ -19,6 +19,7 @@ export class SignInGameResult {
     sessionId: string;
     userId: string;
     disableJackpotGames: boolean;
+    disableAward: boolean;
 
     constructor(session: UserSession) {
         this.id = session.userId;
@@ -39,5 +40,6 @@ export class SignInGameResult {
         this.userId = session.userId;
         this.memberName = session.memberName;
         this.disableJackpotGames = session.disableJackpotGames;
+        this.disableAward = session.disableAward;
     }
 }
