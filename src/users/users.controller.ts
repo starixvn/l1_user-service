@@ -61,4 +61,13 @@ export class UsersController {
 
         return this.userInfosService.updateAvatar(session.userId, request.avatarId);
     }
+
+    @Get('session')
+    async getSession(
+        @Query('session') sessionId: string,
+        @Query('username') username: string,
+        @Query('browserUserAgent') browserUserAgent: string,
+    ) {
+        return await this.userSessionsService.verifySession({ session: sessionId, username, browserUserAgent });
+    }
 }
