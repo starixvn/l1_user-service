@@ -212,6 +212,7 @@ export class AuthService {
                 multiplier: session.multiplier,
                 currencyCode: session.currencyCode,
                 currencyGroup: currencyGroup.name,
+                disableMiniPanel: this.checkDisableMiniPanel(session),
             });
         }
 
@@ -225,6 +226,7 @@ export class AuthService {
             multiplier: session.multiplier,
             currencyCode: session.currencyCode,
             currencyGroup: currencyGroup.name,
+            disableMiniPanel: this.checkDisableMiniPanel(session),
         });
     }
 
@@ -245,13 +247,14 @@ export class AuthService {
             return sameWithUsername;
         }
 
+        const disableMiniPanel = this.checkDisableMiniPanel(session);
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         const availSpins = isVG2System(this.systemType) && (await this.getAvailableSpins(session.memberId));
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
         if (userInfo) {
             return isSC1System(this.systemType)
-                ? new AuthorizeResult(true, { ...userInfo, rate })
-                : new AuthorizeResult(true, { ...userInfo, rate, availSpins });
+                ? new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel })
+                : new AuthorizeResult(true, { ...userInfo, rate, availSpins, disableMiniPanel });
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -296,6 +299,7 @@ export class AuthService {
                   multiplier: session.multiplier,
                   currencyCode: session.currencyCode,
                   currencyGroup: currencyGroup.name,
+                  disableMiniPanel,
               })
             : new AuthorizeResult(true, {
                   ...param,
@@ -310,6 +314,7 @@ export class AuthService {
                   multiplier: session.multiplier,
                   currencyCode: session.currencyCode,
                   currencyGroup: currencyGroup.name,
+                  disableMiniPanel,
               });
     }
 
@@ -435,7 +440,7 @@ export class AuthService {
             siteName,
             disableJackpotGames,
             operatorToken,
-            disableAward
+            disableAward,
         } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
@@ -470,7 +475,7 @@ export class AuthService {
                     playerName,
                     disableJackpotGames,
                     operatorToken,
-                    disableAward
+                    disableAward,
                 }),
             );
         }
@@ -554,5 +559,12 @@ export class AuthService {
 
         const settingGames = await this.currencyGroupGameService.getOfferedGames(session.currencyGroupId);
         return new GetSettingGamesResult(true, settingGames);
+    }
+
+    private checkDisableMiniPanel(session: UserSession) {
+        return (
+            process.env.MINI_PANEL_EXCLUDED_SITES &&
+            process.env.MINI_PANEL_EXCLUDED_SITES.split(',').some((x) => x.toUpperCase() === session.siteName.toUpperCase())
+        );
     }
 }
