@@ -561,8 +561,8 @@ export class AuthService {
         return new GetSettingGamesResult(true, settingGames);
     }
 
-    private checkDisableMiniPanel(session: UserSession) {
-        return (
+    private checkDisableMiniPanel(session: UserSession): boolean {
+        return !!(
             process.env.MINI_PANEL_EXCLUDED_SITES &&
             process.env.MINI_PANEL_EXCLUDED_SITES.split(',').some((x) => x.toUpperCase() === session.siteName.toUpperCase())
         );
