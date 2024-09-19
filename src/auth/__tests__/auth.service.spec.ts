@@ -509,6 +509,7 @@ describe('AuthService test', () => {
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
                 currencyGroup: 'currencyGroup',
+                disableMiniPanel: false,
             };
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
@@ -521,6 +522,7 @@ describe('AuthService test', () => {
             stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
             stubUsersService.getByUsername.mockReturnValueOnce({});
             stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
             stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
             stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
@@ -619,7 +621,7 @@ describe('AuthService test', () => {
 
         it('should return successful when user info was created', async () => {
             // arrange
-            const userExpected = { rate: 1000, availSpins: false };
+            const userExpected = { rate: 1000, availSpins: false, disableMiniPanel: false };
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
