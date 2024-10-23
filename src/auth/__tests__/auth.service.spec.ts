@@ -508,6 +508,7 @@ describe('AuthService test', () => {
                 offerGames: [],
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
+                currencyGroup: 'currencyGroup',
             };
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
@@ -520,8 +521,8 @@ describe('AuthService test', () => {
             stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
             stubUsersService.getByUsername.mockReturnValueOnce({});
             stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
-            stubCurrencyGroupService.isFractionalOddsFormat.mockReturnValueOnce(false);
             stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
@@ -568,6 +569,15 @@ describe('AuthService test', () => {
                 isAuthenticated: false,
                 session: new UserSession(),
             });
+
+            jest.spyOn(CurrencyGroupService.prototype, 'getCurrencyGroup').mockResolvedValueOnce({
+                partnerId: 'partnerId',
+                enabled: true,
+                operatorId: 'operatorId',
+                fractionalOddsFormat: false,
+                name: 'currencyGroup',
+            });
+
             const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);
 
             // act
@@ -673,7 +683,7 @@ describe('AuthService test', () => {
             stubUserInfoService.getLatestUserInfoUID.mockResolvedValueOnce(1);
             stubUserInfoService.upSertUserInfo.mockResolvedValueOnce({ upsetResult: { upserted: [1] } });
             stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
-            stubCurrencyGroupService.isFractionalOddsFormat.mockReturnValueOnce(false);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
             stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
             jest.spyOn<any, any>(AuthService.prototype, 'generateCharacterName').mockResolvedValueOnce('UUSUser');
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(() => {});
