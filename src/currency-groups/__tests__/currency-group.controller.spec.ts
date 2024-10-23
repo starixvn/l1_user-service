@@ -10,6 +10,7 @@ describe('CurrencyGroupController', () => {
         getCurrencyGroupsByPartner: jest.fn(),
         getHrefCurrencyGroup: jest.fn(),
         getCurrencyGroupIdByGroupType: jest.fn(),
+        getCurrencyGroup: jest.fn(),
     };
 
     beforeAll(async () => {
@@ -76,6 +77,9 @@ describe('CurrencyGroupController', () => {
             const partnerId = 'OneWorks1';
             const appType = '1';
             const op = 'SG';
+            service.getCurrencyGroup.mockImplementation(() => {
+                return { id: groupId, name: 'Credit_USD' };
+            });
 
             const actual = await controller.chooseCurrencyGroup(
                 groupType,
@@ -96,6 +100,10 @@ describe('CurrencyGroupController', () => {
 
         it('when token is valid should execute service', async () => {
             service.updateMemberAuth.mockImplementation(() => 'apiUrl');
+            service.getCurrencyGroup.mockImplementation(() => {
+                return { id: groupId, name: 'Credit_USD' };
+            });
+
             const token = 'token';
             const language = 'language';
             const gameId = '1';
@@ -104,7 +112,7 @@ describe('CurrencyGroupController', () => {
             const returnUrl = 'returnUrl';
             const groupType = 'default';
             const partnerId = 'OneWorks1';
-            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl&op=VG' };
+            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl&op=VG&cg=Credit_USD' };
             const appType = '1';
             const op = 'VG';
 

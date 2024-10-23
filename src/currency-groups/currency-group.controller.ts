@@ -40,21 +40,13 @@ export class CurrencyGroupController {
         if (token) {
             const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
             let url = await this.currencyGroupService.updateMemberAuth(groupIdByGroupType, token, parseInt(gameId), language);
-            if (ref) {
-                url = `${url}&ref=${ref}`;
-            }
+            let currencyGroup = await this.currencyGroupService.getCurrencyGroup(groupId);
 
-            if (appType) {
-                url = `${url}&appType=${appType}`;
-            }
-
-            if (returnUrl) {
-                url = `${url}&rurl=${returnUrl}`;
-            }
-
-            if (op) {
-                url = `${url}&op=${op}`;
-            }
+            ref && (url = `${url}&ref=${ref}`);
+            appType && (url = `${url}&appType=${appType}`);
+            returnUrl && (url = `${url}&rurl=${returnUrl}`);
+            op && (url = `${url}&op=${op}`);
+            currencyGroup && (url = `${url}&cg=${currencyGroup.name}`);
 
             return { url };
         } else {
