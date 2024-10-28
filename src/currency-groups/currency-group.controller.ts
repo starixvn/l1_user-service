@@ -40,7 +40,7 @@ export class CurrencyGroupController {
         if (token) {
             const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
             let url = await this.currencyGroupService.updateMemberAuth(groupIdByGroupType, token, parseInt(gameId), language);
-            let currencyGroup = await this.currencyGroupService.getCurrencyGroup(groupId);
+            let currencyGroup = await this.currencyGroupService.getCurrencyGroup(groupIdByGroupType);
 
             ref && (url = `${url}&ref=${ref}`);
             appType && (url = `${url}&appType=${appType}`);
