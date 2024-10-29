@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-    getHello(): string {
-        return `Hello from ${process.env.ENV} - ${process.env.SYSTEM_TYPE}`;
+    getHello(ip: string): string {
+        return `Hello from ${process.env.ENV} - ${process.env.SYSTEM_TYPE} - IP: ${ip}`;
     }
 }
