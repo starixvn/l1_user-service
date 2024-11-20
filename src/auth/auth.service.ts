@@ -91,6 +91,10 @@ export class AuthService {
 
         const userSession = await this.addSessionIfNotExist(user, request, data, system);
         const rate = await this.exchangeRateService.getRateByUser(userSession.currencyCode, userSession.multiplier);
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(userSession.currencyGroupId);
+        const offerGames = await this.getOfferGames(userSession, currencyGroup);
+        const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
+
         return new AuthenticateResult(
             true,
             !isSuperPlayer && umSettings.umInfo
@@ -102,6 +106,8 @@ export class AuthService {
             userSession.system,
             userSession.playerName,
             rate,
+            offerGames,
+            fractionalOddsFormat,
         );
     }
 
