@@ -163,6 +163,9 @@ export class AuthService {
 
     async authorize(request: VerifySessionRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
+        const offerGames = await this.getOfferGames(session, currencyGroup);
+        const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const umSettings = await this.umService.getUMResult(session?.operatorId);
         const umInfo = umSettings.umInfo ? new UMResult(umSettings.umInfo.start, umSettings.umInfo.end, umSettings.umInfo.partnerId) : null;
         if (umSettings.isUM) {
@@ -173,7 +176,7 @@ export class AuthService {
                 user?.local.partnerId ?? user?.local.clientId,
             );
             if (!isSuperPlayer) {
-                return new AuthorizeResult(false, null, umInfo);
+                return new AuthorizeResult(false, { offerGames, fractionalOddsFormat });
             }
         }
 
@@ -192,16 +195,14 @@ export class AuthService {
         const userInfo = await this.userInfosService.getUserInfo(user.id);
 
         if (!userInfo) {
-            return new AuthorizeResult(false);
+            return new AuthorizeResult(false, { offerGames, fractionalOddsFormat });
         }
 
         await this.notifyLogin(session, userInfo.name);
-        const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
 
-        const offerGames = await this.getOfferGames(session, currencyGroup);
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
-        const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
+
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
