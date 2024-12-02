@@ -435,7 +435,7 @@ export class AuthService {
             siteName,
             disableJackpotGames,
             operatorToken,
-            disableAward
+            disableAward,
         } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
@@ -470,7 +470,7 @@ export class AuthService {
                     playerName,
                     disableJackpotGames,
                     operatorToken,
-                    disableAward
+                    disableAward,
                 }),
             );
         }
@@ -517,33 +517,12 @@ export class AuthService {
             return result;
         }, []);
 
-        if (isSC1System(this.systemType)) {
-            return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
-        }
-
-        if (!groupOfferGames) {
-            return [];
-        }
-
-        if (!session.disableJackpotGames) {
-            return groupOfferGames.filter((game) => !siteExclusionGames.includes(game.gameId));
-        }
-
-        const jackpotGames = await this.getDisableJackpotGames();
-        return groupOfferGames.filter(
-            (game) => !jackpotGames.some((id) => id === game.gameId) && !siteExclusionGames.includes(game.gameId),
-        );
+        return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
     }
 
     private async getAvailableSpins(memberId: string) {
         const spins = await this.spinModel.findOne({ memberId: memberId, enabled: true }).lean().exec();
         return spins?.availSpins ?? 0;
-    }
-
-    private async getDisableJackpotGames() {
-        const fourguardiansGameId = 29;
-
-        return [fourguardiansGameId];
     }
 
     async getSettingGames(request: VerifySessionRequest) {
