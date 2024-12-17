@@ -64,7 +64,7 @@ export class TrackingService {
             device.model = deviceRequest.model;
         }
 
-        const updatedPlayerTracking = await this.playerTrackingModel.findOneAndUpdate(
+        await this.playerTrackingModel.findOneAndUpdate(
             {
                 playerId: playerTracking.playerId,
                 visitorId: playerTracking.visitorId,
@@ -80,7 +80,7 @@ export class TrackingService {
             },
         );
 
-        return { status: TrackingStatus.UPDATED, result: updatedPlayerTracking };
+        return { status: TrackingStatus.UPDATED };
     }
 
     private async createPlayerTracking(session: UserSession, deviceRequest: Device, visitorId: string): Promise<TrackingResponse> {
@@ -94,6 +94,6 @@ export class TrackingService {
 
         await newPlayerTracking.save();
 
-        return { status: TrackingStatus.CREATED, result: newPlayerTracking };
+        return { status: TrackingStatus.CREATED };
     }
 }

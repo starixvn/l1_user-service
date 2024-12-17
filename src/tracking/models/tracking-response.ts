@@ -9,6 +9,5 @@ export enum TrackingStatus {
 
 export interface TrackingResponse {
     status: TrackingStatus;
-    result?: PlayerTrackingDocument;
     error?: string;
 }

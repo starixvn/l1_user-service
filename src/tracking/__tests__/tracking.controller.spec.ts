@@ -18,13 +18,6 @@ describe('TrackingController', () => {
 
     const mockTrackingResponse = {
         status: TrackingStatus.CREATED,
-        result: {
-            playerId: 'player123',
-            operatorId: 'operator123',
-            playerName: 'Test Player',
-            visitorId: 'visitor123',
-            deviceHistory: [],
-        },
     };
 
     beforeEach(async () => {
