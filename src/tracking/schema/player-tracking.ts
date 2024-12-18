@@ -35,13 +35,13 @@ class Player {
 
 const PlayerSchema = SchemaFactory.createForClass(Player);
 
-@Schema()
+@Schema({ timestamps: true })
 class PlayerTracking {
+    @Prop({ unique: true })
+    visitorId: string;
+
     @Prop({ type: [PlayerSchema] })
     players: Player[];
-
-    @Prop()
-    visitorId: string;
 
     @Prop({ type: [String] })
     linkedVisitorIds: string[];
@@ -51,6 +51,8 @@ class PlayerTracking {
 }
 
 const PlayerTrackingSchema = SchemaFactory.createForClass(PlayerTracking);
+
+PlayerTrackingSchema.index({ visitorId: 1 }, { unique: true });
 
 type PlayerTrackingDocument = PlayerTracking & Document;
 
