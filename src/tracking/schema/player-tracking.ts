@@ -19,7 +19,7 @@ class Device {
 const DeviceSchema = SchemaFactory.createForClass(Device);
 
 @Schema()
-class PlayerTracking {
+class Player {
     @Prop()
     playerId: string;
 
@@ -29,8 +29,22 @@ class PlayerTracking {
     @Prop()
     playerName: string;
 
+    @Prop({ type: Date, default: Date.now })
+    lastUsedTime: Date;
+}
+
+const PlayerSchema = SchemaFactory.createForClass(Player);
+
+@Schema()
+class PlayerTracking {
+    @Prop({ type: [PlayerSchema] })
+    players: Player[];
+
     @Prop()
     visitorId: string;
+
+    @Prop({ type: [String] })
+    linkedVisitorIds: string[];
 
     @Prop({ type: [DeviceSchema] })
     deviceHistory: Device[];
@@ -40,4 +54,4 @@ const PlayerTrackingSchema = SchemaFactory.createForClass(PlayerTracking);
 
 type PlayerTrackingDocument = PlayerTracking & Document;
 
-export { PlayerTrackingSchema, PlayerTracking, PlayerTrackingDocument, Device };
+export { PlayerTrackingSchema, PlayerTracking, PlayerTrackingDocument, Device, Player };

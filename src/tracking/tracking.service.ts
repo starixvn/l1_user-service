@@ -24,7 +24,6 @@ export class TrackingService {
 
             const deviceInfo = UAParser(trackingRequest.browserUserAgent);
             const playerTracking = await this.playerTrackingModel.findOne({
-                playerId: session.playerId,
                 visitorId: trackingRequest.visitorId,
             });
 
@@ -64,15 +63,26 @@ export class TrackingService {
             device.model = deviceRequest.model;
         }
 
+        const player = playerTracking.players.find((p) => p.playerId === session.playerId && p.operatorId === session.operatorId);
+        if (!player) {
+            playerTracking.players.push({
+                playerId: session.playerId,
+                operatorId: session.operatorId,
+                playerName: session.playerName,
+                lastUsedTime: new Date(),
+            });
+        } else {
+            player.lastUsedTime = new Date();
+            player.operatorId = session.operatorId;
+            player.playerName = session.playerName;
+        }
+
         await this.playerTrackingModel.findOneAndUpdate(
             {
-                playerId: playerTracking.playerId,
                 visitorId: playerTracking.visitorId,
             },
             {
                 ...playerTracking,
-                operatorId: session.operatorId,
-                playerName: session.playerName,
             },
             {
                 new: true,
@@ -83,16 +93,36 @@ export class TrackingService {
         return { status: TrackingStatus.UPDATED };
     }
 
-    private async createPlayerTracking(session: UserSession, deviceRequest: Device, visitorId: string): Promise<TrackingResponse> {
+    public async createPlayerTracking(session: UserSession, deviceRequest: Device, visitorId: string): Promise<TrackingResponse> {
+        // Find existing tracking by playerId and operatorId
+        const existingTracking = await this.playerTrackingModel.findOne({
+            'players.playerId': session.playerId,
+            'players.operatorId': session.operatorId,
+        });
+
         const newPlayerTracking = new this.playerTrackingModel({
-            playerId: session.playerId,
-            operatorId: session.operatorId,
-            playerName: session.playerName,
             visitorId: visitorId,
+            linkedVisitorIds: existingTracking?.visitorId ? [existingTracking.visitorId] : [],
+            players: [
+                {
+                    playerId: session.playerId,
+                    operatorId: session.operatorId,
+                    playerName: session.playerName,
+                    lastUsedTime: new Date(),
+                },
+            ],
             deviceHistory: [deviceRequest],
         });
 
         await newPlayerTracking.save();
+
+        // Update existing tracking's linkedVisitorIds if it exists
+        if (existingTracking?.visitorId) {
+            await this.playerTrackingModel.findOneAndUpdate(
+                { visitorId: existingTracking.visitorId },
+                { $addToSet: { linkedVisitorIds: visitorId } },
+            );
+        }
 
         return { status: TrackingStatus.CREATED };
     }

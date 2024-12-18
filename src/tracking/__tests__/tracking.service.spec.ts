@@ -14,11 +14,17 @@ describe('TrackingService', () => {
     let userSessionsService: UserSessionsService;
 
     const mockPlayerTracking = {
-        playerId: 'player123',
-        operatorId: 'operator123',
-        playerName: 'Test Player',
         visitorId: 'visitor123',
+        players: [
+            {
+                playerId: 'player123',
+                operatorId: 'operator123',
+                playerName: 'Test Player',
+                lastUsedTime: new Date(),
+            },
+        ],
         deviceHistory: [],
+        linkedVisitorIds: [],
     };
 
     const mockSession: Partial<UserSession> = {
@@ -66,7 +72,6 @@ describe('TrackingService', () => {
         }).compile();
 
         service = module.get<TrackingService>(TrackingService);
-
         model = module.get<Model<PlayerTrackingDocument>>(getModelToken(PlayerTracking.name));
         userSessionsService = module.get<UserSessionsService>(UserSessionsService);
     });
@@ -102,21 +107,59 @@ describe('TrackingService', () => {
 
             // Assert
             expect(result.status).toBe(TrackingStatus.UPDATED);
-            expect(model.findOneAndUpdate).toHaveBeenCalled();
+            expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+                { visitorId: mockTrackingRequest.visitorId },
+                expect.any(Object),
+                expect.any(Object),
+            );
         });
 
-        it('should add new device to existing tracking when device not found', async () => {
+        it('should add new player to existing tracking when player not found', async () => {
             // Arrange
             const existingTracking = {
-                ...mockPlayerTracking,
-                deviceHistory: [
+                visitorId: 'visitor123',
+                players: [],
+                deviceHistory: [],
+            } as PlayerTrackingDocument;
+
+            const newSession = {
+                ...mockSession,
+                playerId: 'newPlayer123',
+            };
+
+            jest.spyOn(userSessionsService, 'verifySession').mockResolvedValue({
+                isAuthenticated: true,
+                session: newSession as UserSession,
+            });
+            jest.spyOn(model, 'findOne').mockResolvedValue(existingTracking);
+            jest.spyOn(model, 'findOneAndUpdate').mockImplementation(() => Promise.resolve(existingTracking) as any);
+
+            // Act
+            const result = await service.findAndUpdateDevice(mockTrackingRequest);
+
+            // Assert
+            expect(result.status).toBe(TrackingStatus.UPDATED);
+            expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+                { visitorId: mockTrackingRequest.visitorId },
+                expect.any(Object),
+                expect.any(Object),
+            );
+        });
+
+        it('should update existing player when found in tracking', async () => {
+            // Arrange
+            const oldDate = new Date('2024-01-01');
+            const existingTracking = {
+                visitorId: 'visitor123',
+                players: [
                     {
-                        browser: JSON.stringify({ name: 'Chrome', version: '90.0' }),
-                        os: JSON.stringify({ name: 'Windows', version: '10' }),
-                        model: JSON.stringify({ model: 'PC', type: 'desktop' }),
-                        lastUsedTime: new Date(),
+                        playerId: mockSession.playerId,
+                        operatorId: 'oldOperator',
+                        playerName: 'Old Name',
+                        lastUsedTime: oldDate,
                     },
                 ],
+                deviceHistory: [],
             } as PlayerTrackingDocument;
 
             jest.spyOn(userSessionsService, 'verifySession').mockResolvedValue({
@@ -131,6 +174,7 @@ describe('TrackingService', () => {
 
             // Assert
             expect(result.status).toBe(TrackingStatus.UPDATED);
+            expect(model.findOneAndUpdate).toHaveBeenCalled();
         });
 
         it('should return error when session is invalid', async () => {
@@ -158,46 +202,6 @@ describe('TrackingService', () => {
             // Assert
             expect(result.status).toBe(TrackingStatus.FAILED);
             expect(result.error).toBe('Test error');
-        });
-
-        it('should update existing device when found in tracking history', async () => {
-            // Arrange
-            const oldDate = new Date('2024-01-01');
-            const existingTracking = {
-                ...mockPlayerTracking,
-                deviceHistory: [
-                    {
-                        browser: JSON.stringify(mockDeviceInfo.browser),
-                        os: JSON.stringify(mockDeviceInfo.os),
-                        model: JSON.stringify(mockDeviceInfo.device),
-                        lastUsedTime: oldDate,
-                    },
-                ],
-            } as PlayerTrackingDocument;
-
-            jest.spyOn(userSessionsService, 'verifySession').mockResolvedValue({
-                isAuthenticated: true,
-                session: mockSession as UserSession,
-            });
-            jest.spyOn(model, 'findOne').mockResolvedValue(existingTracking);
-            jest.spyOn(model, 'findOneAndUpdate').mockResolvedValue({
-                ...existingTracking,
-                deviceHistory: [
-                    {
-                        browser: JSON.stringify(mockDeviceInfo.browser),
-                        os: JSON.stringify(mockDeviceInfo.os),
-                        model: JSON.stringify(mockDeviceInfo.device),
-                        lastUsedTime: new Date(),
-                    },
-                ],
-            } as PlayerTrackingDocument);
-
-            // Act
-            const result = await service.findAndUpdateDevice(mockTrackingRequest);
-
-            // Assert
-            expect(result.status).toBe(TrackingStatus.UPDATED);
-            expect(model.findOneAndUpdate).toHaveBeenCalled();
         });
 
         it('should handle database error gracefully', async () => {
