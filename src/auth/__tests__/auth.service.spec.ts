@@ -506,6 +506,7 @@ describe('AuthService test', () => {
                 disableJackpotGames: true,
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
+                currencyGroupId: 'group1',
             };
             const userExpected = {
                 name: 'user1',
@@ -518,7 +519,18 @@ describe('AuthService test', () => {
                 enabledGameIds: [],
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
+                currencyGroup: 'TestGroup',
             };
+
+            stubCurrencyGroupService.getCurrencyGroup.mockResolvedValue({
+                fractionalOddsFormat: false,
+                enabled: true,
+                name: 'TestGroup',
+            });
+
+            stubCurrencyGroupService.getCurrency.mockResolvedValue({
+                enabled: true,
+            });
 
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
