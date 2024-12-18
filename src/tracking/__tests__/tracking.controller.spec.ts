@@ -10,10 +10,9 @@ describe('TrackingController', () => {
 
     const mockTrackingRequest: TrackingRequest = {
         visitorId: 'visitor123',
-        browserUserAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
-        ip: '127.0.0.1',
         session: '',
         username: '',
+        browserUserAgent: '',
     };
 
     const mockTrackingResponse = {

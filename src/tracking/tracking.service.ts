@@ -1,31 +1,52 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Device, PlayerTracking, PlayerTrackingDocument } from './schema/player-tracking';
+import { Device, PlayerTrackingDocument } from './schema/player-tracking';
 import { TrackingRequest } from './models/tracking-request';
 import { TrackingResponse, TrackingStatus } from './models/tracking-response';
 import { UserSession } from '../users/schemas';
 import { UserSessionsService } from '../users/providers';
 import { UAParser } from 'ua-parser-js';
+import * as Sentry from '@sentry/node';
+import { IPlayerTrackingRepository } from './repositories/player-tracking.repository';
 
 @Injectable()
 export class TrackingService {
-    @Inject(UserSessionsService) private readonly userSessionsService: UserSessionsService;
+    constructor(
+        @Inject(UserSessionsService) private readonly userSessionsService: UserSessionsService,
+        @Inject('IPlayerTrackingRepository') private readonly trackingRepository: IPlayerTrackingRepository,
+    ) {}
 
-    constructor(@InjectModel(PlayerTracking.name) private readonly playerTrackingModel: Model<PlayerTrackingDocument>) {}
+    private isValidSession(session: UserSession): boolean {
+        if (!session) return false;
+
+        const requiredFields = ['playerId', 'operatorId', 'playerName'];
+        return requiredFields.every((field) => {
+            const value = session[field];
+            return value !== undefined && value !== null && value !== '';
+        });
+    }
 
     async findAndUpdateDevice(trackingRequest: TrackingRequest): Promise<TrackingResponse> {
         try {
+            if (!trackingRequest?.visitorId) {
+                return { status: TrackingStatus.FAILED, error: 'Invalid visitor ID' };
+            }
+
             const { isAuthenticated, session } = await this.userSessionsService.verifySession(trackingRequest);
 
-            if (!isAuthenticated) {
+            if (!isAuthenticated || !session) {
                 return { status: TrackingStatus.ERROR, error: 'Invalid session' };
             }
 
+            if (!this.isValidSession(session)) {
+                return { status: TrackingStatus.FAILED, error: 'Missing required session data' };
+            }
+
+            if (!trackingRequest.browserUserAgent) {
+                return { status: TrackingStatus.FAILED, error: 'Invalid device info' };
+            }
+
             const deviceInfo = UAParser(trackingRequest.browserUserAgent);
-            const playerTracking = await this.playerTrackingModel.findOne({
-                visitorId: trackingRequest.visitorId,
-            });
+            const playerTracking = await this.trackingRepository.findByVisitorId(trackingRequest.visitorId);
 
             const deviceRequest: Device = {
                 browser: JSON.stringify(deviceInfo.browser),
@@ -40,8 +61,64 @@ export class TrackingService {
 
             return await this.updateExistingTracking(playerTracking, deviceRequest, session);
         } catch (error) {
+            Sentry.captureException(error, {
+                extra: {
+                    visitorId: trackingRequest?.visitorId,
+                    browserUserAgent: trackingRequest?.browserUserAgent,
+                    username: trackingRequest?.username,
+                    context: 'findAndUpdateDevice',
+                },
+            });
             return { status: TrackingStatus.FAILED, error: error.message };
         }
+    }
+
+    public async createPlayerTracking(session: UserSession, deviceRequest: Device, visitorId: string): Promise<TrackingResponse> {
+        try {
+            if (!this.isValidSession(session)) {
+                return { status: TrackingStatus.FAILED, error: 'Invalid session data' };
+            }
+
+            if (!deviceRequest || !this.isValidDevice(deviceRequest)) {
+                return { status: TrackingStatus.FAILED, error: 'Invalid device request' };
+            }
+
+            const existingTracking = await this.trackingRepository.findByPlayerAndOperator(session.playerId, session.operatorId);
+
+            await this.trackingRepository.create({
+                visitorId: visitorId,
+                linkedVisitorIds: existingTracking?.visitorId ? [existingTracking.visitorId] : [],
+                players: [
+                    {
+                        playerId: session.playerId,
+                        operatorId: session.operatorId,
+                        playerName: session.playerName,
+                        lastUsedTime: new Date(),
+                    },
+                ],
+                deviceHistory: [deviceRequest],
+            });
+
+            if (existingTracking?.visitorId) {
+                await this.trackingRepository.updateLinkedVisitorIds(existingTracking.visitorId, visitorId);
+            }
+
+            return { status: TrackingStatus.CREATED };
+        } catch (error) {
+            Sentry.captureException(error, {
+                extra: {
+                    visitorId,
+                    playerId: session?.playerId,
+                    operatorId: session?.operatorId,
+                    context: 'createPlayerTracking',
+                },
+            });
+            return { status: TrackingStatus.FAILED, error: error.message };
+        }
+    }
+
+    private isValidDevice(device: Device): boolean {
+        return !!(device.browser && device.os && device.model && device.lastUsedTime);
     }
 
     private async updateExistingTracking(
@@ -77,53 +154,7 @@ export class TrackingService {
             player.playerName = session.playerName;
         }
 
-        await this.playerTrackingModel.findOneAndUpdate(
-            {
-                visitorId: playerTracking.visitorId,
-            },
-            {
-                ...playerTracking,
-            },
-            {
-                new: true,
-                useFindAndModify: false,
-            },
-        );
-
+        await this.trackingRepository.updateOne(playerTracking.visitorId, playerTracking);
         return { status: TrackingStatus.UPDATED };
-    }
-
-    public async createPlayerTracking(session: UserSession, deviceRequest: Device, visitorId: string): Promise<TrackingResponse> {
-        // Find existing tracking by playerId and operatorId
-        const existingTracking = await this.playerTrackingModel.findOne({
-            'players.playerId': session.playerId,
-            'players.operatorId': session.operatorId,
-        });
-
-        const newPlayerTracking = new this.playerTrackingModel({
-            visitorId: visitorId,
-            linkedVisitorIds: existingTracking?.visitorId ? [existingTracking.visitorId] : [],
-            players: [
-                {
-                    playerId: session.playerId,
-                    operatorId: session.operatorId,
-                    playerName: session.playerName,
-                    lastUsedTime: new Date(),
-                },
-            ],
-            deviceHistory: [deviceRequest],
-        });
-
-        await newPlayerTracking.save();
-
-        // Update existing tracking's linkedVisitorIds if it exists
-        if (existingTracking?.visitorId) {
-            await this.playerTrackingModel.findOneAndUpdate(
-                { visitorId: existingTracking.visitorId },
-                { $addToSet: { linkedVisitorIds: visitorId } },
-            );
-        }
-
-        return { status: TrackingStatus.CREATED };
     }
 }
