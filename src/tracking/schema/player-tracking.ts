@@ -52,7 +52,13 @@ class PlayerTracking {
 
 const PlayerTrackingSchema = SchemaFactory.createForClass(PlayerTracking);
 
+// Index for visitorId
 PlayerTrackingSchema.index({ visitorId: 1 }, { unique: true });
+
+// Indexes for players fields
+PlayerTrackingSchema.index({ 'players.playerId': 1, 'players.operatorId': 1 });
+PlayerTrackingSchema.index({ 'players.playerId': 1 });
+PlayerTrackingSchema.index({ 'players.operatorId': 1 });
 
 type PlayerTrackingDocument = PlayerTracking & Document;
 
