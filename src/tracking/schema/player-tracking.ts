@@ -35,9 +35,9 @@ class Player {
 
 const PlayerSchema = SchemaFactory.createForClass(Player);
 
-@Schema({ timestamps: true })
+@Schema()
 class PlayerTracking {
-    @Prop({ unique: true })
+    @Prop()
     visitorId: string;
 
     @Prop({ type: [PlayerSchema] })
@@ -48,17 +48,12 @@ class PlayerTracking {
 
     @Prop({ type: [DeviceSchema] })
     deviceHistory: Device[];
+
+    @Prop({ type: Date, default: Date.now })
+    createdAt: Date;
 }
 
 const PlayerTrackingSchema = SchemaFactory.createForClass(PlayerTracking);
-
-// Index for visitorId
-PlayerTrackingSchema.index({ visitorId: 1 }, { unique: true });
-
-// Indexes for players fields
-PlayerTrackingSchema.index({ 'players.playerId': 1, 'players.operatorId': 1 });
-PlayerTrackingSchema.index({ 'players.playerId': 1 });
-PlayerTrackingSchema.index({ 'players.operatorId': 1 });
 
 type PlayerTrackingDocument = PlayerTracking & Document;
 

@@ -39,8 +39,6 @@ import { TrackingModule } from './tracking/tracking.module';
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({
                 ...configService.get('database'),
-                useCreateIndex: true,
-                useFindAndModify: false,
             }),
             inject: [ConfigService],
         }),
