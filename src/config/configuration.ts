@@ -2,7 +2,7 @@ export default () => ({
     database: {
         uri: process.env.DATABASE_URI,
         options: {
-            dbName: 'minigame',
+            dbName: process.env.DATABASE_NAME ?? 'minigame',
             useNewUrlParser: true,
             useUnifiedTopology: true,
             auto_reconnect: true,
@@ -34,5 +34,5 @@ export default () => ({
         clientKey: process.env.GAME_RESULT_CLIENT_KEY,
     },
     systemName: process.env.SYSTEM_TYPE,
-    defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS
+    defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS,
 });
