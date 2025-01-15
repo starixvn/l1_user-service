@@ -16,7 +16,7 @@ export class CurrencyGroupService {
         private readonly owApi: OWApiClient,
         private readonly logger: SentryLogger,
         private readonly configService: ConfigService,
-    ) {}
+    ) { }
 
     async getAllCurrencyGroups() {
         try {
@@ -50,7 +50,7 @@ export class CurrencyGroupService {
     }
 
     sortPrioritizedGroups(groups: LeanDocument<CurrencyGroupDocument>[]) {
-        const prioritizedGroupNames = ['Credit_UUS'];
+        const prioritizedGroupNames = ['Credit_UUS', 'Cash_UUS', 'SabaPlay_UUS'];
         const prioritizedGroups = prioritizedGroupNames.reduce((accumulator, currentValue) => {
             const group = groups.find((g) => g.name === currentValue);
             if (group) {
