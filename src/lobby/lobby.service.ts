@@ -7,12 +7,15 @@ import { invalidSession } from '../users/constants/errors';
 import { Model } from 'mongoose';
 import { SentryLogger } from '../common/providers/logger.service';
 import { Cache } from 'cache-manager';
-import { LobbyConfigsResult } from './models/result';
+import { DirectLobbyConfigsResult, LobbyConfigsResult } from './models/result';
+import { DirectLobby, DirectLobbyDocument } from './schemas/direct-lobby.schema';
 
 @Injectable()
 export class LobbyService {
     private readonly lobbyCacheKey = 'Lobbies';
+    private readonly directLobbyCacheKey = 'DirectLobbies';
     @InjectModel(Lobby.name) private readonly lobbyModel: Model<LobbyDocument>;
+    @InjectModel(DirectLobby.name) private readonly directLobbyModel: Model<DirectLobbyDocument>;
     @Inject(UserSessionsService) private readonly userSessionsService: UserSessionsService;
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache;
 
@@ -46,5 +49,32 @@ export class LobbyService {
 
         const lobbyByCurrencyGroup = lobbies?.find((lobby) => lobby?.currencyGroupIds?.includes(session.currencyGroupId));
         return new LobbyConfigsResult(true, lobbyByCurrencyGroup ?? {});
+    }
+
+    async getDirectLobbiesByCurrencyGroup() {
+        try {
+            const cachedLobbies = await this.cacheManager.get(this.directLobbyCacheKey);
+            if (cachedLobbies) {
+                return cachedLobbies as Array<any>;
+            }
+
+            const lobbies = await this.directLobbyModel.find({}).lean().exec();
+            await this.cacheManager.set(this.directLobbyCacheKey, lobbies, { ttl: this.cacheTimeOut });
+            return lobbies;
+        } catch (error) {
+            this.logger.error(error);
+
+            return [];
+        }
+    }
+
+    async getDirectLobbyConfigs(request: VerifySessionRequest) {
+        const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        if (!isAuthenticated) {
+            return invalidSession;
+        }
+        const lobbies = await this.getDirectLobbiesByCurrencyGroup();
+        const lobbyByCurrencyGroup = lobbies?.find((lobby) => lobby?.currencyGroupIds?.includes(session.currencyGroupId));
+        return new DirectLobbyConfigsResult(true, lobbyByCurrencyGroup ?? {});
     }
 }

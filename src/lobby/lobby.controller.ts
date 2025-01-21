@@ -11,4 +11,9 @@ export class LobbyController {
     async getLobbyConfigs(@Body(new AuthPipe()) body: VerifySessionRequest) {
         return this.lobbyService.getLobbyConfigs(body);
     }
+
+    @Post('direct-configs')
+    async getDirectLobbyConfigs(@Body(new AuthPipe()) body: VerifySessionRequest) {
+        return this.lobbyService.getDirectLobbyConfigs(body);
+    }
 }
