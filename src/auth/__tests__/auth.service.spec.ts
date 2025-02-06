@@ -135,6 +135,7 @@ describe('AuthService test', () => {
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
             stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {
                     username: 'user',
@@ -167,6 +168,7 @@ describe('AuthService test', () => {
                     system: 1,
                 };
             });
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
             // act
             const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
@@ -441,6 +443,7 @@ describe('AuthService test', () => {
                 session: new UserSession(),
             });
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
             const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);
 
             // act
@@ -458,6 +461,7 @@ describe('AuthService test', () => {
             });
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             stubUsersService.getByUsername.mockResolvedValueOnce(null);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as Result;
@@ -468,7 +472,7 @@ describe('AuthService test', () => {
 
         it('should return invalid session when do not have user info', async () => {
             // arrange
-            const expectResult = new AuthorizeResult(false);
+            const expectResult = new AuthorizeResult(false, { fractionalOddsFormat: false, offerGames: [] });
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
                 session: new UserSession(),
@@ -476,6 +480,7 @@ describe('AuthService test', () => {
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             stubUsersService.getByUsername.mockResolvedValueOnce({});
             stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
             // act
             const actualResult = await authService.authorize(verifySessionRequest);
@@ -596,6 +601,7 @@ describe('AuthService test', () => {
                 isAuthenticated: true,
                 session: new UserSession(),
             });
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
 
             // act
             const actualResult = (await authService.createCharacterName(createNicknameRequest)) as Result;

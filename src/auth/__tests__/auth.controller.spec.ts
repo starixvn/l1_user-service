@@ -32,7 +32,9 @@ describe('AuthController test', () => {
                 isUM: false,
                 umInfo: null,
                 memberName: '',
-                rate: 1
+                rate: 1,
+                fractionalOddsFormat: false,
+                offerGames: [],
             };
 
             jest.spyOn(authService, 'signIn').mockResolvedValue(expectResult);
