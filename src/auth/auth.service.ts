@@ -200,8 +200,6 @@ export class AuthService {
             return new AuthorizeResult(false, { offerGames, fractionalOddsFormat });
         }
 
-        await this.notifyLogin(session, userInfo.name);
-
         const enabledGameIds = await this.gameConfigService.getEnabledGameIds();
         const getBalanceResult = await this.getBalanceBySession(session, userInfo.name, true);
         userInfo.red = getBalanceResult.balance;
@@ -244,20 +242,21 @@ export class AuthService {
 
     async createCharacterName(request: CreateNicknameRequest) {
         const { isAuthenticated, session } = await this.userSessionsService.verifySession(request);
+        const nickname = session.playerName;
 
         if (!isAuthenticated) {
             return invalidSession;
         }
 
-        const validateSignNameResult = this.validateNickname(request.nickname);
-        if (!validateSignNameResult.isSuccessful) {
-            return validateSignNameResult;
-        }
+        // const validateSignNameResult = this.validateNickname(request.nickname);
+        // if (!validateSignNameResult.isSuccessful) {
+        //     return validateSignNameResult;
+        // }
 
-        const user = await this.usersService.getById(session.userId);
-        if (user.local.username.toUpperCase() === request.nickname.toUpperCase()) {
-            return sameWithUsername;
-        }
+        // const user = await this.usersService.getById(session.userId);
+        // if (user.local.username.toUpperCase() === request.nickname.toUpperCase()) {
+        //     return sameWithUsername;
+        // }
 
         const disableMiniPanel = this.checkDisableMiniPanel(session);
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
@@ -269,10 +268,11 @@ export class AuthService {
                 : new AuthorizeResult(true, { ...userInfo, rate, availSpins, disableMiniPanel });
         }
 
-        const characterName = this.generateCharacterName(request.nickname, session.currencyName);
+        const characterName = this.generateCharacterName(nickname, session.currencyName);
         const isCharacterNameExisted = await this.userInfosService.isExistingCharacterName(characterName);
 
         if (isCharacterNameExisted) {
+            this.logger.error(`Duplicate nickname: ${characterName}, session: ${JSON.stringify(session)}`);
             return duplicateNickname;
         }
 
@@ -290,7 +290,7 @@ export class AuthService {
             return duplicateNickname;
         }
 
-        await this.notifyLogin(session, characterName, true);
+        //await this.notifyLogin(session, characterName, true);
 
         const getBalanceResult = await this.getBalanceBySession(session, param.name, true);
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(session.currencyGroupId);
