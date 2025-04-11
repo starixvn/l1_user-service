@@ -21,8 +21,11 @@ export class DirectLobby {
     @Prop({ type: [String] })
     currencyGroupIds: string[];
 
-    @Prop({ type: [GameSettingSchema] })
-    gameSettings: GameSetting[];
+    @Prop({ type: [Number] })
+    gameIds: number[];
+
+    @Prop({ type: [Number] })
+    newGames: number[];
 }
 
 export const DirectLobbySchema = SchemaFactory.createForClass(DirectLobby);
