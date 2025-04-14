@@ -4,16 +4,6 @@ import * as mongoose from 'mongoose';
 export type DirectLobbyDocument = DirectLobby & mongoose.Document;
 
 @Schema()
-class GameSetting {
-    @Prop()
-    gameId: number;
-
-    @Prop()
-    newTag: boolean;
-}
-const GameSettingSchema = SchemaFactory.createForClass(GameSetting);
-
-@Schema()
 export class DirectLobby {
     @Prop()
     name: string;
