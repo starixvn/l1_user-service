@@ -35,29 +35,13 @@ describe('CurrencyGroupController', () => {
 
                 return [];
             });
-
-            const token = 'token';
-            const language = 'language';
-            const gameId = '1';
-            const ref = 'ref';
-            const returnUrl = 'returnUrl';
-            const appType = '1';
             const expected = {
-                token,
-                language,
-                gameId,
                 groups: [],
-                ref,
-                returnUrl,
                 isONEworksVGCash: false,
-                partnerId: 'partnerId',
-                appType,
-                op: 'VG',
             };
             const partnerId = 'partnerId';
-            const op = 'VG';
 
-            const actual = await controller.index(token, language, gameId, partnerId, ref, returnUrl, appType, op);
+            const actual = await controller.index({ partnerId });
 
             expect(actual).toStrictEqual(expected);
             expect(service.getCurrencyGroupsByPartner.mock.calls.length).toBe(1);
@@ -66,68 +50,52 @@ describe('CurrencyGroupController', () => {
 
     describe('chooseCurrencyGroup', () => {
         it('when token is invalid should return error url', async () => {
-            const token = null;
-            const language = 'language';
-            const gameId = '1';
-            const groupId = 'groupId';
-            const ref = 'ref';
-            const returnUrl = 'returnUrl';
+            const query = {
+                token: null,
+                language: 'language',
+                gameId: '1',
+                groupId: 'groupId',
+                ref: 'ref',
+                returnUrl: 'returnUrl',
+                groupType: 'default',
+                partnerId: 'OneWorks1',
+                appType: '1',
+                op: 'SG',
+            };
             const expected = { url: 'error' };
-            const groupType = 'default';
-            const partnerId = 'OneWorks1';
-            const appType = '1';
-            const op = 'SG';
             service.getCurrencyGroup.mockImplementation(() => {
-                return { id: groupId, name: 'Credit_USD' };
+                return { id: query.groupId, name: 'Credit_USD' };
             });
 
-            const actual = await controller.chooseCurrencyGroup(
-                groupType,
-                groupId,
-                token,
-                language,
-                gameId,
-                ref,
-                returnUrl,
-                partnerId,
-                appType,
-                op,
-            );
+            const actual = await controller.chooseCurrencyGroup(query);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(0);
         });
 
         it('when token is valid should execute service', async () => {
+            const query = {
+                token: 'token',
+                language: 'language',
+                gameId: '1',
+                groupId: 'groupId',
+                ref: 'ref',
+                returnUrl: 'returnUrl',
+                groupType: 'default',
+                partnerId: 'OneWorks1',
+                appType: '1',
+                op: 'VG',
+            };
             service.updateMemberAuth.mockImplementation(() => 'apiUrl');
             service.getCurrencyGroup.mockImplementation(() => {
-                return { id: groupId, name: 'Credit_USD' };
+                return { id: query.groupId, name: 'Credit_USD' };
             });
 
-            const token = 'token';
-            const language = 'language';
-            const gameId = '1';
-            const groupId = 'groupId';
-            const ref = 'ref';
-            const returnUrl = 'returnUrl';
-            const groupType = 'default';
-            const partnerId = 'OneWorks1';
-            const expected = { url: 'apiUrl&ref=ref&appType=1&rurl=returnUrl&op=VG&cg=Credit_USD' };
-            const appType = '1';
-            const op = 'VG';
+            const expected = {
+                url: 'apiUrl?token=token&language=language&gameId=1&ref=ref&returnUrl=returnUrl&appType=1&op=VG&cg=Credit_USD',
+            };
 
-            const actual = await controller.chooseCurrencyGroup(
-                groupType,
-                groupId,
-                token,
-                language,
-                gameId,
-                ref,
-                returnUrl,
-                partnerId,
-                appType,
-                op,
-            );
+            const actual = await controller.chooseCurrencyGroup(query);
 
             expect(actual).toStrictEqual(expected);
             expect(service.updateMemberAuth.mock.calls.length).toBe(1);

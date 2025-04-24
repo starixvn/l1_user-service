@@ -3,17 +3,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { LeanDocument, Model, Types } from 'mongoose';
 
 import { CurrencyDocument, Currency, CurrencyGroup, CurrencyGroupDocument } from './schemas';
-import { OWApiClient } from '../ow-api/ow-api.client';
-import { UpdateMemberAuthRequest } from '../ow-api/models';
+import { UpdateMemberAuthRequest } from '../sg-api/models';
 import { SentryLogger } from '../common/providers';
 import { ConfigService } from '@nestjs/config';
+import { SGApiClient } from '../sg-api/sg-api.client';
 
 @Injectable()
 export class CurrencyGroupService {
     constructor(
         @InjectModel(CurrencyGroup.name) private readonly currencyGroupModel: Model<CurrencyGroupDocument>,
         @InjectModel(Currency.name) private readonly currencyModel: Model<CurrencyDocument>,
-        private readonly owApi: OWApiClient,
+        private readonly sgApi: SGApiClient,
         private readonly logger: SentryLogger,
         private readonly configService: ConfigService,
     ) {}
@@ -66,9 +66,9 @@ export class CurrencyGroupService {
         return groups;
     }
 
-    async updateMemberAuth(groupId: string, token: string, gameId: number, language: string) {
-        const request = new UpdateMemberAuthRequest(token, language, gameId, groupId);
-        const result = await this.owApi.updateMemberAuth(request);
+    async updateMemberAuth(groupId: string, token: string, gameId: number, operatorId: string) {
+        const request = new UpdateMemberAuthRequest(token, operatorId, gameId, groupId);
+        const result = await this.sgApi.updateMemberAuth(request);
         const message = result ? encodeURI(`${result.message} [Code: ${result.code}]`) : '';
 
         return result && !result.code ? result.redirectUri : `error?message=${message}`;

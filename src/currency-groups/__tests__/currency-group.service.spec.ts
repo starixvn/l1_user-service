@@ -1,30 +1,30 @@
 import { getModelToken } from '@nestjs/mongoose';
 import { Test } from '@nestjs/testing';
 import { Model } from 'mongoose';
-import { SingleSignOnResponse } from '../../ow-api/models';
 import { SentryLogger } from '../../common/providers';
-import { OWApiClient } from '../../ow-api/ow-api.client';
 import { CurrencyGroupService } from '../currency-group.service';
 import { CurrencyGroup, Currency, CurrencyGroupDocument, CurrencyDocument } from '../schemas';
 import { ConfigService } from '@nestjs/config';
+import { SGApiClient } from '../../sg-api/sg-api.client';
+import { SingleSignOnResponse } from '../../sg-api/models';
 
 describe('CurrencyGroupService', () => {
     let service: CurrencyGroupService;
     let currencyGroupModel: Model<CurrencyGroupDocument>;
     let currencyModel: Model<CurrencyDocument>;
-    const owClient = { updateMemberAuth: jest.fn() };
+    const sgApiClient = { updateMemberAuth: jest.fn() };
     const logger = {
         error: jest.fn(),
     };
     const configService = {
-        get: jest.fn()
-    }
+        get: jest.fn(),
+    };
 
     beforeAll(async () => {
         const module = await Test.createTestingModule({
             providers: [
                 CurrencyGroupService,
-                { provide: OWApiClient, useValue: owClient },
+                { provide: SGApiClient, useValue: sgApiClient },
                 { provide: getModelToken(CurrencyGroup.name), useValue: Model },
                 { provide: SentryLogger, useValue: logger },
                 { provide: getModelToken(Currency.name), useValue: Model },
@@ -165,7 +165,7 @@ describe('CurrencyGroupService', () => {
             [{ code: 0, redirectUri: 'url' }, 'url'],
             [{ code: 1, message: 'error' }, `error?message=${encodeURI('error [Code: 1]')}`],
         ])('should call ow api', async (result: SingleSignOnResponse, expected: string) => {
-            owClient.updateMemberAuth.mockResolvedValueOnce(result);
+            sgApiClient.updateMemberAuth.mockResolvedValueOnce(result);
 
             const token = 'token';
             const language = 'language';
@@ -175,7 +175,7 @@ describe('CurrencyGroupService', () => {
             const actual = await service.updateMemberAuth(groupId, token, gameId, language);
 
             expect(actual).toBe(expected);
-            expect(owClient.updateMemberAuth).toBeCalled();
+            expect(sgApiClient.updateMemberAuth).toBeCalled();
         });
     });
 

@@ -7,48 +7,27 @@ export class CurrencyGroupController {
 
     @Get()
     @Render('currency-group.hbs')
-    async index(
-        @Query('token') token: string,
-        @Query('lang') language: string,
-        @Query('gameId') gameId: string,
-        @Query('partnerId') partnerId: string,
-        @Query('ref') ref: string,
-        @Query('rurl') returnUrl: string,
-        @Query('appType') appType: string,
-        @Query('op') op: string,
-    ) {
+    async index(@Query() query: any) {
+        const { partnerId } = query;
         const groups = await this.currencyGroupService.getCurrencyGroupsByPartner(partnerId);
         const isONEworksVGCash = partnerId === process.env.ONEworksVGCash;
 
-        return { groups, token, language, gameId, ref, returnUrl, partnerId, isONEworksVGCash, appType, op };
+        return { groups, isONEworksVGCash };
     }
 
     @Get('group')
     @Redirect()
-    async chooseCurrencyGroup(
-        @Query('groupType') groupType: string,
-        @Query('group') groupId: string,
-        @Query('token') token: string,
-        @Query('language') language: string,
-        @Query('gameId') gameId: string,
-        @Query('ref') ref: string,
-        @Query('rurl') returnUrl: string,
-        @Query('partnerId') partnerId: string,
-        @Query('appType') appType: string,
-        @Query('op') op: string,
-    ) {
+    async chooseCurrencyGroup(@Query() query: any) {
+        const { token, gameId, partnerId, groupId, groupType } = query;
         if (token) {
             const groupIdByGroupType = await this.currencyGroupService.getCurrencyGroupIdByGroupType(groupType, groupId, partnerId);
-            let url = await this.currencyGroupService.updateMemberAuth(groupIdByGroupType, token, parseInt(gameId), language);
-            let currencyGroup = await this.currencyGroupService.getCurrencyGroup(groupIdByGroupType);
+            const url = await this.currencyGroupService.updateMemberAuth(groupIdByGroupType, token, parseInt(gameId), partnerId);
+            const currencyGroup = await this.currencyGroupService.getCurrencyGroup(groupIdByGroupType);
 
-            ref && (url = `${url}&ref=${ref}`);
-            appType && (url = `${url}&appType=${appType}`);
-            returnUrl && (url = `${url}&rurl=${returnUrl}`);
-            op && (url = `${url}&op=${op}`);
-            currencyGroup && (url = `${url}&cg=${currencyGroup.name}`);
-
-            return { url };
+            const params = { ...query, cg: currencyGroup.name, partnerId: null, groupId: null, groupType: null };
+            const queryString = new URLSearchParams();
+            Object.keys(params).forEach((key) => params[key] !== null && queryString.append(key, params[key]));
+            return { url: `${url}?${queryString.toString()}` };
         } else {
             return { url: 'error' };
         }

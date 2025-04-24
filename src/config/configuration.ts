@@ -14,6 +14,10 @@ export default () => ({
         requestTimeout: 10000,
         placeBetTimeout: 4500,
     },
+    sgApi: {
+        baseURL: process.env.SG_API_URI,
+        requestTimeout: 10000,
+    },
     auth: {
         uri: process.env.AUTH_URI,
         clientId: 'game-server',

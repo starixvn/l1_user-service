@@ -64,7 +64,7 @@
               <div class="table-cell padding-top-4">
                 <input type="radio" name="groupType" id="groupTypeSpecific" value="Specific" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
                 <label for="groupTypeSpecific">Specific</label>            
-                <select name="group" type="string" id="currencyGroupSelect" form="currency" disabled style="padding: 2px;">
+                <select name="groupId" type="string" id="currencyGroupSelect" form="currency" disabled style="padding: 2px;">
                   {{#each groups}}
                   <option value={{this._id}}>{{this.name}}</option>
                   {{/each}}
@@ -84,7 +84,7 @@
             <div class="table-cell">
               <input type="radio" id="groupTypeSpecific" name="groupType" value="Specific" style="vertical-align: middle;" onclick="enableDisableCurrencyGroupSelect()"/>
               <label for="groupTypeSpecific">Specific</label>            
-              <select name="group" type="string" id="currencyGroupSelect" form="currency" disabled>
+              <select name="groupId" type="string" id="currencyGroupSelect" form="currency" disabled>
                 {{#each groups}}
                 <option value={{this._id}}>{{this.name}}</option>
                 {{/each}}
@@ -92,16 +92,7 @@
             </div>
           </div>            
         </div>
-      {{/if}}      
-
-      <input name="token" type="text" value="{{token}}" hidden="true" />
-      <input name="language" type="text" value="{{language}}" hidden="true" />
-      <input name="gameId" type="number" value="{{gameId}}" hidden="true" />
-      <input name="ref" type="text" value="{{ref}}" hidden="true" />
-      <input name="rurl" type="text" value="{{returnUrl}}" hidden="true" />
-      <input name="partnerId" type="string" value="{{partnerId}}" hidden="true" />
-      <input name="appType" type="string" value="{{appType}}" hidden="true" />
-      <input name="op" type="string" value="{{op}}" hidden="true" />
+      {{/if}}
       <input type="submit" value="Submit" class="primary" style="padding: 5px 12px;"/>
     </form>
   </fieldset>
@@ -115,6 +106,16 @@
         document.getElementById('currencyGroupSelect').disabled = true;
       }
     }   
+    document.getElementById('currency').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const newParams = new URLSearchParams(window.location.search);
+     
+      for (const [key, value] of formData) {
+        newParams.append(key, value);
+      }
+      window.location.href = `${this.action}?${newParams.toString()}`;
+    });
   </script>
 </body>
 

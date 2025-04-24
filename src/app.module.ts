@@ -27,7 +27,7 @@ import { LobbyModule } from './lobby/lobby.module';
 import { DomainModule } from './domain/domain.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ExchangeRateModule } from './exchange_rates/exchange-rate.module';
-
+import { SGApiModule } from './sg-api/sg-api.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -44,6 +44,7 @@ import { ExchangeRateModule } from './exchange_rates/exchange-rate.module';
         CommonModule,
         UsersModule,
         OWApiModule,
+        SGApiModule,
         AuthModule,
         HealthModule,
         GlobalConfigModule,
@@ -58,7 +59,7 @@ import { ExchangeRateModule } from './exchange_rates/exchange-rate.module';
         DomainModule,
         JwtModule.register({}),
         ScheduleModule.forRoot(),
-        ExchangeRateModule
+        ExchangeRateModule,
     ],
     controllers: [AppController],
     providers: [AppService],
