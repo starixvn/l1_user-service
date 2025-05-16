@@ -21,7 +21,7 @@ export class PromotionService {
 
         try {
             const response = await this.httpService
-                .post(`${this.promoApiBaseUrl}/claim-promotion`, {
+                .post(`${this.promoApiBaseUrl}/player-promotions/claim-promotion`, {
                     operatorId,
                     siteName,
                     playerId,
