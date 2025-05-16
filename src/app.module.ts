@@ -13,6 +13,7 @@ import { CurrencyGroupModule } from './currency-groups/currency-group.module';
 import { GlobalConfigModule } from './global-config/global-config.module';
 import { HealthModule } from './health';
 import { OWApiModule } from './ow-api/ow-api.module';
+import { PromotionModule } from './promotion/promotion.module';
 import { SettingsModule } from './settings/settings.module';
 import { UMModule } from './um/um.module';
 import { UsersModule } from './users/users.module';
@@ -60,6 +61,7 @@ import { SGApiModule } from './sg-api/sg-api.module';
         JwtModule.register({}),
         ScheduleModule.forRoot(),
         ExchangeRateModule,
+        PromotionModule,
     ],
     controllers: [AppController],
     providers: [AppService],

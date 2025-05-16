@@ -7,6 +7,7 @@ import { GameConfigModule } from '../game-config/game-config.module';
 import { OWApiModule } from '../ow-api/ow-api.module';
 import { PartnerConfigModule } from '../partner-config/partner-config.module';
 import { PartnerModule } from '../partner/partner.module';
+import { PromotionModule } from '../promotion/promotion.module';
 import { UMModule } from '../um/um.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
@@ -23,6 +24,7 @@ import { AuthService } from './auth.service';
         CurrencyGroupModule,
         PartnerModule,
         ExchangeRateModule,
+        PromotionModule,
     ],
     providers: [AuthService],
     controllers: [AuthController],

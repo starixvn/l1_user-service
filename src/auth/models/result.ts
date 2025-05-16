@@ -3,7 +3,12 @@ import { UMResult } from '../../shared/models/um-result';
 
 export class AuthorizeResult {
     readonly isUM: boolean;
-    constructor(readonly authorized: boolean, readonly user: any = null, readonly umInfo: UMResult = null) {
+    constructor(
+        readonly authorized: boolean,
+        readonly user: any = null,
+        readonly umInfo: UMResult = null,
+        readonly promotionInfo: any = null,
+    ) {
         this.isUM = umInfo !== null;
     }
 }

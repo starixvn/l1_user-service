@@ -39,4 +39,5 @@ export default () => ({
     },
     systemName: process.env.SYSTEM_TYPE,
     defaultCurrencyGroups: process.env.DEFAULT_CURRENCY_GROUPS,
+    promotionUri: process.env.PROMOTION_URI,
 });

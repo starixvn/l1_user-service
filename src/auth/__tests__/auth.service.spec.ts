@@ -25,6 +25,7 @@ import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
+import { PromotionService } from '../../promotion/promotion.service';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -71,6 +72,9 @@ const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
 const stubCurrencyGroupService = stub(CurrencyGroupService);
 const stubPartnerService = stub(PartnerService);
 const stubExchangeRatesService = stub(ExchangeRateService);
+const stubPromotionService = {
+    claimPromotion: jest.fn(),
+};
 
 describe('AuthService test', () => {
     let authService: AuthService;
@@ -123,6 +127,10 @@ describe('AuthService test', () => {
                 {
                     provide: ExchangeRateService,
                     useValue: stubExchangeRatesService,
+                },
+                {
+                    provide: PromotionService,
+                    useValue: stubPromotionService,
                 },
             ],
             imports: [rootMongooseTestModule()],
@@ -770,6 +778,96 @@ describe('AuthService test', () => {
 
             // assert
             expect(actualResult instanceof GetBalanceResult);
+        });
+    });
+
+    describe('promotion integration', () => {
+        const verifySessionRequest: VerifySessionRequest = { username: 'user1', session: 'session', browserUserAgent: 'userAgent' };
+        const mockSession = new UserSession();
+        mockSession.operatorId = 'testOperator';
+        mockSession.siteName = 'testSite';
+        mockSession.playerId = 'player123';
+        mockSession.currencyGroupId = 'group1';
+
+        beforeEach(() => {
+            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValue({
+                isAuthenticated: true,
+                session: mockSession,
+            });
+            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValue({ isUM: false, umInfo: null });
+            stubUsersService.getByUsername.mockResolvedValue({ id: 'user1', local: { username: 'user1', memberName: 'Test Player' } });
+            stubUserInfoService.getUserInfo.mockResolvedValue({ id: 'info1', name: 'Player1' });
+            stubUserInfoService.updateBalance.mockResolvedValue(true);
+            stubCurrencyGroupService.getCurrencyGroup.mockReturnValue({
+                fractionalOddsFormat: false,
+                name: 'currencyGroup',
+                enabled: true,
+            });
+            stubCurrencyGroupService.getCurrency.mockReturnValue({ enabled: true });
+            stubGameConfigService.getEnabledGameIds.mockReturnValue([]);
+            stubPartnerService.isDisplayPlayerCurrency.mockReturnValue(true);
+            stubExchangeRatesService.getRateByUser.mockReturnValue(1);
+            stubPromotionService.claimPromotion.mockResolvedValue({
+                promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+            });
+        });
+
+        it('should include promotion info in authorize result', async () => {
+            // Arrange
+            // Mock the private methods needed for authorize to work
+            jest.spyOn(OWApiClient.prototype, 'notifyLogin').mockResolvedValue({
+                errorCode: 0,
+                errorMessage: '',
+                minBet: 1,
+                maxBet: 1000,
+            });
+            jest.spyOn(OWApiClient.prototype, 'getBalance').mockResolvedValue({ balance: 100, errorCode: 0, errorMessage: '' });
+            stubCurrencyGroupGameService.getOfferedGames.mockResolvedValue([]);
+
+            // Act
+            const result = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
+
+            // Assert
+            expect(stubPromotionService.claimPromotion).toHaveBeenCalledWith(
+                mockSession.operatorId,
+                mockSession.siteName,
+                mockSession.playerId,
+                mockSession.currencyGroupId,
+            );
+            expect(result.promotionInfo).toEqual({
+                promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+            });
+        });
+
+        it('should include promotion info in createCharacterName result when user info exists', async () => {
+            // Arrange
+            const createNicknameRequest: CreateNicknameRequest = {
+                nickname: 'newNick',
+                session: 'session',
+                browserUserAgent: 'agent',
+                avatar: 1,
+                username: 'user1',
+            };
+
+            stubUsersService.getById.mockResolvedValue({ id: 'user1', local: { username: 'differentUsername' } });
+            // Mock the validateNickname method to return valid result
+            (authService as any).validateNickname = jest.fn().mockReturnValue({ isSuccessful: true });
+            // Mock the checkDisableMiniPanel method
+            (authService as any).checkDisableMiniPanel = jest.fn().mockReturnValue(false);
+
+            // Act
+            const result = (await authService.createCharacterName(createNicknameRequest)) as AuthorizeResult;
+
+            // Assert
+            expect(stubPromotionService.claimPromotion).toHaveBeenCalledWith(
+                mockSession.operatorId,
+                mockSession.siteName,
+                mockSession.playerId,
+                mockSession.currencyGroupId,
+            );
+            expect(result.promotionInfo).toEqual({
+                promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+            });
         });
     });
 });

@@ -18,6 +18,7 @@ import { GetBalanceRequest, NotifyLoginRequest, VerifyTokenRequest, VerifyTokenR
 import { OWApiClient } from '../ow-api/ow-api.client';
 import { PartnerConfigService } from '../partner-config/partner-config.service';
 import { PartnerService } from '../partner/partner.service';
+import { PromotionService } from '../promotion/promotion.service';
 import { Result } from '../shared/models/result';
 import { UMResult } from '../shared/models/um-result';
 import { UMService } from '../um/um.service';
@@ -49,10 +50,9 @@ export class AuthService {
     @Inject(CurrencyGroupGameService) private readonly currencyGroupGameService: CurrencyGroupGameService;
     @Inject(CurrencyGroupService) private readonly currencyGroupService: CurrencyGroupService;
     @Inject(PartnerService) private readonly partnerService: PartnerService;
-
     @Inject(ExchangeRateService) private readonly exchangeRateService: ExchangeRateService;
-
     @Inject(StringFormatExtensions) private readonly stringFormatExtensions: StringFormatExtensions;
+    @Inject(PromotionService) private readonly promotionService: PromotionService;
     private readonly chance = new Chance();
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
@@ -198,19 +198,32 @@ export class AuthService {
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
-        return new AuthorizeResult(true, {
-            ...userInfo,
-            offerGames,
-            enabledGameIds,
-            fractionalOddsFormat,
-            isDisplayPlayerCurrency,
-            disableJackpotGames: session.disableJackpotGames,
-            rate,
-            multiplier: session.multiplier,
-            currencyCode: session.currencyCode,
-            currencyGroup: currencyGroup.name,
-            disableMiniPanel: this.checkDisableMiniPanel(session),
-        });
+        // Claim promotion before returning
+        const promotionResult = await this.promotionService.claimPromotion(
+            session.operatorId,
+            session.siteName,
+            session.playerId,
+            session.currencyGroupId,
+        );
+
+        return new AuthorizeResult(
+            true,
+            {
+                ...userInfo,
+                offerGames,
+                enabledGameIds,
+                fractionalOddsFormat,
+                isDisplayPlayerCurrency,
+                disableJackpotGames: session.disableJackpotGames,
+                rate,
+                multiplier: session.multiplier,
+                currencyCode: session.currencyCode,
+                currencyGroup: currencyGroup.name,
+                disableMiniPanel: this.checkDisableMiniPanel(session),
+            },
+            umInfo,
+            promotionResult,
+        );
     }
 
     async createCharacterName(request: CreateNicknameRequest) {
@@ -234,7 +247,15 @@ export class AuthService {
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
         if (userInfo) {
-            return new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel });
+            // Claim promotion before returning
+            const promotionResult = await this.promotionService.claimPromotion(
+                session.operatorId,
+                session.siteName,
+                session.playerId,
+                session.currencyGroupId,
+            );
+
+            return new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel }, null, promotionResult);
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -268,20 +289,33 @@ export class AuthService {
         const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
 
-        return new AuthorizeResult(true, {
-            ...param,
-            red: getBalanceResult.balance,
-            offerGames,
-            enabledGameIds,
-            fractionalOddsFormat,
-            isDisplayPlayerCurrency,
-            rate,
-            disableJackpotGames: session.disableJackpotGames,
-            multiplier: session.multiplier,
-            currencyCode: session.currencyCode,
-            currencyGroup: currencyGroup.name,
-            disableMiniPanel,
-        });
+        // Claim promotion before returning
+        const promotionResult = await this.promotionService.claimPromotion(
+            session.operatorId,
+            session.siteName,
+            session.playerId,
+            session.currencyGroupId,
+        );
+
+        return new AuthorizeResult(
+            true,
+            {
+                ...param,
+                red: getBalanceResult.balance,
+                offerGames,
+                enabledGameIds,
+                fractionalOddsFormat,
+                isDisplayPlayerCurrency,
+                rate,
+                disableJackpotGames: session.disableJackpotGames,
+                multiplier: session.multiplier,
+                currencyCode: session.currencyCode,
+                currencyGroup: currencyGroup.name,
+                disableMiniPanel,
+            },
+            null,
+            promotionResult,
+        );
     }
 
     async getBalance(request: VerifySessionRequest) {
