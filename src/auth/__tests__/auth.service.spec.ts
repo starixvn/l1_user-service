@@ -25,7 +25,6 @@ import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
-import { Spin, SpinSchema } from '../schemas/spins';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -126,7 +125,7 @@ describe('AuthService test', () => {
                     useValue: stubExchangeRatesService,
                 },
             ],
-            imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema }])],
+            imports: [rootMongooseTestModule()],
         }).compile();
 
         authService = await module.resolve(AuthService);
@@ -639,7 +638,7 @@ describe('AuthService test', () => {
 
         it('should return successful when user info was created', async () => {
             // arrange
-            const userExpected = { rate: 1000, availSpins: false, disableMiniPanel: false };
+            const userExpected = { disableMiniPanel: false };
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({

@@ -20,7 +20,6 @@ import { PartnerConfigService } from '../partner-config/partner-config.service';
 import { PartnerService } from '../partner/partner.service';
 import { Result } from '../shared/models/result';
 import { UMResult } from '../shared/models/um-result';
-import { isSC1System, isVG2System } from '../shared/system-type';
 import { UMService } from '../um/um.service';
 import { invalidSession } from '../users/constants/errors';
 import { VerifySessionRequest } from '../users/models';
@@ -30,7 +29,6 @@ import { UserDocument, UserSession } from '../users/schemas';
 import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
-import { Spin } from './schemas/spins';
 
 @Injectable()
 export class AuthService {
@@ -45,7 +43,6 @@ export class AuthService {
     @Inject(UserInfosService) private readonly userInfosService: UserInfosService;
     @Inject(UtilsService) private readonly utilsService: UtilsService;
     @Inject(ConfigService) private readonly configService: ConfigService;
-    @InjectModel(Spin.name) private readonly spinModel;
     @Inject(PartnerConfigService) private readonly partnerConfigService: PartnerConfigService;
     @Inject(GameConfigService) private readonly gameConfigService: GameConfigService;
     @Inject(UMService) private readonly umService: UMService;
@@ -57,7 +54,6 @@ export class AuthService {
 
     @Inject(StringFormatExtensions) private readonly stringFormatExtensions: StringFormatExtensions;
     private readonly chance = new Chance();
-    private readonly systemType = process.env.SYSTEM_TYPE;
 
     async signIn(ip: string, token: string, userAgent: string, system: number) {
         const request = new VerifyTokenRequest(this.utilsService.normalizeIP(ip), token, userAgent);
@@ -133,17 +129,10 @@ export class AuthService {
 
         const getBalanceResponse = await this.getBalanceBySession(session, userInfo.name, false);
 
-        return isSC1System(this.systemType)
-            ? new ReCheckInResponse(
-                  getBalanceResponse.balance,
-                  getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
-              )
-            : new ReCheckInResponse(
-                  getBalanceResponse.balance,
-                  getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
-                  await this.getAvailableSpins(session.memberId),
-                  userInfo.scoins,
-              );
+        return new ReCheckInResponse(
+            getBalanceResponse.balance,
+            getBalanceResponse.isSuccessful ? null : new Result(getBalanceResponse.errorCode, getBalanceResponse.message),
+        );
     }
 
     async verifySession(request: VerifySessionRequest) {
@@ -209,24 +198,6 @@ export class AuthService {
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
-        if (isVG2System(this.systemType)) {
-            const availSpins = await this.getAvailableSpins(session.memberId);
-            return new AuthorizeResult(true, {
-                ...userInfo,
-                offerGames,
-                enabledGameIds,
-                availSpins,
-                fractionalOddsFormat,
-                isDisplayPlayerCurrency,
-                disableJackpotGames: session.disableJackpotGames,
-                rate,
-                multiplier: session.multiplier,
-                currencyCode: session.currencyCode,
-                currencyGroup: currencyGroup.name,
-                disableMiniPanel: this.checkDisableMiniPanel(session),
-            });
-        }
-
         return new AuthorizeResult(true, {
             ...userInfo,
             offerGames,
@@ -261,12 +232,9 @@ export class AuthService {
 
         const disableMiniPanel = this.checkDisableMiniPanel(session);
         const userInfo = await this.userInfosService.getUserInfo(session.userId);
-        const availSpins = isVG2System(this.systemType) && (await this.getAvailableSpins(session.memberId));
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
         if (userInfo) {
-            return isSC1System(this.systemType)
-                ? new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel })
-                : new AuthorizeResult(true, { ...userInfo, rate, availSpins, disableMiniPanel });
+            return new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel });
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -300,37 +268,20 @@ export class AuthService {
         const fractionalOddsFormat = currencyGroup.fractionalOddsFormat;
         const isDisplayPlayerCurrency = await this.partnerService.isDisplayPlayerCurrency(session.partnerId);
 
-        return isSC1System(this.systemType)
-            ? new AuthorizeResult(true, {
-                  ...param,
-                  red: getBalanceResult.balance,
-                  offerGames,
-                  enabledGameIds,
-                  fractionalOddsFormat,
-                  isDisplayPlayerCurrency,
-                  rate,
-                  disableJackpotGames: session.disableJackpotGames,
-                  multiplier: session.multiplier,
-                  currencyCode: session.currencyCode,
-                  currencyGroup: currencyGroup.name,
-                  disableMiniPanel,
-              })
-            : new AuthorizeResult(true, {
-                  ...param,
-                  red: getBalanceResult.balance,
-                  offerGames,
-                  enabledGameIds,
-                  availSpins,
-                  scoins: userInfo?.scoins ?? 0,
-                  fractionalOddsFormat,
-                  isDisplayPlayerCurrency,
-                  rate,
-                  disableJackpotGames: session.disableJackpotGames,
-                  multiplier: session.multiplier,
-                  currencyCode: session.currencyCode,
-                  currencyGroup: currencyGroup.name,
-                  disableMiniPanel,
-              });
+        return new AuthorizeResult(true, {
+            ...param,
+            red: getBalanceResult.balance,
+            offerGames,
+            enabledGameIds,
+            fractionalOddsFormat,
+            isDisplayPlayerCurrency,
+            rate,
+            disableJackpotGames: session.disableJackpotGames,
+            multiplier: session.multiplier,
+            currencyCode: session.currencyCode,
+            currencyGroup: currencyGroup.name,
+            disableMiniPanel,
+        });
     }
 
     async getBalance(request: VerifySessionRequest) {
@@ -363,18 +314,6 @@ export class AuthService {
 
         if (captureBalance) {
             this.userInfosService.updateBalance(userSession.userId, response.balance);
-        }
-
-        if (isVG2System(this.systemType)) {
-            const userInfo = await this.userInfosService.getUserInfo(userSession.userId);
-            const availableSpins = await this.getAvailableSpins(userSession.memberId);
-            return new GetBalanceResult(
-                response.errorCode.toString(),
-                response.errorMessage,
-                response.balance,
-                userInfo.scoins,
-                availableSpins,
-            );
         }
 
         return new GetBalanceResult(response.errorCode.toString(), response.errorMessage, response.balance);
@@ -538,11 +477,6 @@ export class AuthService {
         }, []);
 
         return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
-    }
-
-    private async getAvailableSpins(memberId: string) {
-        const spins = await this.spinModel.findOne({ memberId: memberId, enabled: true }).lean().exec();
-        return spins?.availSpins ?? 0;
     }
 
     async getSettingGames(request: VerifySessionRequest) {

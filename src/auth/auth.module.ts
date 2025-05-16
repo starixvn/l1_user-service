@@ -11,7 +11,6 @@ import { UMModule } from '../um/um.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { Spin, SpinSchema } from './schemas/spins';
 
 @Module({
     imports: [
@@ -23,8 +22,7 @@ import { Spin, SpinSchema } from './schemas/spins';
         UMModule,
         CurrencyGroupModule,
         PartnerModule,
-        MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema, collection: 'spins' }]),
-        ExchangeRateModule
+        ExchangeRateModule,
     ],
     providers: [AuthService],
     controllers: [AuthController],
