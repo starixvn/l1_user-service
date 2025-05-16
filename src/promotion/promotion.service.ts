@@ -15,6 +15,10 @@ export class PromotionService {
     }
 
     async claimPromotion(operatorId: string, siteName: string, playerId: string, currencyGroup: string) {
+        if (!this.promoApiBaseUrl) {
+            return null;
+        }
+
         try {
             const response = await this.httpService
                 .post(`${this.promoApiBaseUrl}/claim-promotion`, {
@@ -27,7 +31,6 @@ export class PromotionService {
 
             return response.data;
         } catch (error) {
-            // Log error with Sentry but don't interrupt the main flow
             this.logger.error(
                 [
                     `Failed to claim promotion: ${error.message}`,

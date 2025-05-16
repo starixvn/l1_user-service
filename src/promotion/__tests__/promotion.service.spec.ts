@@ -116,5 +116,20 @@ describe('PromotionService', () => {
             // Assert
             expect(httpService.post).toHaveBeenCalledWith(`${customApiUrl}/claim-promotion`, expect.any(Object));
         });
+
+        it('should return null when promotionUri is not configured', async () => {
+            // Arrange
+            jest.spyOn(configService, 'get').mockReturnValue(null);
+
+            // Re-create the service to use the null config value
+            service = new PromotionService(httpService, configService, logger);
+
+            // Act
+            const result = await service.claimPromotion('testOperator', 'testSite', 'player123', 'group1');
+
+            // Assert
+            expect(result).toBeNull();
+            expect(httpService.post).not.toHaveBeenCalled();
+        });
     });
 });
