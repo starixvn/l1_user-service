@@ -206,10 +206,10 @@ export class AuthService {
             session.playerId,
             session.currencyGroupId,
         );
-        const promotion = await this.promotionService.getPromotion(promotionResult.promotion.promotionId);
+        const promotion = await this.promotionService.getPromotion(promotionResult?.promotion?.promotionId);
 
         const gameOfferPromotion = offeredGamesNames.filter((gameName) =>
-            promotion.gameIds.some((gameId) => gameName.gameId === gameId) && 
+            promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) && 
             offerGames.some((offerGame) => offerGame.gameId === gameName.gameId)
         ).map(game => {
             return {
