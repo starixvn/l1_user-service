@@ -199,12 +199,24 @@ export class AuthService {
         const rate = await this.exchangeRateService.getRateByUser(session.currencyCode, session.multiplier);
 
         // Claim promotion before returning
+        const offeredGamesNames = await this.currencyGroupGameService.getOfferedGamesNames(session.currencyGroupId);
         const promotionResult = await this.promotionService.claimPromotion(
             session.operatorId,
             session.siteName,
             session.playerId,
             session.currencyGroupId,
         );
+        const promotion = await this.promotionService.getPromotion(promotionResult.promotion.promotionId);
+
+        const gameOfferPromotion = offeredGamesNames.filter((gameName) =>
+            promotion.gameIds.some((gameId) => gameName.gameId === gameId) && 
+            offerGames.some((offerGame) => offerGame.gameId === gameName.gameId)
+        ).map(game => {
+            return {
+                gameId: game.gameId,
+                name: game.gameName,
+            };
+        });
 
         return new AuthorizeResult(
             true,
@@ -222,7 +234,10 @@ export class AuthService {
                 disableMiniPanel: this.checkDisableMiniPanel(session),
             },
             umInfo,
-            promotionResult,
+            {
+                ...promotionResult,
+                gameOfferPromotion
+            }
         );
     }
 
@@ -509,7 +524,6 @@ export class AuthService {
 
             return result;
         }, []);
-
         return groupOfferGames?.filter((game) => !siteExclusionGames.includes(game.gameId)) ?? [];
     }
 

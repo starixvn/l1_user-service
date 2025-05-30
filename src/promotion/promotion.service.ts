@@ -43,4 +43,26 @@ export class PromotionService {
             return null;
         }
     }
+
+    async getPromotion(promotionId: string) {
+        if (!this.promoApiBaseUrl) {
+            return null;
+        }
+
+        try {
+            const response = await this.httpService
+                .get(`${this.promoApiBaseUrl}/promotions/${promotionId}`)
+                .toPromise();
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(
+                [
+                    `Failed to get promotion: ${error.message}`,
+                    `PromotionId: ${promotionId}`,
+                ].join('\n'),
+            );
+            return null;
+        }
+    }
 }

@@ -22,6 +22,16 @@ export class CurrencyGroupGameService {
             .exec();
     }
 
+    async getOfferedGamesNames(groupId: string) {
+        return this.gameOfCurrencyGroupModel
+            .find(
+                { groupId: Types.ObjectId(groupId), enabled: true },
+                { _id: false, gameId: true, minBet: true, maxBet: true, maxBetPerChoices: true, gameName: true },
+            )
+            .lean()
+            .exec();
+    }
+
     async getGamesSettings(groupId: string, gameIds: number[]) {
         const cachedKey = `${this.chipsCacheKey}-${groupId}-${gameIds.join('')}`;
         const cachedChips = await this.cacheManager.get(cachedKey);
