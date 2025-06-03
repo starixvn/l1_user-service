@@ -208,15 +208,17 @@ export class AuthService {
         );
         const promotion = await this.promotionService.getPromotion(promotionResult?.promotion?.promotionId);
 
-        const gameOfferPromotion = offeredGamesNames.filter((gameName) =>
-            promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) && 
-            offerGames.some((offerGame) => offerGame.gameId === gameName.gameId)
-        ).map(game => {
-            return {
+        const gameOfferPromotion = offeredGamesNames
+            .filter(
+                (gameName) =>
+                    promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) &&
+                    offerGames.some((offerGame) => offerGame.gameId === gameName.gameId),
+            )
+            .map((game) => ({
                 gameId: game.gameId,
                 name: game.gameName,
-            };
-        });
+            }))
+            .sort(() => Math.random() - 0.5);
 
         return new AuthorizeResult(
             true,
@@ -236,8 +238,8 @@ export class AuthService {
             umInfo,
             {
                 ...promotionResult,
-                gameOfferPromotion
-            }
+                gameOfferPromotion,
+            },
         );
     }
 
