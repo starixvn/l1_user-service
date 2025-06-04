@@ -74,6 +74,7 @@ const stubPartnerService = stub(PartnerService);
 const stubExchangeRatesService = stub(ExchangeRateService);
 const stubPromotionService = {
     claimPromotion: jest.fn(),
+    getPromotion: jest.fn(),
 };
 
 describe('AuthService test', () => {
@@ -519,6 +520,10 @@ describe('AuthService test', () => {
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
             };
+            const mockOfferedGames = [
+                { gameId: 1, gameName: 'Game 1' },
+                { gameId: 2, gameName: 'Game 2' }
+            ];
             const userExpected = {
                 name: 'user1',
                 red: 100,
@@ -526,13 +531,18 @@ describe('AuthService test', () => {
                 disableJackpotGames: true,
                 fractionalOddsFormat: false,
                 isDisplayPlayerCurrency: true,
-                offerGames: [],
+                offerGames: mockOfferedGames,
                 enabledGameIds: [],
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
                 currencyGroup: 'currencyGroup',
                 disableMiniPanel: false,
             };
+
+            const mockOfferedGamesNames = [
+                { gameId: 1, gameName: 'Game 1' },
+                { gameId: 2, gameName: 'Game 2' }
+            ];
 
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
                 isAuthenticated: true,
@@ -541,6 +551,8 @@ describe('AuthService test', () => {
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
             const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
             jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
+            jest.spyOn<any, any>(AuthService.prototype, 'getOfferGames').mockResolvedValueOnce(mockOfferedGames);
+            stubCurrencyGroupGameService.getOfferedGamesNames.mockResolvedValueOnce(mockOfferedGamesNames);
 
             stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
             stubUsersService.getByUsername.mockReturnValueOnce({});
@@ -549,6 +561,8 @@ describe('AuthService test', () => {
             stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
             stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
             stubGameConfigService.getEnabledGameIds.mockReturnValueOnce([]);
+            stubPromotionService.getPromotion.mockResolvedValueOnce({ gameIds: [1, 2] });
+            stubPromotionService.claimPromotion.mockResolvedValueOnce({ promotion: { promotionId: 'promo1' } });
 
             // act
             const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
@@ -646,7 +660,7 @@ describe('AuthService test', () => {
 
         it('should return successful when user info was created', async () => {
             // arrange
-            const userExpected = { disableMiniPanel: false };
+            const userExpected = { disableMiniPanel: false, rate: 1000 };
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
@@ -789,6 +803,16 @@ describe('AuthService test', () => {
         mockSession.playerId = 'player123';
         mockSession.currencyGroupId = 'group1';
 
+        const mockOfferedGames = [
+            { gameId: 1, gameName: 'Game 1' },
+            { gameId: 2, gameName: 'Game 2' }
+        ];
+
+        const mockOfferedGamesNames = [
+            { gameId: 1, gameName: 'Game 1' },
+            { gameId: 2, gameName: 'Game 2' }
+        ];
+
         beforeEach(() => {
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValue({
                 isAuthenticated: true,
@@ -809,7 +833,11 @@ describe('AuthService test', () => {
             stubExchangeRatesService.getRateByUser.mockReturnValue(1);
             stubPromotionService.claimPromotion.mockResolvedValue({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+                promotion: { promotionId: 'promo1' }
             });
+            stubPromotionService.getPromotion.mockResolvedValue({ gameIds: [1, 2] });
+            jest.spyOn<any, any>(AuthService.prototype, 'getOfferGames').mockResolvedValue(mockOfferedGames);
+            stubCurrencyGroupGameService.getOfferedGamesNames.mockResolvedValue(mockOfferedGamesNames);
         });
 
         it('should include promotion info in authorize result', async () => {
@@ -822,7 +850,6 @@ describe('AuthService test', () => {
                 maxBet: 1000,
             });
             jest.spyOn(OWApiClient.prototype, 'getBalance').mockResolvedValue({ balance: 100, errorCode: 0, errorMessage: '' });
-            stubCurrencyGroupGameService.getOfferedGames.mockResolvedValue([]);
 
             // Act
             const result = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
@@ -836,6 +863,11 @@ describe('AuthService test', () => {
             );
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+                promotion: { promotionId: 'promo1' },
+                gameOfferPromotion: [
+                    { gameId: 1, name: 'Game 1' },
+                    { gameId: 2, name: 'Game 2' }
+                ]
             });
         });
 
@@ -867,6 +899,7 @@ describe('AuthService test', () => {
             );
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
+                promotion: { promotionId: 'promo1' }
             });
         });
     });

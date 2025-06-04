@@ -78,7 +78,7 @@ describe('PromotionService', () => {
             const result = await service.claimPromotion(operatorId, siteName, playerId, currencyGroup);
 
             // Assert
-            expect(httpService.post).toHaveBeenCalledWith('https://test-promo-api.example.com/claim-promotion', {
+            expect(httpService.post).toHaveBeenCalledWith('https://test-promo-api.example.com/player-promotions/claim-promotion', {
                 operatorId,
                 siteName,
                 playerId,
@@ -114,7 +114,7 @@ describe('PromotionService', () => {
             await service.claimPromotion(operatorId, siteName, playerId, currencyGroup);
 
             // Assert
-            expect(httpService.post).toHaveBeenCalledWith(`${customApiUrl}/claim-promotion`, expect.any(Object));
+            expect(httpService.post).toHaveBeenCalledWith(`${customApiUrl}/player-promotions/claim-promotion`, expect.any(Object));
         });
 
         it('should return null when promotionUri is not configured', async () => {
