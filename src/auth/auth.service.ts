@@ -30,7 +30,6 @@ import { UserDocument, UserSession } from '../users/schemas';
 import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
-import { shuffleArray } from '../helpers/shuffle-array-helper';
 
 @Injectable()
 export class AuthService {
@@ -209,8 +208,8 @@ export class AuthService {
         );
         const promotion = await this.promotionService.getPromotion(promotionResult?.promotion?.promotionId);
 
-        const gameOfferPromotion = shuffleArray(
-            offeredGamesNames
+        const gameOfferPromotion = this.chance.shuffle(
+            offeredGamesNames 
                 .filter(
                     (gameName) =>
                         promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) &&

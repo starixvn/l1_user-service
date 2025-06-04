@@ -26,7 +26,6 @@ import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
 import { PromotionService } from '../../promotion/promotion.service';
-import * as shuffleHelper from '../../helpers/shuffle-array-helper';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -38,7 +37,13 @@ jest.mock('../../currency-group-games/currency-group-games.service');
 jest.mock('../../currency-groups/currency-group.service');
 jest.mock('../../exchange_rates/exchange-rate.services');
 jest.mock('../../helpers/string-format-extensions');
+const mockShuffle = jest.fn();
 
+jest.mock('chance', () => {
+    return jest.fn().mockImplementation(() => ({
+        shuffle: mockShuffle,
+    }));
+});
 const getVerifyTokenRequest = (isSuccessful: boolean) => {
     return {
         playerId: '1',
@@ -851,7 +856,7 @@ describe('AuthService test', () => {
                 maxBet: 1000,
             });
             jest.spyOn(OWApiClient.prototype, 'getBalance').mockResolvedValue({ balance: 100, errorCode: 0, errorMessage: '' });
-            const shuffleSpy = jest.spyOn(shuffleHelper, 'shuffleArray').mockImplementation((arr) => [...arr].reverse());
+            mockShuffle.mockImplementation((arr) => [...arr].reverse());
             // Act
             const result = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
 
@@ -863,7 +868,7 @@ describe('AuthService test', () => {
                 mockSession.currencyGroupId,
             );
 
-            expect(shuffleSpy).toHaveBeenCalled();
+            expect(mockShuffle).toHaveBeenCalled();
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
                 promotion: { promotionId: 'promo1' },
