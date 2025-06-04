@@ -4,10 +4,6 @@ import { disconnect } from 'mongoose';
 
 let mongod: MongoMemoryServer;
 
-process.env = Object.assign(process.env, {
-    MONGOMS_RUNTIME_DOWNLOAD: false,
-});
-
 export const rootMongooseTestModule = (options: MongooseModuleOptions = {}) =>
     MongooseModule.forRootAsync({
         useFactory: async () => {
