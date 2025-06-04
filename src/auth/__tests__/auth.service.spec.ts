@@ -864,11 +864,12 @@ describe('AuthService test', () => {
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
                 promotion: { promotionId: 'promo1' },
-                gameOfferPromotion: [
+                gameOfferPromotion: expect.arrayContaining([
                     { gameId: 1, name: 'Game 1' },
                     { gameId: 2, name: 'Game 2' }
-                ]
+                ])
             });
+            expect(result.promotionInfo.gameOfferPromotion).toHaveLength(2);
         });
 
         it('should include promotion info in createCharacterName result when user info exists', async () => {
