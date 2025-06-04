@@ -5,5 +5,3 @@ include:
 
 variables:
   BYPASS_CRITICAL_VULNERABILITY: 'true'
-  MONGOMS_DISABLE_POSTINSTALL: "false"
-  MONGOMS_DOWNLOAD_URL: "https://fastdl.mongodb.org"
