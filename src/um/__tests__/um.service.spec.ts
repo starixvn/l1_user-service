@@ -1,6 +1,7 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
+import { ConfigModule } from '@nestjs/config';
 
 import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { UMInfo, UMInfoDocument, UMInfoSchema } from '../schemas';
@@ -16,7 +17,27 @@ describe('UserInfosService test', () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [UMService],
-            imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: UMInfo.name, schema: UMInfoSchema }])],
+            imports: [
+                ConfigModule.forRoot({
+                    isGlobal: true,
+                    load: [() => ({
+                        database: {
+                            uri: process.env.DATABASE_URI || 'mongodb://localhost:27017/minigame',
+                            options: {
+                                dbName: 'minigame',
+                                useNewUrlParser: true,
+                                useUnifiedTopology: true,
+                                auto_reconnect: true,
+                                authSource: 'admin',
+                                user: process.env.DATABASE_USER,
+                                pass: process.env.DATABASE_PASSWORD
+                            }
+                        }
+                    })]
+                }),
+                rootMongooseTestModule(),
+                MongooseModule.forFeature([{ name: UMInfo.name, schema: UMInfoSchema }])
+            ],
         }).compile();
 
         service = module.get<UMService>(UMService);

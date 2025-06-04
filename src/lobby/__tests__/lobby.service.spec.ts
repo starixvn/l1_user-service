@@ -6,7 +6,7 @@ import { Lobby, LobbyDocument, LobbySchema } from '../schemas/lobby.schema';
 import { CacheModule, CACHE_MANAGER } from '@nestjs/common';
 import { rootMongooseTestModule, closeInMongodConnection } from '../../shared/test-utils/mongoose-test-module';
 import { SentryLogger } from '../../common/providers';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserInfo, UserInfoSchema, UserSession, UserSessionSchema } from '../../users/schemas';
 import { Model } from 'mongoose';
 import { Result } from '../../shared/models/result';
@@ -46,6 +46,23 @@ describe('Lobby Service', () => {
                 },
             ],
             imports: [
+                ConfigModule.forRoot({
+                    isGlobal: true,
+                    load: [() => ({
+                        database: {
+                            uri: process.env.DATABASE_URI || 'mongodb://localhost:27017/minigame',
+                            options: {
+                                dbName: 'minigame',
+                                useNewUrlParser: true,
+                                useUnifiedTopology: true,
+                                auto_reconnect: true,
+                                authSource: 'admin',
+                                user: process.env.DATABASE_USER,
+                                pass: process.env.DATABASE_PASSWORD
+                            }
+                        }
+                    })]
+                }),
                 rootMongooseTestModule(),
                 CacheModule.register(),
                 MongooseModule.forFeature([{ name: Lobby.name, schema: LobbySchema }]),
@@ -202,7 +219,9 @@ describe('Lobby Service', () => {
             });
 
             afterEach(() => {
-                findSpy.mockRestore();
+                if (findSpy) {
+                    findSpy.mockRestore();
+                }
             });
 
             it('should return empty array', async () => {

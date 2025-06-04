@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
+import { ConfigModule } from '@nestjs/config';
 
 import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsService } from '../../common/providers';
@@ -140,7 +141,26 @@ describe('AuthService test', () => {
                     useValue: stubPromotionService,
                 },
             ],
-            imports: [rootMongooseTestModule()],
+            imports: [
+                ConfigModule.forRoot({
+                    isGlobal: true,
+                    load: [() => ({
+                        database: {
+                            uri: process.env.DATABASE_URI || 'mongodb://localhost:27017/minigame',
+                            options: {
+                                dbName: 'minigame',
+                                useNewUrlParser: true,
+                                useUnifiedTopology: true,
+                                auto_reconnect: true,
+                                authSource: 'admin',
+                                user: process.env.DATABASE_USER,
+                                pass: process.env.DATABASE_PASSWORD
+                            }
+                        }
+                    })]
+                }),
+                rootMongooseTestModule(),
+            ],
         }).compile();
 
         authService = await module.resolve(AuthService);

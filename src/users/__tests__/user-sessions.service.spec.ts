@@ -1,6 +1,8 @@
 import { MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
+import { ConfigModule } from '@nestjs/config';
+import { getModelToken } from '@nestjs/mongoose';
 import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { CreateUserSessionParam } from '../params';
 import { UserSessionsService, UserInfosService } from '../providers';
@@ -33,6 +35,23 @@ describe('UserSessionService test', () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [UserSessionsService, UserInfosService],
             imports: [
+                ConfigModule.forRoot({
+                    isGlobal: true,
+                    load: [() => ({
+                        database: {
+                            uri: process.env.DATABASE_URI || 'mongodb://localhost:27017/minigame',
+                            options: {
+                                dbName: 'minigame',
+                                useNewUrlParser: true,
+                                useUnifiedTopology: true,
+                                auto_reconnect: true,
+                                authSource: 'admin',
+                                user: process.env.DATABASE_USER,
+                                pass: process.env.DATABASE_PASSWORD
+                            }
+                        }
+                    })]
+                }),
                 rootMongooseTestModule(),
                 MongooseModule.forFeature([{ name: UserSession.name, schema: UserSessionSchema }]),
                 MongooseModule.forFeature([{ name: UserInfo.name, schema: UserInfoSchema }]),
@@ -40,7 +59,7 @@ describe('UserSessionService test', () => {
         }).compile();
 
         service = module.get<UserSessionsService>(UserSessionsService);
-        userSessionModel = module.get<Model<UserSessionDocument>>(`${UserSession.name}Model`);
+        userSessionModel = module.get<Model<UserSessionDocument>>(getModelToken(UserSession.name));
         userInfosService = module.get<UserInfosService>(UserInfosService);
     });
 

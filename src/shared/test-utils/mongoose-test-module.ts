@@ -1,23 +1,23 @@
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { disconnect } from 'mongoose';
-
-let mongod: MongoMemoryServer;
+import { ConfigService } from '@nestjs/config';
 
 export const rootMongooseTestModule = (options: MongooseModuleOptions = {}) =>
     MongooseModule.forRootAsync({
-        useFactory: async () => {
-            mongod = await MongoMemoryServer.create();
-            const mongoUri = mongod.getUri();
-
+        imports: [ConfigService],
+        useFactory: async (configService: ConfigService) => {
+            const uri = configService.get<string>('database.uri');
+            const dbName = configService.get<string>('database.options.dbName');
+            
             return {
-                uri: mongoUri,
+                uri,
+                dbName,
                 ...options,
             };
         },
+        inject: [ConfigService],
     });
 
 export const closeInMongodConnection = async () => {
     await disconnect();
-    mongod && (await mongod.stop());
 };
