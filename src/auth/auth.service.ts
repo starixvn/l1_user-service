@@ -30,6 +30,7 @@ import { UserDocument, UserSession } from '../users/schemas';
 import { AppTypes } from './constants/app-types';
 import { duplicateNickname, invalidNicknameChars, invalidNicknameLength, sameWithUsername } from './constants/errors';
 import { AuthenticateResult, AuthorizeResult, GetBalanceResult, GetSettingGamesResult, ReCheckInResponse } from './models/result';
+import { shuffleArray } from '../helpers/shuffle-array-helper';
 
 @Injectable()
 export class AuthService {
@@ -208,17 +209,18 @@ export class AuthService {
         );
         const promotion = await this.promotionService.getPromotion(promotionResult?.promotion?.promotionId);
 
-        const gameOfferPromotion = offeredGamesNames
-            .filter(
-                (gameName) =>
-                    promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) &&
-                    offerGames.some((offerGame) => offerGame.gameId === gameName.gameId),
-            )
-            .map((game) => ({
-                gameId: game.gameId,
-                name: game.gameName,
-            }))
-            .sort(() => Math.random() - 0.5);
+        const gameOfferPromotion = shuffleArray(
+            offeredGamesNames
+                .filter(
+                    (gameName) =>
+                        promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) &&
+                        offerGames.some((offerGame) => offerGame.gameId === gameName.gameId),
+                )
+                .map((game) => ({
+                    gameId: game.gameId,
+                    name: game.gameName,
+                })),
+        );
 
         return new AuthorizeResult(
             true,

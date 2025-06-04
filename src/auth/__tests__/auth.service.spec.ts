@@ -26,6 +26,7 @@ import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
 import { PromotionService } from '../../promotion/promotion.service';
+import * as shuffleHelper from '../../helpers/shuffle-array-helper';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -522,7 +523,7 @@ describe('AuthService test', () => {
             };
             const mockOfferedGames = [
                 { gameId: 1, gameName: 'Game 1' },
-                { gameId: 2, gameName: 'Game 2' }
+                { gameId: 2, gameName: 'Game 2' },
             ];
             const userExpected = {
                 name: 'user1',
@@ -541,7 +542,7 @@ describe('AuthService test', () => {
 
             const mockOfferedGamesNames = [
                 { gameId: 1, gameName: 'Game 1' },
-                { gameId: 2, gameName: 'Game 2' }
+                { gameId: 2, gameName: 'Game 2' },
             ];
 
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
@@ -805,12 +806,12 @@ describe('AuthService test', () => {
 
         const mockOfferedGames = [
             { gameId: 1, gameName: 'Game 1' },
-            { gameId: 2, gameName: 'Game 2' }
+            { gameId: 2, gameName: 'Game 2' },
         ];
 
         const mockOfferedGamesNames = [
             { gameId: 1, gameName: 'Game 1' },
-            { gameId: 2, gameName: 'Game 2' }
+            { gameId: 2, gameName: 'Game 2' },
         ];
 
         beforeEach(() => {
@@ -833,7 +834,7 @@ describe('AuthService test', () => {
             stubExchangeRatesService.getRateByUser.mockReturnValue(1);
             stubPromotionService.claimPromotion.mockResolvedValue({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
-                promotion: { promotionId: 'promo1' }
+                promotion: { promotionId: 'promo1' },
             });
             stubPromotionService.getPromotion.mockResolvedValue({ gameIds: [1, 2] });
             jest.spyOn<any, any>(AuthService.prototype, 'getOfferGames').mockResolvedValue(mockOfferedGames);
@@ -850,7 +851,7 @@ describe('AuthService test', () => {
                 maxBet: 1000,
             });
             jest.spyOn(OWApiClient.prototype, 'getBalance').mockResolvedValue({ balance: 100, errorCode: 0, errorMessage: '' });
-
+            const shuffleSpy = jest.spyOn(shuffleHelper, 'shuffleArray').mockImplementation((arr) => [...arr].reverse());
             // Act
             const result = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
 
@@ -861,15 +862,16 @@ describe('AuthService test', () => {
                 mockSession.playerId,
                 mockSession.currencyGroupId,
             );
+
+            expect(shuffleSpy).toHaveBeenCalled();
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
                 promotion: { promotionId: 'promo1' },
-                gameOfferPromotion: expect.arrayContaining([
+                gameOfferPromotion: [
+                    { gameId: 2, name: 'Game 2' },
                     { gameId: 1, name: 'Game 1' },
-                    { gameId: 2, name: 'Game 2' }
-                ])
+                ],
             });
-            expect(result.promotionInfo.gameOfferPromotion).toHaveLength(2);
         });
 
         it('should include promotion info in createCharacterName result when user info exists', async () => {
@@ -900,7 +902,7 @@ describe('AuthService test', () => {
             );
             expect(result.promotionInfo).toEqual({
                 promotions: [{ id: 'promo1', name: 'Welcome Bonus', amount: 100 }],
-                promotion: { promotionId: 'promo1' }
+                promotion: { promotionId: 'promo1' },
             });
         });
     });
