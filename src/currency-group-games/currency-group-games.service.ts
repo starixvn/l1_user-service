@@ -26,7 +26,7 @@ export class CurrencyGroupGameService {
         return this.gameOfCurrencyGroupModel
             .find(
                 { groupId: Types.ObjectId(groupId), enabled: true },
-                { _id: false, gameId: true, minBet: true, maxBet: true, maxBetPerChoices: true, gameName: true },
+                { _id: false, gameId: true, gameName: true },
             )
             .lean()
             .exec();
