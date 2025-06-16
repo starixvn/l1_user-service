@@ -1,180 +1,229 @@
-import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserInfosService, UserSessionsService } from '../../users/providers';
 import { LobbyService } from '../lobby.service';
-import { Lobby, LobbyDocument, LobbySchema } from '../schemas/lobby.schema';
-import { CacheModule, CACHE_MANAGER } from '@nestjs/common';
-import { rootMongooseTestModule, closeInMongodConnection } from '../../shared/test-utils/mongoose-test-module';
-import { SentryLogger } from '../../common/providers';
-import { ConfigService } from '@nestjs/config';
-import { UserInfo, UserInfoSchema, UserSession, UserSessionSchema } from '../../users/schemas';
-import { Model } from 'mongoose';
-import { Result } from '../../shared/models/result';
+import { getModelToken } from '@nestjs/mongoose';
+import { Lobby } from '../schemas/lobby.schema';
+import { DirectLobby } from '../schemas/direct-lobby.schema';
+import { UserSessionsService } from '../../users/providers';
+import { SentryLogger } from '../../common/providers/logger.service';
+import { CACHE_MANAGER } from '@nestjs/common';
+import { LobbyConfigsResult, DirectLobbyConfigsResult } from '../models/result';
 import { invalidSession } from '../../users/constants/errors';
-import { VerifySessionRequest } from '../../users/models';
-import { LobbyConfigsResult } from '../models/result';
 
-jest.mock('../../common/providers');
-jest.mock('../../users/providers');
 
-class MockCacheManager {
-    set: jest.Mock;
-    get: jest.Mock;
-}
-
-describe('Lobby Service', () => {
+describe('LobbyService', () => {
     let service: LobbyService;
+    let mockLobbyModel: any;
+    let mockDirectLobbyModel: any;
+    let mockUserSessionsService: any;
+    let mockCacheManager: any;
+    let mockLogger: any;
 
-    let lobbyModel: Model<LobbyDocument>;
-    let logger: SentryLogger;
-    let cacheManager = new MockCacheManager();
+    beforeEach(async () => {
+        mockLobbyModel = { find: jest.fn() };
+        mockDirectLobbyModel = { find: jest.fn() };
+        mockUserSessionsService = { verifySession: jest.fn() };
+        mockCacheManager = { get: jest.fn(), set: jest.fn() };
+        mockLogger = { error: jest.fn() };
+        process.env.CACHE_TIMEOUT_LOBBY = '10';
 
-    beforeAll(async () => {
-        jest.clearAllMocks();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 LobbyService,
-                ConfigService,
-                UserSessionsService,
-                UserInfosService,
-                SentryLogger,
-                {
-                    provide: CACHE_MANAGER,
-                    useValue: cacheManager,
-                },
-            ],
-            imports: [
-                rootMongooseTestModule(),
-                CacheModule.register(),
-                MongooseModule.forFeature([{ name: Lobby.name, schema: LobbySchema }]),
-                MongooseModule.forFeature([{ name: UserSession.name, schema: UserSessionSchema }]),
-                MongooseModule.forFeature([{ name: UserInfo.name, schema: UserInfoSchema }]),
+                { provide: getModelToken(Lobby.name), useValue: mockLobbyModel },
+                { provide: getModelToken(DirectLobby.name), useValue: mockDirectLobbyModel },
+                { provide: UserSessionsService, useValue: mockUserSessionsService },
+                { provide: CACHE_MANAGER, useValue: mockCacheManager },
+                { provide: SentryLogger, useValue: mockLogger },
             ],
         }).compile();
 
         service = module.get<LobbyService>(LobbyService);
-        logger = module.get<SentryLogger>(SentryLogger);
-        lobbyModel = module.get<Model<LobbyDocument>>(getModelToken(Lobby.name));
-    });
-
-    afterAll(async () => {
         jest.clearAllMocks();
-        await closeInMongodConnection();
     });
 
-    describe('constructor', () => {
-        it('service instance should be defined', () => {
-            expect(service).toBeDefined();
-        });
-
-        it('cache manager should be available', () => {
-            expect(cacheManager).toBeDefined();
-        });
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     describe('getLobbies', () => {
-        it('when exception occur should return an empty list', async () => {
-            cacheManager.get = jest.fn().mockReturnValue(undefined);
-            const error = new Error('Error happens!');
-            const spy = jest.spyOn(lobbyModel, 'find').mockReturnValue({
-                lean: function (): any {
-                    return {
-                        exec: async function () {
-                            throw error;
-                        },
-                    };
-                },
-            } as any);
-            const actual = await service.getLobbies();
+        it('should return cached lobbies if present', async () => {
+            // Arrange
+            const cached = [{ id: 1 }];
+            mockCacheManager.get.mockResolvedValue(cached);
 
-            expect(actual).toStrictEqual([]);
-            expect(logger.error).toHaveBeenCalledWith(error);
-            expect(spy).toBeCalled();
+            // Act
+            const result = await service.getLobbies();
+
+            // Assert
+            expect(result).toBe(cached);
+            expect(mockCacheManager.get).toHaveBeenCalledWith('Lobbies');
         });
 
-        it('should return data from model', async () => {
-            const entity = new Lobby();
-            cacheManager.get = jest.fn().mockReturnValue(undefined);
-            lobbyModel.find = jest.fn().mockReturnValue({
-                lean: function (): any {
-                    return {
-                        exec: async function () {
-                            return [entity];
-                        },
-                    };
-                },
-            } as any);
-            cacheManager.set = jest.fn();
-            const actual = await service.getLobbies();
+        it('should fetch from db, cache, and return if not cached', async () => {
+            // Arrange
+            mockCacheManager.get.mockResolvedValue(undefined);
+            const lobbies = [{ id: 2 }];
+            mockLobbyModel.find.mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(lobbies) }) });
+            mockCacheManager.set.mockResolvedValue(undefined);
 
-            expect(actual).toStrictEqual([entity]);
+            // Act
+            const result = await service.getLobbies();
+
+            // Assert
+            expect(result).toBe(lobbies);
+            expect(mockLobbyModel.find).toHaveBeenCalled();
+            expect(mockCacheManager.set).toHaveBeenCalledWith('Lobbies', lobbies, { ttl: 600 });
         });
 
-        it('should return data from cache manager', async () => {
-            const entityCached = new Lobby();
-            entityCached.name = 'lobby cache';
-            const entity = new Lobby();
-            cacheManager.get = jest.fn().mockReturnValue([entityCached]);
-            lobbyModel.find = jest.fn().mockReturnValue({
-                lean: function (): any {
-                    return {
-                        exec: async function () {
-                            return [entity];
-                        },
-                    };
-                },
-            } as any);
+        it('should return [] and log error on exception', async () => {
+            // Arrange
+            const error = new Error('fail');
+            mockCacheManager.get.mockRejectedValue(error);
 
-            const actual = await service.getLobbies();
+            // Act
+            const result = await service.getLobbies();
 
-            expect(actual).toStrictEqual([entityCached]);
+            // Assert
+            expect(result).toEqual([]);
+            expect(mockLogger.error).toHaveBeenCalledWith(error);
         });
     });
 
     describe('getLobbyConfigs', () => {
-        const verifySessionRequest: VerifySessionRequest = { username: 'user1', session: 'session', browserUserAgent: 'userAgent' };
-        it('should return invalid session when session is invalid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-            const expected = new Result(invalidSession.errorCode, invalidSession.message, null);
-            // act
-            const actualResult = await service.getLobbyConfigs({ session: 'session', username: 'user', browserUserAgent: 'userAgent' });
+        it('should return invalidSession if not authenticated', async () => {
+            // Arrange
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: false });
+            const req = { session: 's', username: 'u', browserUserAgent: 'a' };
 
-            // assert
-            expect(actualResult).toStrictEqual(expected);
+            // Act
+            const result = await service.getLobbyConfigs(req);
+
+            // Assert
+            expect(result).toBe(invalidSession);
         });
-        it('should return lobby layout', async () => {
-            // arrange
-            const entity = new Lobby();
-            entity.name = 'lobby';
-            entity.currencyGroupIds = ['group1', 'group2'];
-            const session = new UserSession();
-            session.currencyGroupId = 'group1';
-            cacheManager.get = jest.fn().mockReturnValue(undefined);
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: session,
-            });
 
-            lobbyModel.find = jest.fn().mockReturnValue({
-                lean: function (): any {
-                    return {
-                        exec: async function () {
-                            return [entity];
-                        },
-                    };
-                },
-            } as any);
-            cacheManager.set = jest.fn();
-            // act
-            const expected = new LobbyConfigsResult(true, entity);
-            const actualResult = await service.getLobbyConfigs(verifySessionRequest);
+        it('should return LobbyConfigsResult with lobby by currency group', async () => {
+            // Arrange
+            const session = { currencyGroupId: 'cgid' };
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: true, session });
+            const lobbies = [
+                { currencyGroupIds: ['cgid'], name: 'lobby1' },
+                { currencyGroupIds: ['other'], name: 'lobby2' },
+            ];
+            jest.spyOn(service, 'getLobbies').mockResolvedValue(lobbies);
 
-            // assert
-            expect(actualResult).toStrictEqual(expected);
+            // Act
+            const result = await service.getLobbyConfigs({ session: 's', username: 'u', browserUserAgent: 'a' });
+
+            // Assert
+            expect(result).toEqual(new LobbyConfigsResult(true, lobbies[0]));
+        });
+
+        it('should return LobbyConfigsResult with empty object if no match', async () => {
+            // Arrange
+            const session = { currencyGroupId: 'cgid' };
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: true, session });
+            const lobbies = [
+                { currencyGroupIds: ['other'], name: 'lobby2' },
+            ];
+            jest.spyOn(service, 'getLobbies').mockResolvedValue(lobbies);
+
+            // Act
+            const result = await service.getLobbyConfigs({ session: 's', username: 'u', browserUserAgent: 'a' });
+
+            // Assert
+            expect(result).toEqual(new LobbyConfigsResult(true, {}));
         });
     });
-});
+
+    describe('getDirectLobbiesByCurrencyGroup', () => {
+        it('should return cached direct lobbies if present', async () => {
+            // Arrange
+            const cached = [{ id: 1 }];
+            mockCacheManager.get.mockResolvedValue(cached);
+
+            // Act
+            const result = await service.getDirectLobbiesByCurrencyGroup();
+
+            // Assert
+            expect(result).toBe(cached);
+            expect(mockCacheManager.get).toHaveBeenCalledWith('DirectLobbies');
+        });
+
+        it('should fetch from db, cache, and return if not cached', async () => {
+            // Arrange
+            mockCacheManager.get.mockResolvedValue(undefined);
+            const lobbies = [{ id: 2 }];
+            mockDirectLobbyModel.find.mockReturnValue({ lean: () => ({ exec: () => Promise.resolve(lobbies) }) });
+            mockCacheManager.set.mockResolvedValue(undefined);
+
+            // Act
+            const result = await service.getDirectLobbiesByCurrencyGroup();
+
+            // Assert
+            expect(result).toBe(lobbies);
+            expect(mockDirectLobbyModel.find).toHaveBeenCalled();
+            expect(mockCacheManager.set).toHaveBeenCalledWith('DirectLobbies', lobbies, { ttl: 600 });
+        });
+
+        it('should return [] and log error on exception', async () => {
+            // Arrange
+            const error = new Error('fail');
+            mockCacheManager.get.mockRejectedValue(error);
+
+            // Act
+            const result = await service.getDirectLobbiesByCurrencyGroup();
+
+            // Assert
+            expect(result).toEqual([]);
+            expect(mockLogger.error).toHaveBeenCalledWith(error);
+        });
+    });
+
+    describe('getDirectLobbyConfigs', () => {
+        it('should return invalidSession if not authenticated', async () => {
+            // Arrange
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: false });
+            const req = { session: 's', username: 'u', browserUserAgent: 'a' };
+
+            // Act
+            const result = await service.getDirectLobbyConfigs(req);
+
+            // Assert
+            expect(result).toBe(invalidSession);
+        });
+
+        it('should return DirectLobbyConfigsResult with lobby by currency group', async () => {
+            // Arrange
+            const session = { currencyGroupId: 'cgid' };
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: true, session });
+            const lobbies = [
+                { currencyGroupIds: ['cgid'], name: 'lobby1' },
+                { currencyGroupIds: ['other'], name: 'lobby2' },
+            ];
+            jest.spyOn(service, 'getDirectLobbiesByCurrencyGroup').mockResolvedValue(lobbies);
+
+            // Act
+            const result = await service.getDirectLobbyConfigs({ session: 's', username: 'u', browserUserAgent: 'a' });
+
+            // Assert
+            expect(result).toEqual(new DirectLobbyConfigsResult(true, lobbies[0]));
+        });
+
+        it('should return DirectLobbyConfigsResult with empty object if no match', async () => {
+            // Arrange
+            const session = { currencyGroupId: 'cgid' };
+            mockUserSessionsService.verifySession.mockResolvedValue({ isAuthenticated: true, session });
+            const lobbies = [
+                { currencyGroupIds: ['other'], name: 'lobby2' },
+            ];
+            jest.spyOn(service, 'getDirectLobbiesByCurrencyGroup').mockResolvedValue(lobbies);
+
+            // Act
+            const result = await service.getDirectLobbyConfigs({ session: 's', username: 'u', browserUserAgent: 'a' });
+
+            // Assert
+            expect(result).toEqual(new DirectLobbyConfigsResult(true, {}));
+        });
+    });
+}); 

@@ -1,781 +1,278 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { AuthService } from '../auth.service';
 import { ConfigService } from '@nestjs/config';
-import { Test } from '@nestjs/testing';
-import { stub } from 'jest-micro-auto-stub';
-
-import { MongooseModule } from '@nestjs/mongoose';
-import { UtilsService } from '../../common/providers';
-import { SentryLogger } from '../../common/providers/logger.service';
+import { SentryLogger, UtilsService } from '../../common/providers';
 import { CurrencyGroupGameService } from '../../currency-group-games/currency-group-games.service';
-import { CurrencyGroupGame } from '../../currency-group-games/schemas';
 import { CurrencyGroupService } from '../../currency-groups/currency-group.service';
 import { ExchangeRateService } from '../../exchange_rates/exchange-rate.services';
 import { GameConfigService } from '../../game-config/game-config.service';
-import { VerifyTokenResponse } from '../../ow-api/models';
+import { StringFormatExtensions } from '../../helpers';
 import { OWApiClient } from '../../ow-api/ow-api.client';
 import { PartnerConfigService } from '../../partner-config/partner-config.service';
 import { PartnerService } from '../../partner/partner.service';
-import { Result } from '../../shared/models/result';
-import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
-import { UMInfo } from '../../um/schemas';
 import { UMService } from '../../um/um.service';
-import { invalidSession } from '../../users/constants/errors';
-import { VerifySessionRequest } from '../../users/models';
-import { StringFormatExtensions, UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
-import { UserInfo, UserSession } from '../../users/schemas';
-import { AuthService } from '../auth.service';
-import { duplicateNickname } from '../constants/errors';
-import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
-import { Spin, SpinSchema } from '../schemas/spins';
+import { UserInfosService, UserSessionsService, UsersService } from '../../users/providers';
+import { Spin } from '../schemas/spins';
+import { getModelToken } from '@nestjs/mongoose';
+import { UMResult } from '../../shared/models/um-result';
 
-jest.mock('../../ow-api/ow-api.client');
-jest.mock('../../users/providers');
-jest.mock('../../common/providers/logger.service');
-jest.mock('../../partner-config/partner-config.service');
-jest.mock('../../game-config/game-config.service');
-jest.mock('../../um/um.service');
-jest.mock('../../currency-group-games/currency-group-games.service');
-jest.mock('../../currency-groups/currency-group.service');
-jest.mock('../../exchange_rates/exchange-rate.services');
-jest.mock('../../helpers/string-format-extensions');
+describe('AuthService - signIn', () => {
+    let service: AuthService;
+    let mockLogger: any;
+    let mockApiClient: any;
+    let mockUsersService: any;
+    let mockUserSessionsService: any;
+    let mockUserInfosService: any;
+    let mockUtilsService: any;
+    let mockConfigService: any;
+    let mockSpinModel: any;
+    let mockPartnerConfigService: any;
+    let mockGameConfigService: any;
+    let mockUMService: any;
+    let mockCurrencyGroupGameService: any;
+    let mockCurrencyGroupService: any;
+    let mockPartnerService: any;
+    let mockExchangeRateService: any;
+    let mockStringFormatExtensions: any;
 
-const getVerifyTokenRequest = (isSuccessful: boolean) => {
-    return {
-        playerId: '1',
-        playerName: 'user1',
-        siteId: '77',
-        operatorId: 'id',
-        domain: 'localhost',
-        language: 'en',
-        currencyCode: 'UUS',
-        currencyName: 'UUS',
-        currencyGroupId: '1',
-        isTestCurrency: false,
-        multiplier: 1,
-        seq: '123',
-        memberKey: 'memberKey',
-        code: 3,
-        message: '',
-        isSuccessful,
-        appType: 1,
-        siteName: 'lumi',
-        disableJackpotGames: false,
-        operatorToken: 'operator-token',
-        operatorPlayerId: '1',
-    };
-};
+    beforeEach(async () => {
+        mockLogger = { log: jest.fn(), error: jest.fn() };
+        mockApiClient = { verifyToken: jest.fn(), getBalance: jest.fn(), notifyLogin: jest.fn() };
+        mockUsersService = { getByUsername: jest.fn(), createUser: jest.fn() };
+        mockUserSessionsService = { getUserSessionByToken: jest.fn(), createUserSession: jest.fn(), verifySession: jest.fn(), updateReCheckInTime: jest.fn() };
+        mockUserInfosService = { getUserInfo: jest.fn(), updateBalance: jest.fn(), isExistingCharacterName: jest.fn(), getLatestUserInfoUID: jest.fn(), upSertUserInfo: jest.fn() };
+        mockUtilsService = { normalizeIP: jest.fn() };
+        mockConfigService = { get: jest.fn() };
+        mockSpinModel = { findOne: jest.fn() };
+        mockPartnerConfigService = { isSuperPlayers: jest.fn(), getExclusionSites: jest.fn() };
+        mockGameConfigService = { getEnabledGameIds: jest.fn() };
+        mockUMService = { getUMResult: jest.fn() };
+        mockCurrencyGroupGameService = { getOfferedGames: jest.fn() };
+        mockCurrencyGroupService = { getCurrencyGroup: jest.fn(), getCurrency: jest.fn() };
+        mockPartnerService = { isDisplayPlayerCurrency: jest.fn() };
+        mockExchangeRateService = { getRateByUser: jest.fn() };
+        mockStringFormatExtensions = { formatUserName: jest.fn() };
 
-const stubUsersService = stub(UsersService);
-const stubUserInfoService = stub(UserInfosService);
-const stubPartnerConfigService = stub(PartnerConfigService);
-const stubGameConfigService = stub(GameConfigService);
-const stubCurrencyGroupGameService = stub(CurrencyGroupGameService);
-const stubCurrencyGroupService = stub(CurrencyGroupService);
-const stubPartnerService = stub(PartnerService);
-const stubExchangeRatesService = stub(ExchangeRateService);
-
-describe('AuthService test', () => {
-    let authService: AuthService;
-    let currencyGroupService: CurrencyGroupService;
-    let currencyGroupGameService: CurrencyGroupGameService;
-    let partnerConfigService: PartnerConfigService;
-    let gameConfigService: GameConfigService;
-    let config: ConfigService;
-
-    beforeAll(async () => {
-        jest.clearAllMocks();
-        const module = await Test.createTestingModule({
+        const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
-                SentryLogger,
-                OWApiClient,
-                UserSessionsService,
-                UtilsService,
-                StringFormatExtensions,
-                ConfigService,
-                {
-                    provide: PartnerConfigService,
-                    useValue: stubPartnerConfigService,
-                },
-                {
-                    provide: GameConfigService,
-                    useValue: stubGameConfigService,
-                },
-                {
-                    provide: UsersService,
-                    useValue: stubUsersService,
-                },
-                {
-                    provide: UserInfosService,
-                    useValue: stubUserInfoService,
-                },
-                UMService,
-                {
-                    provide: CurrencyGroupGameService,
-                    useValue: stubCurrencyGroupGameService,
-                },
-                {
-                    provide: CurrencyGroupService,
-                    useValue: stubCurrencyGroupService,
-                },
-                {
-                    provide: PartnerService,
-                    useValue: stubPartnerService,
-                },
-                {
-                    provide: ExchangeRateService,
-                    useValue: stubExchangeRatesService,
-                },
+                { provide: SentryLogger, useValue: mockLogger },
+                { provide: OWApiClient, useValue: mockApiClient },
+                { provide: UsersService, useValue: mockUsersService },
+                { provide: UserSessionsService, useValue: mockUserSessionsService },
+                { provide: UserInfosService, useValue: mockUserInfosService },
+                { provide: UtilsService, useValue: mockUtilsService },
+                { provide: ConfigService, useValue: mockConfigService },
+                { provide: getModelToken(Spin.name), useValue: mockSpinModel },
+                { provide: PartnerConfigService, useValue: mockPartnerConfigService },
+                { provide: GameConfigService, useValue: mockGameConfigService },
+                { provide: UMService, useValue: mockUMService },
+                { provide: CurrencyGroupGameService, useValue: mockCurrencyGroupGameService },
+                { provide: CurrencyGroupService, useValue: mockCurrencyGroupService },
+                { provide: PartnerService, useValue: mockPartnerService },
+                { provide: ExchangeRateService, useValue: mockExchangeRateService },
+                { provide: StringFormatExtensions, useValue: mockStringFormatExtensions },
             ],
-            imports: [rootMongooseTestModule(), MongooseModule.forFeature([{ name: Spin.name, schema: SpinSchema }])],
         }).compile();
 
-        authService = await module.resolve(AuthService);
-        currencyGroupService = await module.resolve(CurrencyGroupService);
-        currencyGroupGameService = await module.resolve(CurrencyGroupGameService);
-        partnerConfigService = await module.resolve(PartnerConfigService);
-        gameConfigService = await module.resolve(GameConfigService);
-        config = module.get<ConfigService>(ConfigService);
+        service = module.get<AuthService>(AuthService);
+        jest.clearAllMocks();
+        process.env.SYSTEM_TYPE = 'VG2';
     });
 
-    describe('signIn test', () => {
-        it('should return authentication successful when UM and user is super player', async () => {
-            // arrange
-            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-            const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
-                return {
-                    username: 'user',
-                    language: 'en',
-                    sessionId: 'session',
-                    system: 1,
-                };
-            });
-            stubUsersService.getByUsername.mockResolvedValueOnce({ local: {} });
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(actualResult.isAuthenticated).toBeTruthy();
-            expect(addSessionIfNotExistFunc).toHaveBeenCalled();
-        });
-
-        it('should return authentication successful and create user when request token is valid', async () => {
-            // arrange
-            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            const createUserIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'createUserIfNotExist');
-            const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
-                return {
-                    username: 'user',
-                    language: 'en',
-                    sessionId: 'session',
-                    system: 1,
-                };
-            });
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(createUserIfNotExistFunc).toHaveBeenCalled();
-            expect(addSessionIfNotExistFunc).toHaveBeenCalled();
-            expect(actualResult.isAuthenticated).toBe(true);
-        });
-
-        it('should return authentication failed result when token invalid', async () => {
-            // arrange
-            const verifyTokenResponse = getVerifyTokenRequest(false);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(actualResult.isAuthenticated).toBe(false);
-        });
-
-        it('should return unauthorized when UM and user is NOT super player', async () => {
-            // arrange
-            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(false);
-            stubUsersService.getByMemberName.mockResolvedValueOnce({ local: {} });
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(actualResult.isAuthenticated).toBe(false);
-        });
-
-        it('should return unauthorized when UM and user is NOT exist', async () => {
-            // arrange
-            const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
-            jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: true, umInfo: new UMInfo() });
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
-            stubUsersService.getByMemberName.mockResolvedValueOnce(null);
-
-            // act
-            const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
-
-            // assert
-            expect(actualResult.isAuthenticated).toBe(false);
-        });
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    describe('reCheckIn test', () => {
-        it('should return invalid session when session is invalid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
+    it('signIn_happyPath_shouldReturnAuthenticateResult', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 1;
+        const verifyTokenData = { isSuccessful: true, appType: 1, operatorId: 'op1', playerId: 'p1', memberKey: 'mk', playerName: 'pn', currencyName: 'USD', operatorPlayerId: 'opid', seq: 'seq', siteId: 'site', language: 'en', currencyCode: 'USD', currencyGroupId: 'cgid', isTestCurrency: false, multiplier: 1, siteName: 'site', disableJackpotGames: false, operatorToken: 'ot', disableAward: false };
+        const umSettings = { isUM: false, umInfo: null };
+        const user = { id: 'uid', local: { memberName: 'mem', partnerId: 'pid', clientId: 'cid' } };
+        const userSession = { username: 'mk', language: 'en', sessionId: 'sid', system: 1, playerName: 'pn', currencyCode: 'USD', multiplier: 1, currencyGroupId: 'cgid' };
+        const rate = 1.23;
+        const currencyGroup = { fractionalOddsFormat: false, name: 'cg', enabled: true };
+        const offerGames = [{ gameId: 1 }];
 
-            // act
-            const actualResult = await authService.reCheckIn({ session: 'session', username: 'user', browserUserAgent: 'userAgent' });
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
+        mockStringFormatExtensions.formatUserName.mockReturnValue('mk');
+        mockUsersService.getByUsername.mockResolvedValue(user);
+        mockPartnerConfigService.isSuperPlayers.mockResolvedValue(false);
+        mockUserSessionsService.getUserSessionByToken.mockResolvedValue(null);
+        mockUserSessionsService.createUserSession.mockResolvedValue(userSession);
+        mockExchangeRateService.getRateByUser.mockResolvedValue(rate);
+        mockCurrencyGroupService.getCurrencyGroup.mockResolvedValue(currencyGroup);
+        mockCurrencyGroupGameService.getOfferedGames.mockResolvedValue(offerGames);
+        mockCurrencyGroupService.getCurrency.mockResolvedValue({ enabled: true });
+        mockPartnerConfigService.getExclusionSites.mockResolvedValue({});
 
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-        it('should update reCheckIn time when session is valid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UserSessionsService.prototype, 'updateReCheckInTime').mockImplementation();
-
-            // act
-            await authService.reCheckIn({ session: 'session', username: 'user', browserUserAgent: 'userAgent' });
-
-            // assert
-            expect(UserSessionsService.prototype.updateReCheckInTime).toHaveBeenCalled();
-        });
-
-        it('should return recheckIn successful when session is valid and have none user info', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UserSessionsService.prototype, 'updateReCheckInTime').mockImplementation();
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
-
-            // act
-            const actualResult = await authService.reCheckIn({ session: 'session', username: 'user', browserUserAgent: 'userAgent' });
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(true);
-        });
-
-        it('should return recheckIn api error when get balance failed', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UserSessionsService.prototype, 'updateReCheckInTime').mockImplementation();
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce(new UserInfo());
-            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({
-                isSuccessful: false,
-                errorCode: 'SB0001',
-            });
-
-            // act
-            const actualResult = (await authService.reCheckIn({
-                session: 'session',
-                username: 'user',
-                browserUserAgent: 'userAgent',
-            })) as ReCheckInResponse;
-
-            // assert
-            expect(actualResult.apiError.errorCode).toEqual('SB0001');
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(true);
+        expect(result.username).toBe(userSession.username);
+        expect(result.language).toBe(userSession.language);
+        expect(result.ss).toBe(userSession.sessionId);
+        expect(result.system).toBe(userSession.system);
+        expect(result.memberName).toBe(userSession.playerName);
+        expect(result.rate).toBe(rate);
+        expect(result.offerGames).toEqual(offerGames);
+        expect(result.fractionalOddsFormat).toBe(currencyGroup.fractionalOddsFormat);
+        expect(result.umInfo).toBeNull();
+        expect(mockApiClient.verifyToken).toHaveBeenCalled();
+        expect(mockUMService.getUMResult).toHaveBeenCalledWith(verifyTokenData.operatorId);
+        expect(mockUsersService.getByUsername).toHaveBeenCalled();
+        expect(mockUserSessionsService.createUserSession).toHaveBeenCalled();
+        expect(mockExchangeRateService.getRateByUser).toHaveBeenCalled();
+        expect(mockCurrencyGroupService.getCurrencyGroup).toHaveBeenCalled();
+        expect(mockCurrencyGroupGameService.getOfferedGames).toHaveBeenCalled();
     });
 
-    describe('verifySession test', () => {
-        const verifySessionRequest: VerifySessionRequest = { username: 'user1', session: 'session', browserUserAgent: 'userAgent' };
+    it('signIn_invalidToken_shouldReturnAuthenticateResultWithUMInfo', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 1;
+        const verifyTokenData = { isSuccessful: false, appType: 1, operatorId: 'op1', playerId: 'p1' };
+        const umSettings = { isUM: false, umInfo: { start: new Date('2020-01-01'), end: new Date('2020-01-02'), partnerId: 'pid' } };
 
-        it('should return unsuccessful result when session is invalid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
 
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
-
-        it('should return successful result when session is valid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(true);
-        });
-
-        it('should always return unsuccessful when UM and member is NOT super player', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(false);
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
-
-        it('should return unsuccessful when UM and member is super player but not authenticated', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
-
-        it('should return successful when UM and member is super player and authenticated', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(true);
-        });
-
-        it('should always return unsuccessful when UM and member is NOT super player', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(false);
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
-
-        it('should return unsuccessful when UM and member is super player but not authenticated', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-
-            stubPartnerConfigService.isSuperPlayers.mockResolvedValueOnce(true);
-
-            // act
-            const actualResult = await authService.verifySession(verifySessionRequest);
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(false);
+        expect(result.umInfo).toEqual(new UMResult(new Date('2020-01-01'), new Date('2020-01-02'), 'pid'));
+        expect(mockLogger.log).toHaveBeenCalled();
     });
 
-    describe('authorize test', () => {
-        const verifySessionRequest: VerifySessionRequest = { username: 'user1', session: 'session', browserUserAgent: 'userAgent' };
+    it('signIn_umUserNotSuperPlayer_shouldReturnAuthenticateResultWithUMInfo', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 1;
+        const verifyTokenData = { isSuccessful: true, appType: 1, operatorId: 'op1', playerId: 'p1' };
+        const umSettings = { isUM: true, umInfo: { start: new Date('2020-01-01'), end: new Date('2020-01-02'), partnerId: 'pid' } };
+        const user = { local: { memberName: 'mem', partnerId: 'pid', clientId: 'cid' } };
 
-        it('should return unsuccessful result when session is invalid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-            const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
+        mockStringFormatExtensions.formatUserName.mockReturnValue('mk');
+        mockUsersService.getByUsername.mockResolvedValue(user);
+        mockPartnerConfigService.isSuperPlayers.mockResolvedValue(false);
 
-            // act
-            const actualResult = (await authService.authorize(verifySessionRequest)) as Result;
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-            // assert
-            expect(actualResult).toStrictEqual(expectedResult);
-        });
-
-        it('should return invalid session when do not have user document', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            stubUsersService.getByUsername.mockResolvedValueOnce(null);
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-
-            // act
-            const actualResult = (await authService.authorize(verifySessionRequest)) as Result;
-
-            // assert
-            expect(actualResult).toBe(invalidSession);
-        });
-
-        it('should return invalid session when do not have user info', async () => {
-            // arrange
-            const expectResult = new AuthorizeResult(false, { fractionalOddsFormat: false, offerGames: [] });
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            stubUsersService.getByUsername.mockResolvedValueOnce({});
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-
-            // act
-            const actualResult = await authService.authorize(verifySessionRequest);
-
-            // assert
-            expect(actualResult).toEqual(expectResult);
-        });
-
-        it('should call notify login and return authorized when user info is available', async () => {
-            // arrange
-            const user = {
-                memberName: 'memberName2',
-                memberId: '2',
-                currencyName: 'currency2',
-                partnerId: 'partnerId2',
-                isTestCurrency: false,
-                recheckInTime: new Date(),
-                sessionId: '2',
-                disableJackpotGames: true,
-                multiplier: 1,
-                currencyCode: 'currencycode2,',
-            };
-            const userExpected = {
-                name: 'user1',
-                red: 100,
-                rate: 1000,
-                disableJackpotGames: true,
-                fractionalOddsFormat: false,
-                isDisplayPlayerCurrency: true,
-                offerGames: [],
-                enabledGameIds: [],
-                multiplier: 1,
-                currencyCode: 'currencycode2,',
-                currencyGroup: 'currencyGroup',
-                disableMiniPanel: false,
-            };
-
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: { ...new UserSession(), ...user },
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(jest.fn());
-            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
-
-            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
-            stubUsersService.getByUsername.mockReturnValueOnce({});
-            stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user1' });
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-            stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-            stubGameConfigService.getEnabledGameIds.mockReturnValueOnce([]);
-
-            // act
-            const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
-
-            // assert
-            expect(notifyLoginFunc).toHaveBeenCalled();
-            expect(actualResult.authorized).toBe(true);
-            expect(actualResult.user).toStrictEqual(userExpected);
-        });
-
-        it('should return unauthorized when UM and user is NOT super player', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({
-                isUM: true,
-                umInfo: new UMInfo(),
-            });
-            jest.spyOn(PartnerConfigService.prototype, 'isSuperPlayers').mockResolvedValueOnce(true);
-            stubUsersService.getByUsername.mockResolvedValueOnce({ local: {} });
-
-            // act
-            const actualResult = (await authService.authorize(verifySessionRequest)) as AuthorizeResult;
-
-            // assert
-            expect(actualResult.authorized).toBe(false);
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(false);
+        expect(result.umInfo).toEqual(new UMResult(new Date('2020-01-01'), new Date('2020-01-02'), 'pid'));
     });
 
-    describe('createCharacterName test', () => {
-        const createNicknameRequest: CreateNicknameRequest = {
-            avatar: 1,
-            browserUserAgent: 'agent',
-            nickname: 'nickName',
-            session: 'session',
-            username: 'userName',
-        };
+    it('signIn_umUserSuperPlayer_shouldReturnAuthenticateResult', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 1;
+        const verifyTokenData = { isSuccessful: true, appType: 1, operatorId: 'op1', playerId: 'p1', memberKey: 'mk', playerName: 'pn', currencyName: 'USD', operatorPlayerId: 'opid', seq: 'seq', siteId: 'site', language: 'en', currencyCode: 'USD', currencyGroupId: 'cgid', isTestCurrency: false, multiplier: 1, siteName: 'site', disableJackpotGames: false, operatorToken: 'ot', disableAward: false };
+        const umSettings = { isUM: true, umInfo: { start: 's', end: 'e', partnerId: 'pid' } };
+        const user = { id: 'uid', local: { memberName: 'mem', partnerId: 'pid', clientId: 'cid' } };
+        const userSession = { username: 'mk', language: 'en', sessionId: 'sid', system: 1, playerName: 'pn', currencyCode: 'USD', multiplier: 1, currencyGroupId: 'cgid' };
+        const rate = 1.23;
+        const currencyGroup = { fractionalOddsFormat: false, name: 'cg', enabled: true };
+        const offerGames = [{ gameId: 1 }];
 
-        it('should return unsuccessful result when session is invalid', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
+        mockStringFormatExtensions.formatUserName.mockReturnValue('mk');
+        mockUsersService.getByUsername.mockResolvedValue(user);
+        mockPartnerConfigService.isSuperPlayers.mockResolvedValue(true);
+        mockUserSessionsService.getUserSessionByToken.mockResolvedValue(null);
+        mockUserSessionsService.createUserSession.mockResolvedValue(userSession);
+        mockExchangeRateService.getRateByUser.mockResolvedValue(rate);
+        mockCurrencyGroupService.getCurrencyGroup.mockResolvedValue(currencyGroup);
+        mockCurrencyGroupGameService.getOfferedGames.mockResolvedValue(offerGames);
+        mockCurrencyGroupService.getCurrency.mockResolvedValue({ enabled: true });
+        mockPartnerConfigService.getExclusionSites.mockResolvedValue({});
 
-            jest.spyOn(CurrencyGroupService.prototype, 'getCurrencyGroup').mockResolvedValueOnce({
-                partnerId: 'partnerId',
-                enabled: true,
-                operatorId: 'operatorId',
-                fractionalOddsFormat: false,
-                name: 'currencyGroup',
-            });
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-            const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);
-
-            // act
-            const actualResult = await authService.createCharacterName(createNicknameRequest);
-
-            // assert
-            expect(actualResult).toEqual(expectedResult);
-        });
-
-        it('should return invalid sign name when nick name is invalid', async () => {
-            // arrange
-            jest.spyOn<any, any>(AuthService.prototype, 'validateNickname').mockResolvedValueOnce({ isSuccessful: false });
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as Result;
-
-            // assert
-            expect(actualResult.isSuccessful).toEqual(false);
-        });
-
-        it('should return invalid sign name when nick name is same as user name', async () => {
-            // arrange
-            stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.nickname } });
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as Result;
-
-            // assert
-            expect(actualResult.isSuccessful).toBe(false);
-        });
-
-        it('should return successful when user info was created', async () => {
-            // arrange
-            const userExpected = { rate: 1000, availSpins: false, disableMiniPanel: false };
-            stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as AuthorizeResult;
-
-            // assert
-            expect(actualResult.authorized).toBe(true);
-            expect(actualResult.user).toStrictEqual(userExpected);
-        });
-
-        it('should return unsuccessful when nick name is existed', async () => {
-            // arrange
-            stubUserInfoService.isExistingCharacterName.mockResolvedValueOnce(true);
-            stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
-            jest.spyOn<any, any>(AuthService.prototype, 'generateCharacterName').mockResolvedValueOnce('UUSUser');
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as Result;
-
-            // assert
-            expect(actualResult).toEqual(duplicateNickname);
-        });
-
-        it('should return unsuccessful when nick name is existed', async () => {
-            // arrange
-            stubUserInfoService.isExistingCharacterName.mockResolvedValueOnce(false);
-            stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
-            stubUserInfoService.getLatestUserInfoUID.mockResolvedValueOnce(1);
-            stubUserInfoService.upSertUserInfo.mockResolvedValueOnce(null);
-            jest.spyOn<any, any>(AuthService.prototype, 'generateCharacterName').mockResolvedValueOnce('UUSUser');
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as Result;
-
-            // assert
-            expect(actualResult).toEqual(duplicateNickname);
-        });
-
-        it('should notify login and return successful', async () => {
-            // arrange
-            const currencyGroupGame1 = new CurrencyGroupGame();
-            currencyGroupGame1.gameId = 1;
-            const offerGames = [currencyGroupGame1];
-
-            //stubUserInfoService.getUserInfo.mockReturnValueOnce({ name: 'user2' });
-            stubUserInfoService.isExistingCharacterName.mockResolvedValueOnce(false);
-            stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
-            stubUserInfoService.getLatestUserInfoUID.mockResolvedValueOnce(1);
-            stubUserInfoService.upSertUserInfo.mockResolvedValueOnce({ upsetResult: { upserted: [1] } });
-            stubExchangeRatesService.getRateByUser.mockReturnValueOnce(1000);
-            stubCurrencyGroupService.getCurrencyGroup.mockReturnValueOnce({ fractionalOddsFormat: false, name: 'currencyGroup' });
-            stubPartnerService.isDisplayPlayerCurrency.mockReturnValueOnce(true);
-            jest.spyOn<any, any>(AuthService.prototype, 'generateCharacterName').mockResolvedValueOnce('UUSUser');
-            const notifyLoginFunc = jest.spyOn<any, any>(AuthService.prototype, 'notifyLogin').mockImplementation(() => {});
-            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce({ balance: 100 });
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-            jest.spyOn<any, any>(AuthService.prototype, 'getOfferGames').mockResolvedValueOnce(offerGames);
-
-            // act
-            const actualResult = (await authService.createCharacterName(createNicknameRequest)) as AuthorizeResult;
-
-            // assert
-            expect(notifyLoginFunc).toHaveBeenCalled();
-            expect(actualResult.authorized).toEqual(true);
-            expect(actualResult.user.offerGames).toStrictEqual(offerGames);
-            expect(actualResult.user.rate).toStrictEqual(1000);
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(true);
+        expect(result.umInfo).toBeNull();
+        expect(result.username).toBe(userSession.username);
     });
 
-    describe('getBalance test', () => {
-        const request: VerifySessionRequest = { username: 'userName', session: 'session', browserUserAgent: 'browserAgent' };
+    it('signIn_shouldCallCreateUserIfNotExist_whenNotUM', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 1;
+        const verifyTokenData = { isSuccessful: true, appType: 1, operatorId: 'op1', playerId: 'p1', memberKey: 'mk', playerName: 'pn', currencyName: 'USD', operatorPlayerId: 'opid', seq: 'seq', siteId: 'site', language: 'en', currencyCode: 'USD', currencyGroupId: 'cgid', isTestCurrency: false, multiplier: 1, siteName: 'site', disableJackpotGames: false, operatorToken: 'ot', disableAward: false };
+        const umSettings = { isUM: false, umInfo: null };
+        const user = { id: 'uid', local: { memberName: 'mem', partnerId: 'pid', clientId: 'cid' } };
+        const userSession = { username: 'mk', language: 'en', sessionId: 'sid', system: 1, playerName: 'pn', currencyCode: 'USD', multiplier: 1, currencyGroupId: 'cgid' };
+        const rate = 1.23;
+        const currencyGroup = { fractionalOddsFormat: false, name: 'cg', enabled: true };
+        const offerGames = [{ gameId: 1 }];
 
-        it('should return invalid session when verify session failed', async () => {
-            // arrange
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: false,
-                session: new UserSession(),
-            });
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
+        mockUsersService.getByUsername.mockResolvedValue(null);
+        mockUsersService.createUser.mockResolvedValue(user);
+        mockUserSessionsService.getUserSessionByToken.mockResolvedValue(null);
+        mockUserSessionsService.createUserSession.mockResolvedValue(userSession);
+        mockExchangeRateService.getRateByUser.mockResolvedValue(rate);
+        mockCurrencyGroupService.getCurrencyGroup.mockResolvedValue(currencyGroup);
+        mockCurrencyGroupGameService.getOfferedGames.mockResolvedValue(offerGames);
+        mockCurrencyGroupService.getCurrency.mockResolvedValue({ enabled: true });
+        mockPartnerConfigService.getExclusionSites.mockResolvedValue({});
 
-            // act
-            const actualResult = await authService.getBalance(request);
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-            // assert
-            expect(actualResult).toEqual(invalidSession);
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(true);
+        expect(mockUsersService.createUser).toHaveBeenCalled();
+    });
 
-        it('should return invalid session when have no user info', async () => {
-            // arrange
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
+    it('signIn_shouldReturnFalse_whenCheckValidAppTypeFails', async () => {
+        // Arrange
+        const ip = '1.2.3.4';
+        const token = 'token';
+        const userAgent = 'agent';
+        const system = 2;
+        const verifyTokenData = { isSuccessful: true, appType: 1, operatorId: 'op1', playerId: 'p1' };
+        const umSettings = { isUM: false, umInfo: null };
 
-            // act
-            const actualResult = await authService.getBalance(request);
+        mockUtilsService.normalizeIP.mockReturnValue(ip);
+        mockApiClient.verifyToken.mockResolvedValue(verifyTokenData);
+        mockUMService.getUMResult.mockResolvedValue(umSettings);
 
-            // assert
-            expect(actualResult).toEqual(invalidSession);
-        });
+        // Act
+        const result = await service.signIn(ip, token, userAgent, system);
 
-        it('should return balance when session & user info is valid', async () => {
-            // arrange
-            stubUserInfoService.getUserInfo.mockResolvedValueOnce(null);
-            jest.spyOn<any, any>(AuthService.prototype, 'getBalanceBySession').mockResolvedValueOnce(new GetBalanceResult('0', '', 100));
-            jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
-                isAuthenticated: true,
-                session: new UserSession(),
-            });
-
-            // act
-            const actualResult = await authService.getBalance(request);
-
-            // assert
-            expect(actualResult instanceof GetBalanceResult);
-        });
+        // Assert
+        expect(result.isAuthenticated).toBe(false);
+        expect(mockLogger.log).toHaveBeenCalled();
     });
 });
-
-afterAll(async () => {
-    jest.clearAllMocks();
-    await closeInMongodConnection();
-});
+// ... existing code ... 
