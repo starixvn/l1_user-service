@@ -73,6 +73,9 @@ export class Lobby {
     @Prop({ type: [BannerSchema] })
     banners: Banner[];
 
+    @Prop({ type: [BannerSchema] })
+    centerBanners: Banner[];
+
     @Prop({ type: Object })
     roundTimerGame: RoundTimerGame;
 }
