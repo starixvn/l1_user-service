@@ -182,7 +182,13 @@ describe('AuthService test', () => {
             const verifyTokenResponse: VerifyTokenResponse = getVerifyTokenRequest(true);
             jest.spyOn(OWApiClient.prototype, 'verifyToken').mockResolvedValueOnce(verifyTokenResponse);
             jest.spyOn(UMService.prototype, 'getUMResult').mockResolvedValueOnce({ isUM: false, umInfo: null });
-            const createUserIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'createUserIfNotExist');
+            const updatePlayerAvatarUrlAndNicknameFunc = stubUserInfoService.updatePlayerAvatarUrlAndNickname.mockImplementation();
+            const createUserIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'createUserIfNotExist').mockImplementation(() => {
+                return {
+                    id: 'user123',
+                    local: { username: 'user1' },
+                };
+            });
             const addSessionIfNotExistFunc = jest.spyOn<any, any>(AuthService.prototype, 'addSessionIfNotExist').mockImplementation(() => {
                 return {
                     username: 'user',
@@ -197,6 +203,7 @@ describe('AuthService test', () => {
             const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
 
             // assert
+            expect(updatePlayerAvatarUrlAndNicknameFunc).toHaveBeenCalled();
             expect(createUserIfNotExistFunc).toHaveBeenCalled();
             expect(addSessionIfNotExistFunc).toHaveBeenCalled();
             expect(actualResult.isAuthenticated).toBe(true);
