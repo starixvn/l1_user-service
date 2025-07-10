@@ -75,6 +75,12 @@ class UserInfo {
 
     @Prop({ default: false })
     isSignedInSM: boolean;
+
+    @Prop({ default: '' })
+    playerAvatarUrl: string;
+
+    @Prop({ default: '' })
+    playerNickname: string;
 }
 
 const UserInfoSchema = SchemaFactory.createForClass(UserInfo);
