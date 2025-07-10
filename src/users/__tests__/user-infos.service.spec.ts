@@ -64,7 +64,7 @@ describe('UserInfosService test', () => {
     });
 
     describe('upSertUserInfo test', () => {
-        const createUserRequest = new CreateUserInfoParam('124', '124', 'UUS', 124, 1);
+        const createUserRequest = new CreateUserInfoParam('124', '124', 'UUS', 124, 1, null, null);
 
         it('should call insert data', async () => {
             jest.spyOn(userModel, 'updateOne');

@@ -66,4 +66,10 @@ export class UserInfosService {
     async updateAvatar(userId: string, avatarId: number) {
         return this.userInfoModel.updateOne({ id: userId }, { $set: { avatarId: avatarId } }).exec();
     }
+
+    async updatePlayerAvatarUrlAndNickname(userId: string, avatarUrl: string, playerNickname: string) {
+        return this.userInfoModel
+            .updateOne({ id: userId }, { $set: { playerAvatarUrl: avatarUrl, playerNickname: playerNickname } })
+            .exec();
+    }
 }

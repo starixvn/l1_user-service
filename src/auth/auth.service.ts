@@ -209,7 +209,7 @@ export class AuthService {
         const promotion = await this.promotionService.getPromotion(promotionResult?.promotion?.promotionId);
 
         const gameOfferPromotion = this.chance.shuffle(
-            offeredGamesNames 
+            offeredGamesNames
                 .filter(
                     (gameName) =>
                         promotion?.gameIds?.some((gameId) => gameName.gameId === gameId) &&
@@ -290,6 +290,8 @@ export class AuthService {
             session.currencyName,
             latestUID,
             request.avatar || this.chance.integer({ min: 1, max: this.maximumAvatarId }),
+            session.playerNickname,
+            session.playerAvatarUrl,
         );
         const upsetResult = await this.userInfosService.upSertUserInfo(param);
 
@@ -455,6 +457,7 @@ export class AuthService {
         if (session) {
             return session;
         } else {
+            this.userInfosService.updatePlayerAvatarUrlAndNickname(user.id, playerAvatarUrl, playerNickname);
             return this.userSessionsService.createUserSession(
                 new CreateUserSessionParam({
                     ssoToken: token,
