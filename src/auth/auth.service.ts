@@ -447,6 +447,8 @@ export class AuthService {
             disableJackpotGames,
             operatorToken,
             disableAward,
+            playerNickname,
+            playerAvatarUrl,
         } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
@@ -482,6 +484,8 @@ export class AuthService {
                     disableJackpotGames,
                     operatorToken,
                     disableAward,
+                    playerNickname,
+                    playerAvatarUrl,
                 }),
             );
         }

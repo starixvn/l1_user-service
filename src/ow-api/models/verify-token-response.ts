@@ -21,4 +21,6 @@ export interface VerifyTokenResponse {
     operatorToken: string;
     operatorPlayerId: string;
     disableAward?: boolean;
+    playerNickname?: string;
+    playerAvatarUrl?: string;
 }
