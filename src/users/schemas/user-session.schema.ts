@@ -85,6 +85,12 @@ export class UserSession {
 
     @Prop()
     disableAward: boolean;
+
+    @Prop()
+    playerNickname: string;
+
+    @Prop()
+    playerAvatarUrl: string;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);
