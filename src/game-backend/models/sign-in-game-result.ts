@@ -20,6 +20,8 @@ export class SignInGameResult {
     userId: string;
     disableJackpotGames: boolean;
     disableAward: boolean;
+    playerNickname: string;
+    playerAvatarUrl: string;
 
     constructor(session: UserSession) {
         this.id = session.userId;
@@ -41,5 +43,7 @@ export class SignInGameResult {
         this.memberName = session.memberName;
         this.disableJackpotGames = session.disableJackpotGames;
         this.disableAward = session.disableAward;
+        this.playerNickname = session.playerNickname;
+        this.playerAvatarUrl = session.playerAvatarUrl;
     }
 }
