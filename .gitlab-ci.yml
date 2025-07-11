@@ -1,7 +1,36 @@
 include:
-  - project: ci/core-cicd
-    ref: main
-    file: luminet.gitlab-ci.yml
+    - project: ci/core-cicd
+      ref: main
+      file: luminet.gitlab-ci.yml
 
 variables:
-  BYPASS_CRITICAL_VULNERABILITY: 'true'
+    BYPASS_CRITICAL_VULNERABILITY: 'true'
+
+.unit_test_js:
+    stage: test
+    image: hub.lumigame.com/pentagon-base/node-mongo:18.13
+    tags:
+        - ci
+    before_script:
+        - if [ "$NPM_LUMI_HOST" != "" ]; then
+          npm set registry $NPM_LUMI_HOST;
+          fi
+        - yarn global add jest@28.1.3
+        - echo $SRC_PATH
+        - cd "$SRC_PATH"
+        - yarn install
+    script:
+        - npm run test-coverage
+    allow_failure: true
+    cache:
+        - key:
+              files:
+                  - package.json
+                  - yarn.lock
+          paths:
+              - node_modules
+    artifacts:
+        when: always
+        paths:
+            - ./**/lcov.info
+        expire_in: 1 day
