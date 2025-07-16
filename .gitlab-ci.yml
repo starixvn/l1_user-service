@@ -3,9 +3,6 @@ include:
       ref: main
       file: luminet.gitlab-ci.yml
 
-variables:
-    BYPASS_CRITICAL_VULNERABILITY: 'true'
-
 .unit_test_js:
     stage: test
     image: hub.lumigame.com/pentagon-base/node-mongo:18.13
