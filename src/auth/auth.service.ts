@@ -88,7 +88,9 @@ export class AuthService {
         }
 
         const userSession = await this.addSessionIfNotExist(user, request, data, system);
-        await this.userInfosService.updatePlayerAvatarUrlAndNickname(user.id, data.playerAvatarUrl, data.playerNickname);
+        if (data.playerAvatarUrl || data.playerNickname) {
+            await this.userInfosService.updatePlayerAvatarUrlAndNickname(user.id, data.playerAvatarUrl, data.playerNickname);
+        }
         const rate = await this.exchangeRateService.getRateByUser(userSession.currencyCode, userSession.multiplier);
         const currencyGroup = await this.currencyGroupService.getCurrencyGroup(userSession.currencyGroupId);
         const offerGames = await this.getOfferGames(userSession, currencyGroup);

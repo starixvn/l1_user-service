@@ -203,7 +203,6 @@ describe('AuthService test', () => {
             const actualResult = await authService.signIn('0.0.0.1', 'token', 'userAgent', 1);
 
             // assert
-            expect(updatePlayerAvatarUrlAndNicknameFunc).toHaveBeenCalled();
             expect(createUserIfNotExistFunc).toHaveBeenCalled();
             expect(addSessionIfNotExistFunc).toHaveBeenCalled();
             expect(actualResult.isAuthenticated).toBe(true);
