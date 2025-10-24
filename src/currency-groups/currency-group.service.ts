@@ -29,7 +29,7 @@ export class CurrencyGroupService {
     }
 
     async getCurrencyGroup(groupId: string) {
-        return this.currencyGroupModel.findById(Types.ObjectId(groupId)).lean().exec();
+        return this.currencyGroupModel.findById(new Types.ObjectId(groupId)).lean().exec();
     }
 
     async getCurrency(currencyName: string, partnerId: string) {
