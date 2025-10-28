@@ -9,7 +9,7 @@ export class CurrencyGroupGameService {
     constructor(
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
         @InjectModel(CurrencyGroupGame.name) private readonly gameOfCurrencyGroupModel: Model<CurrencyGroupGameDocument>,
-    ) {}
+    ) { }
     private readonly chipsCacheKey = 'Chips';
 
     async getOfferedGames(groupId: string) {
@@ -25,7 +25,7 @@ export class CurrencyGroupGameService {
     async getOfferedGamesNames(groupId: string) {
         return this.gameOfCurrencyGroupModel
             .find(
-                { groupId: Types.ObjectId(groupId), enabled: true },
+                { groupId: new Types.ObjectId(groupId), enabled: true },
                 { _id: false, gameId: true, gameName: true },
             )
             .lean()
