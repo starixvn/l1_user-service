@@ -28,7 +28,7 @@ export class UserSessionsService {
     }
 
     async updateReCheckInTime(sessionId: string): Promise<UserSessionDocument> {
-        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
+        return this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { recheckInTime: new Date() } }).exec();
     }
 
     async verifySession(request: VerifySessionRequest) {
@@ -51,7 +51,7 @@ export class UserSessionsService {
     }
 
     async updateCurrencyGroup(sessionId: string, currencyGroupId: string): Promise<UserSessionDocument> {
-        return this.userSessionModel.updateOne({ sessionId: sessionId }, { $set: { currencyGroupId } }).exec();
+        return this.userSessionModel.findOneAndUpdate({ sessionId: sessionId }, { $set: { currencyGroupId } }).exec();
     }
 
     async getOnlineUsers() {
