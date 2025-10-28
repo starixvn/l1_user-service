@@ -47,7 +47,7 @@
         "handlebars": "^4.7.7",
         "jsonwebtoken": "^8.5.1",
         "jwks-rsa": "^1.7.0",
-        "mongoose": "5.11.13",
+        "mongoose": "6.13.6",
         "openid-client": "^4.3.0",
         "point-of-view": "^4.15.2",
         "randomstring": "^1.1.5",
@@ -57,6 +57,10 @@
         "sc-instrument": "1.1.0",
         "simpl-schema": "^1.7.3",
         "validator": "^13.5.2"
+    },
+    "resolutions": {
+        "mongoose": "6.13.6",
+        "minimist": "1.2.6"
     },
     "devDependencies": {
         "@commitlint/cli": "^13.1.0",
