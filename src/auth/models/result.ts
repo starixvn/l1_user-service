@@ -26,6 +26,7 @@ export class AuthenticateResult {
         readonly rate: number = 1,
         readonly offerGames: any = null,
         readonly fractionalOddsFormat: boolean = null,
+        readonly xMode: number = 1,
     ) {
         this.isUM = umInfo !== null;
     }

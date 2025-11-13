@@ -29,7 +29,8 @@ export class CreateUserSessionParam {
     readonly disableAward: boolean;
     readonly playerNickname: string;
     readonly playerAvatarUrl: string;
-
+    readonly xMode: number;
+    
     constructor({
         ssoToken,
         sessionId,
@@ -60,6 +61,7 @@ export class CreateUserSessionParam {
         disableAward,
         playerNickname,
         playerAvatarUrl,
+        xMode,
     }: any) {
         this.ssoToken = ssoToken;
         this.sessionId = sessionId;
@@ -90,5 +92,6 @@ export class CreateUserSessionParam {
         this.disableAward = disableAward;
         this.playerNickname = playerNickname;
         this.playerAvatarUrl = playerAvatarUrl;
+        this.xMode = xMode;
     }
 }

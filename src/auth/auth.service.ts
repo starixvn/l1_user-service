@@ -4,7 +4,6 @@ import { LeanDocument } from 'mongoose';
 import { generate } from 'randomstring';
 import validator from 'validator';
 
-import { InjectModel } from '@nestjs/mongoose';
 import * as Chance from 'chance';
 import { CreateNicknameRequest } from '.';
 import { SentryLogger, UtilsService } from '../common/providers';
@@ -109,6 +108,7 @@ export class AuthService {
             rate,
             offerGames,
             fractionalOddsFormat,
+            userSession.xMode,
         );
     }
 
@@ -454,6 +454,7 @@ export class AuthService {
             disableAward,
             playerNickname,
             playerAvatarUrl,
+            xMode,
         } = verifyTokenResult;
 
         const session = await this.userSessionsService.getUserSessionByToken(token);
@@ -491,6 +492,7 @@ export class AuthService {
                     disableAward,
                     playerNickname,
                     playerAvatarUrl,
+                    xMode,
                 }),
             );
         }

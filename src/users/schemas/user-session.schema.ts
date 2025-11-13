@@ -91,6 +91,9 @@ export class UserSession {
 
     @Prop()
     playerAvatarUrl: string;
+
+    @Prop()
+    xMode: number;
 }
 
 export const UserSessionSchema = SchemaFactory.createForClass(UserSession);

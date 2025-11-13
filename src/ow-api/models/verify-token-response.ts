@@ -23,4 +23,5 @@ export interface VerifyTokenResponse {
     disableAward?: boolean;
     playerNickname?: string;
     playerAvatarUrl?: string;
+    xMode: number;
 }

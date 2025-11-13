@@ -22,7 +22,8 @@ export class SignInGameResult {
     disableAward: boolean;
     playerNickname: string;
     playerAvatarUrl: string;
-
+    xMode: number;
+    
     constructor(session: UserSession) {
         this.id = session.userId;
         this.playerId = session.playerId;
@@ -45,5 +46,6 @@ export class SignInGameResult {
         this.disableAward = session.disableAward;
         this.playerNickname = session.playerNickname;
         this.playerAvatarUrl = session.playerAvatarUrl;
+        this.xMode = session.xMode;
     }
 }
