@@ -35,6 +35,7 @@ describe('AuthController test', () => {
                 rate: 1,
                 fractionalOddsFormat: false,
                 offerGames: [],
+                xMode: 1,
             };
 
             jest.spyOn(authService, 'signIn').mockResolvedValue(expectResult);

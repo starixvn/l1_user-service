@@ -2,7 +2,6 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
 
-import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsService } from '../../common/providers';
 import { SentryLogger } from '../../common/providers/logger.service';
 import { CurrencyGroupGameService } from '../../currency-group-games/currency-group-games.service';
@@ -14,6 +13,7 @@ import { VerifyTokenResponse } from '../../ow-api/models';
 import { OWApiClient } from '../../ow-api/ow-api.client';
 import { PartnerConfigService } from '../../partner-config/partner-config.service';
 import { PartnerService } from '../../partner/partner.service';
+import { PromotionService } from '../../promotion/promotion.service';
 import { Result } from '../../shared/models/result';
 import { closeInMongodConnection, rootMongooseTestModule } from '../../shared/test-utils/mongoose-test-module';
 import { UMInfo } from '../../um/schemas';
@@ -25,7 +25,6 @@ import { UserInfo, UserSession } from '../../users/schemas';
 import { AuthService } from '../auth.service';
 import { duplicateNickname } from '../constants/errors';
 import { AuthorizeResult, CreateNicknameRequest, GetBalanceResult, ReCheckInResponse } from '../models';
-import { PromotionService } from '../../promotion/promotion.service';
 
 jest.mock('../../ow-api/ow-api.client');
 jest.mock('../../users/providers');
@@ -67,6 +66,7 @@ const getVerifyTokenRequest = (isSuccessful: boolean) => {
         disableJackpotGames: false,
         operatorToken: 'operator-token',
         operatorPlayerId: '1',
+        xMode: 1,
     };
 };
 
