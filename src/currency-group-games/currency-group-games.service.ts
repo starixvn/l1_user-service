@@ -1,7 +1,7 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
 import { Cache } from 'cache-manager';
+import { Model, Types } from 'mongoose';
 import { CurrencyGroupGame, CurrencyGroupGameDocument } from './schemas';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class CurrencyGroupGameService {
     async getOfferedGames(groupId: string) {
         return this.gameOfCurrencyGroupModel
             .find(
-                { groupId: Types.ObjectId(groupId), enabled: true },
+                { groupId: new Types.ObjectId(groupId), enabled: true },
                 { _id: false, gameId: true, minBet: true, maxBet: true, maxBetPerChoices: true },
             )
             .lean()
@@ -24,10 +24,7 @@ export class CurrencyGroupGameService {
 
     async getOfferedGamesNames(groupId: string) {
         return this.gameOfCurrencyGroupModel
-            .find(
-                { groupId: Types.ObjectId(groupId), enabled: true },
-                { _id: false, gameId: true, gameName: true },
-            )
+            .find({ groupId: new Types.ObjectId(groupId), enabled: true }, { _id: false, gameId: true, gameName: true })
             .lean()
             .exec();
     }
@@ -41,7 +38,7 @@ export class CurrencyGroupGameService {
 
         const configGames = await this.gameOfCurrencyGroupModel
             .find(
-                { groupId: Types.ObjectId(groupId), enabled: true, gameId: { $in: gameIds } },
+                { groupId: new Types.ObjectId(groupId), enabled: true, gameId: { $in: gameIds } },
                 { _id: false, minBet: true, maxBet: true, chips: true },
             )
             .lean()

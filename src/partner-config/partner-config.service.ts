@@ -13,11 +13,11 @@ export class PartnerConfigService {
             return false;
         }
 
-        return this.partnerConfigModel.exists({
+        return !!(await this.partnerConfigModel.exists({
             type: 'super_players',
             partnerId: partnerId,
             'value.names': playerName.toLocaleLowerCase(),
-        });
+        }));
     }
 
     async getExclusionSites(partnerId: string): Promise<Object> {

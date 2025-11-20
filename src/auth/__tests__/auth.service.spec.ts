@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { stub } from 'jest-micro-auto-stub';
 
+import { Types } from 'mongoose';
 import { UtilsService } from '../../common/providers';
 import { SentryLogger } from '../../common/providers/logger.service';
 import { CurrencyGroupGameService } from '../../currency-group-games/currency-group-games.service';
@@ -628,6 +629,7 @@ describe('AuthService test', () => {
                 operatorId: 'operatorId',
                 fractionalOddsFormat: false,
                 name: 'currencyGroup',
+                _id: new Types.ObjectId(),
             });
 
             const expectedResult = new Result(invalidSession.errorCode, invalidSession.message, null);

@@ -47,7 +47,7 @@
         "handlebars": "^4.7.7",
         "jsonwebtoken": "^8.5.1",
         "jwks-rsa": "^1.7.0",
-        "mongoose": "5.11.13",
+        "mongoose": "6.13.6",
         "openid-client": "^4.3.0",
         "point-of-view": "^4.15.2",
         "randomstring": "^1.1.5",

@@ -17,7 +17,7 @@ export class GlobalConfigService {
             return false;
         }
 
-        return this.globalConfigModel.exists({ type: 'super_players', 'configs.names': playerName.toLocaleLowerCase() });
+        return !!(await this.globalConfigModel.exists({ type: 'super_players', 'configs.names': playerName.toLocaleLowerCase() }));
     }
 
     async getBetaGames(): Promise<GameConfig[]> {
