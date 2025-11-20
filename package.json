@@ -58,6 +58,9 @@
         "simpl-schema": "^1.7.3",
         "validator": "^13.5.2"
     },
+    "resolutions": {
+        "minimist": "1.2.6"
+    },
     "devDependencies": {
         "@commitlint/cli": "^13.1.0",
         "@commitlint/config-conventional": "^13.1.0",
