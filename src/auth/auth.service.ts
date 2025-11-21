@@ -238,6 +238,7 @@ export class AuthService {
                 currencyCode: session.currencyCode,
                 currencyGroup: currencyGroup.name,
                 disableMiniPanel: this.checkDisableMiniPanel(session),
+                xMode: session.xMode,
             },
             umInfo,
             {
