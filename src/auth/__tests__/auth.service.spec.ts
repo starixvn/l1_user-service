@@ -532,6 +532,7 @@ describe('AuthService test', () => {
                 disableJackpotGames: true,
                 multiplier: 1,
                 currencyCode: 'currencycode2,',
+                xMode: 1,
             };
             const mockOfferedGames = [
                 { gameId: 1, gameName: 'Game 1' },
@@ -550,6 +551,7 @@ describe('AuthService test', () => {
                 currencyCode: 'currencycode2,',
                 currencyGroup: 'currencyGroup',
                 disableMiniPanel: false,
+                xMode: 1,
             };
 
             const mockOfferedGamesNames = [
