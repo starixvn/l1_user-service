@@ -277,7 +277,7 @@ export class AuthService {
                 session.currencyGroupId,
             );
 
-            return new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel }, null, promotionResult);
+            return new AuthorizeResult(true, { ...userInfo, rate, disableMiniPanel, xMode: session.xMode }, null, promotionResult);
         }
 
         const characterName = this.generateCharacterName(request.nickname, session.currencyName);
@@ -336,6 +336,7 @@ export class AuthService {
                 currencyCode: session.currencyCode,
                 currencyGroup: currencyGroup.name,
                 disableMiniPanel,
+                xMode: session.xMode,
             },
             null,
             promotionResult,
