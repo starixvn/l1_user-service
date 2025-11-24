@@ -676,7 +676,7 @@ describe('AuthService test', () => {
 
         it('should return successful when user info was created', async () => {
             // arrange
-            const userExpected = { disableMiniPanel: false, rate: 1000 };
+            const userExpected = { disableMiniPanel: false, rate: 1000, xMode: undefined };
             stubUsersService.getById.mockResolvedValueOnce({ local: { username: createNicknameRequest.username } });
             stubUserInfoService.getUserInfo.mockResolvedValueOnce({});
             jest.spyOn(UserSessionsService.prototype, 'verifySession').mockResolvedValueOnce({
